@@ -549,6 +549,8 @@ def build_views(p, me=people.OWNER):
             if near and near[0] <= 0.25:
                 insights, insights_from = near[1]["insights"], round(near[0] * 1000)
         listed = parse_time(merged.get("listed_at"))
+        # When the owner last touched the ad on its board, where a board says so (yad2's full ad, Homeless).
+        touched = max((t for t in (parse_time(x.get("updated_at")) for x in [ad] + twins) if t), default=None)
         recent = [c for c in merged.get("changes") or [] if (parse_time(c["at"]) or now) >= recent_from]
         # New = we first saw it lately, and it is not just our own search getting wider (a board's first pull, or an
         # old ad that entered because the budget or rooms changed).
@@ -578,6 +580,8 @@ def build_views(p, me=people.OWNER):
             cost=cost_of(merged, text), haggle=haggle_of(merged, now),
             insights=insights, insights_from=insights_from, near=near_of(merged, by_kind),
             days_listed=(now - listed).days if listed else None,
+            listed_at=listed.isoformat(timespec="seconds") if listed else None,
+            updated_at=touched.isoformat(timespec="seconds") if touched and (not listed or touched > listed) else None,
             is_new=is_new, recent=recent, has_detail=bool(merged.get("detail_at")),
         )
         # Marks are per person and seen by everyone on the profile: mine drive my filters, all of them the favorites.

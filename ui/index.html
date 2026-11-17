@@ -20,7 +20,13 @@
           --sky: #2f6fe0; --sky-soft: #e2ecfd; --pop: 3px 3px 0 var(--ink); }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
-  body { background: var(--paper); color: var(--ink); font: 14.5px/1.45 Rubik, "Segoe UI", system-ui, sans-serif; }
+  body { background: var(--paper); color: var(--ink); font: 14.5px/1.45 Rubik, "Segoe UI", system-ui, sans-serif; display: flex; flex-direction: column; }
+  /* The page is a column: the screen, then the footer. The board screen fills the window exactly and scrolls inside. */
+  #root { flex: 1 0 auto; display: flex; flex-direction: column; } body:has(.app) #root { flex: 1 1 0; min-height: 0; }
+  .foot { order: 99; flex: none; display: flex; gap: 14px; justify-content: center; align-items: center; padding: 5px 18px 9px; font-size: 12.5px; color: var(--soft); }
+  .foot a { color: inherit; font-weight: 600; text-decoration: none; } .foot a:hover { color: var(--ink); }
+  .foot a.treat { color: var(--ink); background: #ffe08a; border: 1.5px solid var(--ink); border-radius: 999px; padding: 1px 12px; box-shadow: 2px 2px 0 var(--ink); }
+  .foot a.treat:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
   button, input, select, textarea { font: inherit; color: inherit; }
   button { cursor: pointer; }
   .btn { border: 1.5px solid var(--ink); background: var(--card); border-radius: 999px; padding: 7px 16px; font-weight: 600; }
@@ -95,7 +101,7 @@
   @keyframes sp { to { transform: rotate(360deg); } }
 
   /* board */
-  .app { display: grid; grid-template-rows: auto auto 1fr; height: 100vh; }
+  .app { display: flex; flex-direction: column; flex: 1; min-height: 0; } .app > * { flex: none; } .app > .main { flex: 1; }
   .top { display: flex; align-items: center; gap: 14px; padding: 10px 18px; }
   .top .who { font-weight: 600; background: var(--card); border: 1.5px solid var(--ink); border-radius: 999px; padding: 4px 14px; }
   .top .stat { color: var(--soft); font-size: 13px; }
@@ -252,12 +258,11 @@
   .dhead { display: flex; align-items: center; font-size: 17px; } .dhead .btn { padding: 3px 11px; }
   .dsec { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 11px 13px; display: grid; gap: 6px; } .dsec h4 { margin: 0; font-size: 13px; }
   #modal.page { position: static; background: none; padding: 10px 18px 24px; display: block; } #modal.page .mcard { margin: 0 auto; max-height: none; height: auto; box-shadow: var(--pop); } #modal.page .mbody { height: min(78vh, 780px); }
-  .app { grid-template-rows: auto auto auto 1fr; }
   .panelwrap { padding: 0 18px; } .panelwrap:empty { display: none; } .panelwrap .fpanel { margin: 0 0 10px; }
   @media (max-width: 980px) {
     .bar { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; } .bar > * { flex: none; }
     .frame { height: 250px; } .top .chip { white-space: normal; }
-    .app { height: auto; min-height: 100vh; } .top { flex-wrap: wrap; gap: 8px; } .top .stat { order: 9; flex-basis: 100%; }
+    body:has(.app) #root { flex: 1 0 auto; } .top { flex-wrap: wrap; gap: 8px; } .top .stat { order: 9; flex-basis: 100%; }
     #modal { padding: 0; } .mcard { border-radius: 0; border: 0; height: 100%; } .mhead { flex-wrap: wrap; padding: 10px 12px; } .mbody { padding: 12px; }
     .mbody, #modal.page .mbody { display: flex; flex-direction: column; overflow: auto; height: auto; } .mbody > * { flex: none; }
     .mmedia { grid-template-rows: none; } .gallery { height: 56vw; min-height: 240px; } .side { grid-template-columns: 1fr; grid-template-rows: 230px 230px; }
@@ -272,6 +277,7 @@
 </head>
 <body>
 <div id="root"></div>
+<div class="foot"><span>לוח אחד · by <a href="https://dogware.ai/" target="_blank" rel="noopener">Dogware.ai</a></span><a class="treat" href="https://treat.dogware.ai/" target="_blank" rel="noopener">🍪 קנו לי חטיף</a></div>
 <div id="toast"></div>
 <script>
 const $root = document.getElementById("root");
@@ -302,6 +308,22 @@ const api = async (path, body) => {
 };
 const toast = (t, ms = 4500) => { const el = document.getElementById("toast"); el.textContent = t; el.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.display = "none", ms); };
 const nis = (n) => n == null ? "בלי מחיר" : "₪" + Math.round(n).toLocaleString("en-US");
+// "3 hours ago" for a time the board gave. A board that gives a date only (midnight) is told in days.
+const ago = (iso) => {
+  if (!iso) return null;
+  const t = new Date(iso), min = (Date.now() - t) / 60000, dateOnly = /T00:00:00/.test(iso);
+  const days = Math.floor((new Date().setHours(0, 0, 0, 0) - new Date(t).setHours(0, 0, 0, 0)) / 864e5);
+  if (min < 0) return null;
+  if (!dateOnly && min < 60) return "לפני " + Math.max(1, Math.round(min)) + " דק'";
+  if (!dateOnly && min < 60 * 20) return Math.round(min / 60) === 1 ? "לפני שעה" : "לפני " + Math.round(min / 60) + " שעות";
+  if (days <= 0) return "היום";
+  if (days === 1) return "אתמול";
+  if (days < 14) return "לפני " + days + " ימים";
+  if (days < 60) return "לפני " + Math.round(days / 7) + " שבועות";
+  return "לפני " + Math.round(days / 30) + " חודשים";
+};
+// The ad's own clock on its board: when the owner last updated it, or else when it was published.
+const touched = (a) => a.updated_at ? ["עודכנה", ago(a.updated_at), a.updated_at] : a.listed_at ? ["פורסמה", ago(a.listed_at), a.listed_at] : null;
 const day = (iso) => iso ? new Date(iso).toLocaleDateString("he-IL", { day: "numeric", month: "numeric" }) : "";
 const floorHe = (a) => a.floor == null ? null : a.floor <= 0 ? (a.floor < 0 ? "מרתף" : "קרקע") : "קומה " + a.floor + (a.top_floor ? "/" + a.top_floor : "");
 const go = (hash) => { location.hash = hash; };
@@ -508,6 +530,8 @@ function chipsOf(a) {
   if (a.flags.includes("religious")) chips.push(h("span", { class: "chip" }, "לשומרי שבת"));
   if (a.flags.includes("basement")) chips.push(h("span", { class: "chip" }, "מרתף"));
   if (a.status && !PICKED.includes(a.status)) chips.push(h("span", { class: "chip bad" }, "פסלתי"));
+  const t = touched(a);
+  if (t && t[1]) chips.push(h("span", { class: "chip", title: t[0] + " בלוח: " + new Date(t[2]).toLocaleString("he-IL", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }) }, "🕒 " + t[0] + " " + t[1]));
   a.boards.forEach((b) => chips.push(h("span", { class: "chip b-" + b.board }, META.boards[b.board])));
   return chips;
 }
