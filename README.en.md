@@ -164,6 +164,11 @@ person's pace, and sends you to the original ad on its board. Each board has its
 them is the responsibility of whoever uses the tool. Do not use it to collect ads in bulk, to pass them on, or to
 get around blocks.
 
+## 📜 Licence
+
+Free for personal and any other non-commercial use, changes included:
+[PolyForm Noncommercial 1.0.0](LICENSE.md). Selling the app or building a paid service on it needs permission.
+
 ## 🤖 For an AI agent
 
 Have an AI agent that works on your computer? Give it this page's address and it can download, install and start
