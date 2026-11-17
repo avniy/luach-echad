@@ -1,3 +1,5 @@
+**עברית** · [English](README.en.md)
+
 <div dir="rtl">
 
 # לוח אחד
@@ -149,20 +151,5 @@
 
 ---
 
-## In English
-
-**לוח אחד** ("one board") puts Israeli rental boards in one place, on your own computer: yad2, Madlan, Komo and
-Homeless are read through a small Chrome extension, merged into one shape, de-duplicated across boards and ranked
-against a profile (area, budget, rooms, no brokers, no stairs, and more). The interface is in Hebrew.
-
-- **Needs:** Windows 10/11 (macOS and Linux should work with `start.sh`, untested), Google Chrome 116+,
-  Python 3.10+ with no extra packages.
-- **Install:** install Python (add it to PATH); download and unzip this repository to a permanent folder; in
-  `chrome://extensions` switch on Developer mode and "Load unpacked" the `extension` folder; run `start.cmd`.
-- **Limits:** rent only; 30 cities, tested in depth in Petah Tikva only; pulls only when you press sync, with Chrome
-  open: the boards side by side in background tabs, each at a slow pace; Madlan may show a human check that only you can pass; Komo shows 20 ads unless you sign in there
-  yourself; Homeless first page only; duplicate matching can err; plain HTTP with no passwords, so home network only.
-- **Privacy:** everything stays in the `data` folder. No server of ours, no tracking, read only, owners are never
-  contacted and their names and phone numbers are not stored.
-- **The extension** can reach those four sites and the local app, and can do three things: open a board page in a
-  background tab of its own (one per board), read the ads from it, and show a notification.
+**In English:** the full guide is in [README.en.md](README.en.md). "לוח אחד" ("one board") puts the Israeli rental
+boards (yad2, Madlan, Komo, Homeless) in one place on your own computer, through a small Chrome extension.
