@@ -378,7 +378,7 @@ function wizard(existing) {
 function syncing(pid, name) {
   const steps = h("div", { class: "steps" });
   $root.replaceChildren(h("div", { class: "center" }, logo(), h("div", { class: "hero" }, h("span", { class: "spin" }), " מושכים מודעות אמיתיות", name ? " בשביל " + name : ""),
-    h("div", { class: "muted" }, "דרך הכרום שלך, לוח אחרי לוח, בקצב של גולש רגיל. בערך דקה-שתיים."), steps));
+    h("div", { class: "muted" }, "דרך הכרום שלך, כל לוח בלשונית רקע משלו, בקצב של גולש רגיל. כמה דקות."), steps));
   clearInterval(pollT);
   pollT = setInterval(async () => {
     const s = await api("sync");

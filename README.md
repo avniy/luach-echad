@@ -44,8 +44,9 @@
 
 1. **פרופיל חדש.** לוחצים "+ פרופיל חדש" ועונים על השאלון: עיר, שכונות, תקציב, חדרים, מה חובה ומה יתרון.
    פרופיל הוא חיפוש של אדם אחד. אפשר כמה.
-2. **סנכרון.** האפליקציה פותחת לשונית ברקע בכרום, עוברת על הלוחות אחד אחד בקצב של גולש רגיל, וסוגרת אותה
-   בסוף. דקה עד כמה דקות. כרום צריך להישאר פתוח.
+2. **סנכרון.** האפליקציה פותחת בכרום לשונית רקע לכל לוח (עד ארבע), קוראת את הלוחות במקביל, כל אחד בקצב של
+   גולש רגיל, וסוגרת את הלשוניות כשתי דקות אחרי הסיום. כמה דקות בסך הכול. כרום צריך להישאר פתוח, ואפשר להמשיך
+   לעבוד בו בינתיים.
 3. **הלוח.** מודעות מתאימות קודם, עם ציון והסבר. לחיצה על מודעה פותחת תמונות, מפה, מה יש בסביבה, מאילו לוחות
    היא הגיעה, וקישור למודעה המקורית בלוח.
 4. **מסמנים.** מועדפת, יצרתי קשר, ביקור, לא רלוונטי, והערה חופשית.
@@ -61,8 +62,8 @@
 **איך זה נמשך**
 
 - **רק כשמבקשים.** אין משיכה אוטומטית. סנכרון קורה בלחיצה, כשכרום פתוח והתוסף מותקן.
-- **לאט בכוונה.** בקשה אחת בכל פעם, עם הפסקות. פעם או פעמיים ביום זה מספיק. סנכרונים תכופים יגרמו ללוחות
-  לחסום את הדפדפן שלך.
+- **לאט בכוונה.** הלוחות נקראים במקביל, אבל מכל לוח בקשה אחת בכל פעם, עם הפסקות. פעם או פעמיים ביום זה
+  מספיק. סנכרונים תכופים יגרמו ללוחות לחסום את הדפדפן שלך.
 - **הלוחות משנים את האתרים שלהם.** כשזה קורה, הקריאה של אותו לוח תישבר עד שהקוד יעודכן.
 
 **לוח לוח**
@@ -106,7 +107,8 @@
 
 - **גישה לארבעה אתרים בלבד:** `yad2.co.il`, `madlan.co.il`, `komo.co.il`, `homeless.co.il`, ולאפליקציה עצמה
   ב-`127.0.0.1:7461`. הוא לא יכול לראות או לגעת בשום אתר או לשונית אחרים.
-- **שלוש פעולות בלבד:** לפתוח דף של אחד הלוחות בלשונית רקע משלו, לקרוא ממנו את המודעות, ולהציג התראה.
+- **שלוש פעולות בלבד:** לפתוח דף של אחד הלוחות בלשונית רקע משלו (אחת לכל לוח), לקרוא ממנו את המודעות,
+  ולהציג התראה.
 - **לא עושה:** לא מקליד, לא לוחץ, לא מתחבר לחשבונות, לא שולח דבר ללוחות, ולא מנסה לעבור בדיקות "אני לא רובוט".
 - הקוד כולו בתיקייה `extension`, כמה מאות שורות. אפשר לקרוא אותו.
 
@@ -157,10 +159,10 @@ against a profile (area, budget, rooms, no brokers, no stairs, and more). The in
   Python 3.10+ with no extra packages.
 - **Install:** install Python (add it to PATH); download and unzip this repository to a permanent folder; in
   `chrome://extensions` switch on Developer mode and "Load unpacked" the `extension` folder; run `start.cmd`.
-- **Limits:** rent only; 30 cities, tested in depth in Petah Tikva only; pulls only when you press sync, slowly, with
-  Chrome open; Madlan may show a human check that only you can pass; Komo shows 20 ads unless you sign in there
+- **Limits:** rent only; 30 cities, tested in depth in Petah Tikva only; pulls only when you press sync, with Chrome
+  open: the boards side by side in background tabs, each at a slow pace; Madlan may show a human check that only you can pass; Komo shows 20 ads unless you sign in there
   yourself; Homeless first page only; duplicate matching can err; plain HTTP with no passwords, so home network only.
 - **Privacy:** everything stays in the `data` folder. No server of ours, no tracking, read only, owners are never
   contacted and their names and phone numbers are not stored.
-- **The extension** can reach those four sites and the local app, and can do three things: open a board page in its
-  own background tab, read the ads from it, and show a notification.
+- **The extension** can reach those four sites and the local app, and can do three things: open a board page in a
+  background tab of its own (one per board), read the ads from it, and show a notification.

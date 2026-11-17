@@ -1,13 +1,13 @@
 // The whole extension. It serves one program: the "לוח אחד" app on this computer (127.0.0.1:7461).
 // The app asks for one of three things, and nothing else is possible:
-//   navigate {url}          open a page of one of the four boards in the extension's own background tab
+//   navigate {url}          open a page of one of the four boards in the extension's own background tab for that board
 //   collect  {board, job}   read that page with the script in collectors/<board>.js (shipped with the extension)
 //   notify   {title, text, url}   a desktop note ("Komo asks to sign in again")
 // It never types, clicks, signs in or sends anything to a board, and it cannot touch any other site or tab.
 
 const APP = "http://127.0.0.1:7461";
 const BOARDS = { yad2: "yad2.co.il", madlan: "madlan.co.il", komo: "komo.co.il", homeless: "homeless.co.il" };
-const IDLE_CLOSE_MS = 120000;   // the work tab closes two minutes after the last request
+const IDLE_CLOSE_MS = 120000;   // the work tabs close two minutes after the last request
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const boardOf = (url) => {
@@ -18,11 +18,14 @@ const boardOf = (url) => {
   } catch (e) { return null; }
 };
 
-// ---- the work tab: one background tab of our own, remembered while the browser session lasts ----
-async function workTab() {
-  const { tabId } = await chrome.storage.session.get("tabId");
-  if (tabId == null) return null;
-  try { return await chrome.tabs.get(tabId); } catch (e) { return null; }
+// ---- the work tabs: one background tab per board, remembered while the browser session lasts ----
+// The boards are read side by side, so each has a tab of its own; one board never has two requests at once.
+const key = (board) => "tab_" + board;
+
+async function workTab(board) {
+  const id = (await chrome.storage.session.get(key(board)))[key(board)];
+  if (id == null) return null;
+  try { return await chrome.tabs.get(id); } catch (e) { return null; }
 }
 
 function loaded(getId, ms) {
@@ -38,14 +41,15 @@ function loaded(getId, ms) {
 }
 
 async function navigate({ url }) {
-  if (!boardOf(url)) throw new Error("כתובת שאינה של אחד מארבעת הלוחות");
+  const board = boardOf(url);
+  if (!board) throw new Error("כתובת שאינה של אחד מארבעת הלוחות");
   let id = null;
   const wait = loaded(() => id, 45000);
-  const tab = await workTab();
+  const tab = await workTab(board);
   if (tab) { await chrome.tabs.update(tab.id, { url }); id = tab.id; }
   else {
     const made = await chrome.tabs.create({ url, active: false });
-    await chrome.storage.session.set({ tabId: made.id });
+    await chrome.storage.session.set({ [key(board)]: made.id });
     id = made.id;
   }
   chrome.tabs.update(id, { autoDiscardable: false }).catch(() => {});
@@ -57,14 +61,13 @@ async function navigate({ url }) {
 
 async function collect({ board, job }) {
   if (!BOARDS[board]) throw new Error("לוח לא מוכר");
-  const tab = await workTab();
+  const tab = await workTab(board);
   if (!tab) throw new Error("אין דף פתוח של הלוח");
-  const at = boardOf(tab.url);
-  if (at !== board) {
+  if (boardOf(tab.url) !== board) {
     // The board sent the tab somewhere else (a check on another address, or an error page): nothing to read.
     let host = "";
     try { host = new URL(tab.url).hostname; } catch (e) { /* no address */ }
-    return { blocked: !at, errors: ["הלוח העביר לדף אחר: " + host] };
+    return { blocked: true, errors: ["הלוח העביר לדף אחר: " + host] };
   }
   await chrome.scripting.executeScript({ target: { tabId: tab.id }, world: "MAIN", files: [`collectors/${board}.js`] });
   const [res] = await chrome.scripting.executeScript({
@@ -93,17 +96,29 @@ chrome.notifications.onClicked.addListener((id) => {
 
 const COMMANDS = { navigate, collect, notify };
 
-// ---- talking to the app: ask for the next request, do it, hand the answer back with the next ask ----
+// ---- talking to the app: ask for the next request; each request is done on its own and answered when ready ----
 let running = false;
 
-async function ask(done) {
+async function call(body) {
   const r = await fetch(APP + "/api/ext/poll", {
     method: "POST",
     headers: { "Content-Type": "application/json", "X-Luach-Extension": chrome.runtime.getManifest().version },
-    body: JSON.stringify({ version: chrome.runtime.getManifest().version, done }),
+    body: JSON.stringify(Object.assign({ version: chrome.runtime.getManifest().version }, body)),
   });
   if (!r.ok) throw new Error("app " + r.status);
   return (await r.json()).job;
+}
+
+async function run(job) {
+  let done;
+  try {
+    if (!COMMANDS[job.cmd]) throw new Error("בקשה לא מוכרת: " + job.cmd);
+    done = { id: job.id, ok: true, result: await COMMANDS[job.cmd](job.args || {}) };
+  } catch (e) {
+    done = { id: job.id, ok: false, error: String((e && e.message) || e) };
+  }
+  await chrome.storage.session.set({ lastJob: Date.now() });
+  try { await call({ done }); } catch (e) { /* the app went away: it will ask again */ }
 }
 
 async function loop() {
@@ -112,19 +127,12 @@ async function loop() {
   // A waiting request does not count as activity for Chrome; a small call every 20 s keeps the extension awake
   // for as long as the app is running.
   const awake = setInterval(() => chrome.runtime.getPlatformInfo(() => {}), 20000);
-  let done = null;
   try {
     for (;;) {
-      const job = await ask(done);
-      done = null;
+      const job = await call({});
       if (!job) continue;
       await chrome.storage.session.set({ lastJob: Date.now() });
-      try {
-        if (!COMMANDS[job.cmd]) throw new Error("בקשה לא מוכרת: " + job.cmd);
-        done = { id: job.id, ok: true, result: await COMMANDS[job.cmd](job.args || {}) };
-      } catch (e) {
-        done = { id: job.id, ok: false, error: String((e && e.message) || e) };
-      }
+      run(job);   // not awaited: the next board's request can start meanwhile
     }
   } catch (e) {
     // The app is not running (or was closed): stop asking. The alarm, or the app's page, starts it again.
@@ -136,10 +144,11 @@ async function loop() {
 
 async function tidy() {
   const { lastJob } = await chrome.storage.session.get("lastJob");
-  const tab = await workTab();
-  if (tab && (!lastJob || Date.now() - lastJob > IDLE_CLOSE_MS)) {
-    await chrome.tabs.remove(tab.id).catch(() => {});
-    await chrome.storage.session.remove("tabId");
+  if (lastJob && Date.now() - lastJob <= IDLE_CLOSE_MS) return;
+  for (const board of Object.keys(BOARDS)) {
+    const tab = await workTab(board);
+    if (tab) await chrome.tabs.remove(tab.id).catch(() => {});
+    await chrome.storage.session.remove(key(board));
   }
 }
 

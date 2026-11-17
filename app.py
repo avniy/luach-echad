@@ -2,6 +2,7 @@
 
     python app.py                      the app at http://127.0.0.1:7461
     python app.py serve --lan          the same, also for devices you invited on the home network
+    python app.py sync <profile> [board]   pull the profile's search now (the app must be running, open in Chrome)
     python app.py list <profile>       the ads that fit, best first
     python app.py set <profile> <ad id> [--status S] [--note "..."] [--summary "..."]
 
@@ -46,6 +47,7 @@ STATUSES = ["", "shortlist", "contacted", "visit", "rejected"]
 TRACKED = ["price", "description", "rooms", "sqm", "floor", "seller", "entrance"]
 YAD2_FEATURES = list(boards.YAD2_MAP_FEATURES)
 LOCK = threading.RLock()
+GEO_LOCK = threading.Lock()
 CITIES = {c["name"]: c for c in json.loads((ROOT / "cities.json").read_text(encoding="utf-8"))}
 
 
@@ -598,8 +600,8 @@ class BridgeError(RuntimeError):
 
 
 # The extension (extension/) keeps asking the app "anything for me?" (POST /api/ext/poll). A request waits in JOBS
-# until it asks; its answer comes back with its next ask. Three requests exist: navigate, collect, notify.
-EXT = {"seen": 0.0, "version": None, "busy": False}
+# until it asks; its answer comes back in a call of its own. Three requests exist: navigate, collect, notify.
+EXT = {"seen": 0.0, "version": None}
 JOBS = queue.Queue()
 ANSWERS = {}  # job id -> {"event", "result"}
 NO_BROWSER = ("התוסף של לוח אחד לא מחובר. צריך כרום פתוח במחשב הזה, עם התוסף מותקן ומופעל, "
@@ -610,7 +612,7 @@ def browser_ready():
     """Is there a browser to read the boards with right now?"""
     if hasattr(LOCAL, "browser"):
         return True
-    return EXT["busy"] or time.time() - EXT["seen"] < 50
+    return time.time() - EXT["seen"] < 50
 
 
 def ext_call(cmd, args, timeout):
@@ -635,13 +637,16 @@ def ext_call(cmd, args, timeout):
 
 
 def ext_poll(body):
-    """One ask from the extension: take its answer to the last request, then hand it the next one (waits up to 20 s)."""
-    EXT.update(seen=time.time(), version=str(body.get("version") or "")[:20], busy=False)
+    """One call from the extension. With "done": its answer to a request (it does not wait). Otherwise: hand it the
+    next request, waiting up to 20 s for one. Several requests can be out at once, one per board."""
+    EXT.update(seen=time.time(), version=str(body.get("version") or "")[:20])
     done = body.get("done")
-    if isinstance(done, dict) and done.get("id") in ANSWERS:
-        slot = ANSWERS[done["id"]]
-        slot["result"] = done
-        slot["event"].set()
+    if isinstance(done, dict):
+        slot = ANSWERS.get(done.get("id"))
+        if slot:
+            slot["result"] = done
+            slot["event"].set()
+        return {"job": None}
     end = time.time() + 20
     while time.time() < end:
         try:
@@ -649,7 +654,7 @@ def ext_poll(body):
         except queue.Empty:
             break
         if job["id"] in ANSWERS:  # still wanted (a request that timed out is dropped here)
-            EXT.update(seen=time.time(), busy=True)
+            EXT["seen"] = time.time()
             return {"job": job}
     EXT["seen"] = time.time()
     return {"job": None}
@@ -866,7 +871,8 @@ def sync_board(p, board, city, now, say):
     say(f"{he}: {len(seen)} מודעות" + (f" מתוך {res['total']}" if res.get("total") and res["total"] > len(seen) else "")
         + f", {new} חדשות, {changed} השתנו, {gone} ירדו")
     if board in ("komo", "homeless"):
-        placed = locate(p["id"], city, say)
+        with GEO_LOCK:  # one address question a second in all, also when two boards finish together
+            placed = locate(p["id"], city, say)
         if placed:
             say(f"{he}: {placed} כתובות מוקמו על המפה")
         with LOCK:
@@ -968,39 +974,50 @@ def locate(pid, city, say=lambda t: None):
 
 
 def sync(pid, say=print, only=None):
-    """only: one board's name, to pull just that board (the others keep what they have)."""
+    """Pull the profile's search. The boards are read side by side, each in its own tab and at its own pace: they
+    are different sites, so one board never gets more than one request at a time.
+    only: one board's name, to pull just that board (the others keep what they have)."""
     with LOCK:
         p = load_profile(pid)
-    city, now, results = CITIES[p["prefs"]["city"]], now_iso(), []
-    for board in boards.BOARDS:
-        if only and board != only:
-            continue
+    city, now = CITIES[p["prefs"]["city"]], now_iso()
+
+    def one(board):
         st = load_state()["boards"].get(board) or {}
         he = boards.BOARDS[board]
         if st.get("ok") is False and st.get("why") == "human" and not st.get("retry"):
             say(f"{he}: מחכה לך. אחרי לחיצה והחזקה באתר, לחצו \"פתרתי\" כאן, והסנכרון הבא ינסה שוב")
-            results.append({"board": board, "skipped": "human"})
-            continue
+            return {"board": board, "skipped": "human"}
         rest = REST_HOURS.get(board)
         last_ok = parse_time(st.get("last_ok"))
         if rest and st.get("ok") and last_ok and datetime.now() - last_ok < timedelta(hours=rest):
             ago = (datetime.now() - last_ok).total_seconds() / 3600
             say(f"{he}: נמשך לפני {ago:.1f} שעות. נמשך פעם ב-{rest} שעות כדי שלא יחסום, המודעות שלו נשארות")
-            results.append({"board": board, "skipped": "resting"})
-            continue
+            return {"board": board, "skipped": "resting"}
         try:
-            results.append(sync_board(p, board, city, now, say))
-            if board == "komo" and not results[-1]["signed_in"]:
+            res = sync_board(p, board, city, now, say)
+            if board == "komo" and not res["signed_in"]:
                 note_board(board, False, "login")
             else:
                 note_board(board, True)
+            return res
         except BridgeError as e:
-            say(f"{boards.BOARDS[board]}: לא הצליח ({e})")
-            results.append({"board": board, "error": str(e)})
+            say(f"{he}: לא הצליח ({e})")
             note_board(board, False, "human" if "אימות אנושי" in str(e) else "login" if "התחברות" in str(e) else "error", str(e))
-        except Exception as e:  # a fault in one board's code must not stop the boards after it
-            say(f"{boards.BOARDS[board]}: תקלה אצלנו ({type(e).__name__}: {e})")
-            results.append({"board": board, "error": f"{type(e).__name__}: {e}"})
+            return {"board": board, "error": str(e)}
+        except Exception as e:  # a fault in one board's code must not stop the other boards
+            say(f"{he}: תקלה אצלנו ({type(e).__name__}: {e})")
+            return {"board": board, "error": f"{type(e).__name__}: {e}"}
+
+    todo = [b for b in boards.BOARDS if not only or b == only]
+    got = {}
+    threads = [threading.Thread(target=lambda b=b: got.__setitem__(b, one(b)), daemon=True) for b in todo]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    results = [got.get(b) or {"board": b, "error": "לא הסתיים"} for b in todo]
+    if hasattr(LOCAL, "after_sync"):
+        LOCAL.after_sync()
     with LOCK:
         p = load_profile(pid)
         p["meta"]["last_sync"] = now
@@ -1011,7 +1028,7 @@ def sync(pid, say=print, only=None):
     return results
 
 
-def start_sync(pid):
+def start_sync(pid, only=None):
     with LOCK:
         if SYNC["running"]:
             return False
@@ -1019,7 +1036,7 @@ def start_sync(pid):
 
     def work():
         try:
-            sync(pid, say=lambda t: SYNC["steps"].append(t))
+            sync(pid, say=lambda t: SYNC["steps"].append(t), only=only)
         except Exception as e:  # the thread must always release the flag
             SYNC["error"] = str(e)
         finally:
@@ -1027,6 +1044,42 @@ def start_sync(pid):
 
     threading.Thread(target=work, daemon=True).start()
     return True
+
+
+def sync_through_app(pid, only=None):
+    """`python app.py sync` from a shell: the running app is the one connected to Chrome, so ask it to pull and
+    print its steps as they come."""
+    import urllib.error
+    import urllib.request
+
+    def call(path, body=None):
+        req = urllib.request.Request(f"http://127.0.0.1:{PORT}/api/{path}", data=None if body is None else json.dumps(body).encode(),
+                                     headers={"Content-Type": "application/json"})
+        try:
+            with urllib.request.urlopen(req, timeout=30) as r:
+                return json.loads(r.read())
+        except urllib.error.HTTPError as e:
+            try:
+                why = json.loads(e.read()).get("error")
+            except ValueError:
+                why = None
+            sys.exit(f"הסנכרון לא התחיל: {why or e.code}")
+        except OSError:
+            sys.exit("האפליקציה לא רצה. מפעילים אותה (start.cmd), משאירים אותה פתוחה בכרום, ומנסים שוב.")
+
+    if call(f"profiles/{pid}/sync", {"board": only}).get("error"):
+        sys.exit("סנכרון אחר כבר רץ")
+    shown = 0
+    while True:
+        s = call("sync")
+        for line in s["steps"][shown:]:
+            print(line, flush=True)
+        shown = len(s["steps"])
+        if not s["running"]:
+            break
+        time.sleep(1.5)
+    if s.get("error"):
+        sys.exit(f"הסנכרון לא הצליח: {s['error']}")
 
 
 def set_fields(pid, ad_id, person=people.OWNER, status=None, note=None, summary=None):
@@ -1327,7 +1380,8 @@ class Handler(BaseHTTPRequestHandler):
                 wider = any(old.get(k) != p["prefs"].get(k) for k in ("city", "price_max", "price_min", "rooms_min", "rooms_max"))
                 return self.send({"ok": True, "needs_sync": wider})
             if method == "POST" and parts[2:] == ["sync"]:
-                return self.send({"ok": True} if start_sync(pid) else {"error": "סנכרון אחר כבר רץ"}, 200 if not SYNC["running"] or SYNC["profile"] == pid else 409)
+                only = body.get("board") if body.get("board") in boards.BOARDS else None
+                return self.send({"ok": True} if start_sync(pid, only) else {"error": "סנכרון אחר כבר רץ"}, 200 if not SYNC["running"] or SYNC["profile"] == pid else 409)
             if method == "POST" and len(parts) == 5 and parts[2] == "ads" and parts[4] == "detail":
                 try:
                     read_one(pid, parts[3])
@@ -1390,7 +1444,7 @@ def main():
     args = ap.parse_args()
     if args.cmd == "sync":
         if not hasattr(LOCAL, "browser"):
-            sys.exit("סנכרון מתבצע מתוך האפליקציה (הכפתור \"סנכרון\"): שם היא מחוברת לכרום דרך התוסף.")
+            return sync_through_app(args.profile, args.board)
         try:
             sync(args.profile, only=args.board)
         except (BridgeError, KeyError) as e:
