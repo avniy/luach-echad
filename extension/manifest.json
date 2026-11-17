@@ -1,0 +1,25 @@
+{
+  "manifest_version": 3,
+  "name": "לוח אחד: קורא הלוחות",
+  "short_name": "לוח אחד",
+  "version": "1.0.0",
+  "description": "קורא בשבילך את החיפוש שלך ביד2, מדלן, קומו והומלס, בקצב של גולש רגיל, ומעביר את המודעות לאפליקציה לוח אחד שרצה במחשב הזה. לא נוגע בשום אתר אחר.",
+  "minimum_chrome_version": "116",
+  "icons": { "48": "icon-48.png", "128": "icon-128.png" },
+  "permissions": ["scripting", "alarms", "storage", "notifications"],
+  "host_permissions": [
+    "https://*.yad2.co.il/*",
+    "https://*.madlan.co.il/*",
+    "https://*.komo.co.il/*",
+    "https://*.homeless.co.il/*",
+    "http://127.0.0.1:7461/*"
+  ],
+  "background": { "service_worker": "background.js" },
+  "content_scripts": [
+    {
+      "matches": ["http://127.0.0.1:7461/*", "http://localhost:7461/*"],
+      "js": ["wake.js"],
+      "run_at": "document_start"
+    }
+  ]
+}

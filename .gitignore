@@ -1,0 +1,16 @@
+# Only what is listed below is published. Everything else in this folder stays on this computer:
+# data/ (your searches, ads, people, keys), local settings, old versions, notes.
+/*
+!/.gitignore
+!/README.md
+!/app.py
+!/boards.py
+!/people.py
+!/cities.json
+!/start.cmd
+!/start-lan.cmd
+!/start.sh
+!/ui/
+!/extension/
+__pycache__/
+*.pyc
