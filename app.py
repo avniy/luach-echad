@@ -691,7 +691,7 @@ def wants_detail(rec, prefs, now):
     return parse_time(at) < parse_time(now) - timedelta(days=7)
 
 
-SYNC = {"running": False, "profile": None, "steps": [], "error": None, "finished": None}
+SYNC = {"running": False, "profile": None, "steps": [], "done": [], "error": None, "finished": None}
 STATE_FILE = ROOT / "data" / "state.json"
 FIX_URL = {"yad2": "https://www.yad2.co.il/realestate/rent", "madlan": "https://www.madlan.co.il/for-rent",
            "komo": "https://account.komo.co.il/", "homeless": "https://www.homeless.co.il/rent/"}
@@ -979,7 +979,7 @@ def locate(pid, city, say=lambda t: None):
     return len(found)
 
 
-def sync(pid, say=print, only=None):
+def sync(pid, say=print, only=None, done=None):
     """Pull the profile's search. The boards are read side by side, each in its own tab and at its own pace: they
     are different sites, so one board never gets more than one request at a time.
     only: one board's name, to pull just that board (the others keep what they have)."""
@@ -1016,7 +1016,12 @@ def sync(pid, say=print, only=None):
 
     todo = [b for b in boards.BOARDS if not only or b == only]
     got = {}
-    threads = [threading.Thread(target=lambda b=b: got.__setitem__(b, one(b)), daemon=True) for b in todo]
+    def run(b):
+        got[b] = one(b)
+        if done:
+            done(b)
+
+    threads = [threading.Thread(target=run, args=(b,), daemon=True) for b in todo]
     for t in threads:
         t.start()
     for t in threads:
@@ -1038,11 +1043,11 @@ def start_sync(pid, only=None):
     with LOCK:
         if SYNC["running"]:
             return False
-        SYNC.update(running=True, profile=pid, steps=[], error=None, finished=None)
+        SYNC.update(running=True, profile=pid, steps=[], done=[], error=None, finished=None)
 
     def work():
         try:
-            sync(pid, say=lambda t: SYNC["steps"].append(t), only=only)
+            sync(pid, say=lambda t: SYNC["steps"].append(t), only=only, done=lambda b: SYNC["done"].append(b))
         except Exception as e:  # the thread must always release the flag
             SYNC["error"] = str(e)
         finally:

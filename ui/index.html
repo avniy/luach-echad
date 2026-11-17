@@ -70,12 +70,23 @@
   .pick button.must { background: var(--coral); border-color: var(--ink); color: #fff; }
   .pick button.nice { background: var(--mint-soft); border-color: var(--mint); color: var(--mint); }
   .row2 { display: flex; gap: 14px; flex-wrap: wrap; align-items: end; }
-  .tog { display: flex; align-items: center; gap: 10px; padding: 9px 12px; border: 1.5px solid var(--line); border-radius: 12px; margin-top: 8px; cursor: pointer; }
-  .tog.on { border-color: var(--ink); background: #fff6ee; }
-  .tog i { width: 34px; height: 20px; border-radius: 20px; background: var(--line); position: relative; flex: none; }
-  .tog i::after { content: ""; position: absolute; top: 2px; right: 2px; width: 16px; height: 16px; border-radius: 50%; background: #fff; transition: right .12s; }
-  .tog.on i { background: var(--coral); } .tog.on i::after { right: 16px; }
-  .wnav { display: flex; justify-content: space-between; margin-top: 22px; }
+  .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; } .tiles.big { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .tile { border: 1.5px solid var(--line); background: var(--card); border-radius: 14px; padding: 10px 8px 8px; display: grid; justify-items: center; align-content: start; gap: 2px; font-size: 13.5px; text-align: center; }
+  .tile:hover { border-color: var(--ink); } .tile .ti { font-size: 24px; line-height: 1.2; } .tile b { font-weight: 600; } .tile small { font-size: 11.5px; color: var(--soft); min-height: 15px; }
+  .tile.on { background: var(--ink); border-color: var(--ink); color: #fff; } .tile.on small { color: #d9d2c4; }
+  .tile.nice { background: var(--mint-soft); border-color: var(--mint); } .tile.nice small { color: var(--mint); font-weight: 700; }
+  .tile.must { background: var(--coral); border-color: var(--ink); color: #fff; } .tile.must small { color: #fff; font-weight: 700; }
+  .citysel { min-width: 240px; padding: 8px 10px; font-size: 15px; }
+  .wnav { display: flex; justify-content: space-between; margin-top: 22px; } .wgo { display: flex; gap: 12px; align-items: center; } .whint { color: var(--soft); font-size: 13px; }
+  .sboards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
+  .sb { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 7px; align-content: start; min-height: 112px; transition: border-color .3s, opacity .3s; }
+  .sb.work { border-color: var(--ink); } .sb.idle, .sb.skip { opacity: .6; } .sb.bad { border-color: var(--red); }
+  .sbh { display: flex; align-items: center; gap: 8px; } .sbh .chip { font-size: 13.5px; padding: 2px 11px; } .sbs { margin-inline-start: auto; font-size: 12.5px; color: var(--soft); display: flex; gap: 6px; align-items: center; }
+  .sb.done .sbs { color: var(--mint); font-weight: 600; } .sb.bad .sbs { color: var(--red); font-weight: 600; } .sbs .spin { width: 13px; height: 13px; border-width: 2px; }
+  .sbm { font-size: 13.5px; min-height: 20px; } .sbc { font-size: 12.5px; color: var(--soft); min-height: 17px; }
+  .sbar { height: 6px; border-radius: 6px; background: #efe8d8; overflow: hidden; } .sbar i { display: block; height: 100%; width: 0; background: var(--coral); border-radius: 6px; transition: width .6s; }
+  .sb.done .sbar i { background: var(--mint); }
+  @media (max-width: 700px) { .sboards { grid-template-columns: 1fr; } }
   .steps { margin-top: 18px; display: grid; gap: 8px; }
   .steps div { background: var(--card); border: 1.5px solid var(--line); border-radius: 12px; padding: 9px 14px; animation: in .25s; }
   .steps div:last-child { border-color: var(--ink); }
@@ -162,7 +173,6 @@
   .mhead { display: flex; gap: 14px; align-items: center; padding: 14px 18px; border-bottom: 1.5px solid var(--line); background: var(--card); }
   .mprice { font-size: 27px; font-weight: 800; letter-spacing: -.02em; } .mfacts { font-size: 16px; font-weight: 500; }
   .mnav { display: flex; gap: 6px; align-items: center; flex: none; } .mnav .btn { padding: 5px 12px; }
-  .mbody { overflow: auto; padding: 16px 18px; display: grid; gap: 14px; align-content: start; }
   .media { display: grid; gap: 8px; justify-items: center; }
   .stage { position: relative; width: 100%; height: 400px; border: 1.5px solid var(--ink); border-radius: 16px; overflow: hidden; background: #1f1c17; display: flex; }
   .stage .big { flex: 1; min-width: 0; display: grid; place-items: center; } .stage .big img { max-width: 100%; max-height: 400px; object-fit: contain; display: block; }
@@ -184,10 +194,17 @@
   .prov { color: var(--soft); font-size: 12px; margin-top: 7px; }
   .mcard .act { padding: 11px 18px; border-top: 1.5px solid var(--line); background: var(--card); }
   /* the ad, rebuilt: photos, street view and surroundings side by side; details as ordered cards */
-  .mcard { width: min(1560px, 100%); }
-  .mgrid { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); gap: 12px; height: min(56vh, 520px); min-height: 360px; }
-  .mgrid.solo { grid-template-columns: 1fr; }
-  .mbody { display: flex; flex-direction: column; } .mbody > * { flex: none; }  /* a scrolling column: nothing may be squeezed */
+  /* One screen, no page scroll: photos with the two maps under them on one side, the details beside them (only
+     that column scrolls, and only when an ad has a lot to say), our marks and the share button in the footer. */
+  .mcard { width: min(1640px, 100%); height: 100%; }
+  .mbody { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; padding: 14px 18px; min-height: 0; overflow: hidden; }
+  .mmedia { display: grid; grid-template-rows: minmax(0, 1.55fr) minmax(0, 1fr); gap: 12px; min-height: 0; }
+  .mmedia.solo { grid-template-rows: minmax(0, 1fr); }
+  .mdetail { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: auto; padding-inline-end: 4px; scrollbar-width: thin; }
+  .mdetail > * { flex: none; }
+  .us { font-size: 12px; color: var(--soft); letter-spacing: .04em; }
+  .act .mark { flex: none; gap: 5px; } .mnote { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
+  .act .seg.st button { padding: 5px 13px; }
   .gallery { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 6px; min-height: 0; }
   .gallery.none { place-items: center; color: var(--soft); border: 1.5px dashed var(--line); border-radius: 16px; }
   .gbig { position: relative; background: #1f1c17; border: 1.5px solid var(--ink); border-radius: 16px; overflow: hidden; display: grid; place-items: center; min-height: 0; }
@@ -197,7 +214,7 @@
   .gcount { position: absolute; bottom: 8px; left: 10px; background: rgba(31, 28, 23, .7); color: #fff; font-size: 12px; padding: 1px 9px; border-radius: 999px; }
   .thumbs { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; }
   .thumbs img { width: 62px; height: 48px; object-fit: cover; border-radius: 8px; opacity: .55; cursor: pointer; flex: none; border: 1.5px solid transparent; } .thumbs img.on { opacity: 1; border-color: var(--ink); }
-  .side { display: grid; grid-template-rows: 1fr 1fr; gap: 12px; min-height: 0; }
+  .side { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; min-height: 0; }
   .pane { position: relative; border: 1.5px solid var(--ink); border-radius: 16px; overflow: hidden; min-height: 0; background: #efe9dc; display: grid; }
   .pane iframe, .pane .minimap { width: 100%; height: 100%; border: 0; direction: ltr; }
   .ptitle { position: absolute; top: 8px; right: 8px; z-index: 600; background: var(--card); border: 1.5px solid var(--ink); border-radius: 999px; padding: 1px 11px; font-size: 12.5px; font-weight: 600; display: flex; gap: 7px; align-items: center; }
@@ -210,7 +227,11 @@
   .spill.b-yad2 b { color: #b3530a; } .spill.b-madlan b { color: var(--sky); } .spill.b-komo b { color: #6b3fb5; } .spill.b-homeless b { color: #0c7c86; }
   .spill button { border: 1.5px solid var(--line); background: none; border-radius: 999px; padding: 0 7px; font-size: 12px; }
   .pv { cursor: help; opacity: .75; font-size: 14px; }
-  .dgrid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; align-items: start; }
+  .dgrid { columns: 2; column-gap: 10px; }   /* the wide cards span every column, the rest pack under them */
+  @media (min-width: 1500px) { .dgrid { columns: 3; } }
+  .dgrid .dcard { break-inside: avoid; margin-bottom: 10px; padding: 9px 12px; gap: 5px; } .dgrid .dcard.wide { column-span: all; }
+  .dcard.wide .facts { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .mhsrc { flex: none; max-width: 44%; } .mhsrc .srcrow { justify-content: flex-end; } .mhsrc .grow { display: none; }
   .dcard { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 11px 13px; font-size: 13.5px; display: grid; gap: 6px; }
   .dcard.wide { grid-column: span 2; } .dcard h4 { margin: 0; font-size: 12px; letter-spacing: .04em; color: var(--soft); font-weight: 600; }
   .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px 8px; }
@@ -230,7 +251,7 @@
   .dcardbox { background: var(--paper); border: 1.5px solid var(--ink); border-radius: 20px; box-shadow: 6px 6px 0 var(--ink); width: min(560px, 100%); max-height: 100%; overflow: auto; padding: 16px 18px; display: grid; gap: 14px; }
   .dhead { display: flex; align-items: center; font-size: 17px; } .dhead .btn { padding: 3px 11px; }
   .dsec { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 11px 13px; display: grid; gap: 6px; } .dsec h4 { margin: 0; font-size: 13px; }
-  #modal.page { position: static; background: none; padding: 10px 18px 24px; display: block; } #modal.page .mcard { margin: 0 auto; max-height: none; box-shadow: var(--pop); }
+  #modal.page { position: static; background: none; padding: 10px 18px 24px; display: block; } #modal.page .mcard { margin: 0 auto; max-height: none; height: auto; box-shadow: var(--pop); } #modal.page .mbody { height: min(78vh, 780px); }
   .app { grid-template-rows: auto auto auto 1fr; }
   .panelwrap { padding: 0 18px; } .panelwrap:empty { display: none; } .panelwrap .fpanel { margin: 0 0 10px; }
   @media (max-width: 980px) {
@@ -238,8 +259,11 @@
     .frame { height: 250px; } .top .chip { white-space: normal; }
     .app { height: auto; min-height: 100vh; } .top { flex-wrap: wrap; gap: 8px; } .top .stat { order: 9; flex-basis: 100%; }
     #modal { padding: 0; } .mcard { border-radius: 0; border: 0; height: 100%; } .mhead { flex-wrap: wrap; padding: 10px 12px; } .mbody { padding: 12px; }
-    .mgrid { grid-template-columns: 1fr; height: auto; } .gallery { height: 56vw; min-height: 240px; } .side { grid-template-rows: 230px 230px; }
-    .dgrid { grid-template-columns: 1fr; } .dcard.wide { grid-column: auto; } .favnotes { margin-inline-start: 0; }
+    .mbody, #modal.page .mbody { display: flex; flex-direction: column; overflow: auto; height: auto; } .mbody > * { flex: none; }
+    .mmedia { grid-template-rows: none; } .gallery { height: 56vw; min-height: 240px; } .side { grid-template-columns: 1fr; grid-template-rows: 230px 230px; }
+    .mdetail { overflow: visible; padding: 0; }
+    .dgrid { columns: 1; } .mhsrc { max-width: none; flex-basis: 100%; order: 5; } .mhsrc .srcrow { justify-content: flex-start; } .dcard.wide .facts { grid-template-columns: repeat(3, minmax(0, 1fr)); } .favnotes { margin-inline-start: 0; }
+    .mcard .act { padding: 8px 12px; gap: 6px; } .us { display: none; } .act .seg.st { flex: 1; } .act .seg.st button { flex: 1; padding: 6px 4px; } .act input { flex-basis: 100%; }
   }
   .empty { color: var(--soft); text-align: center; padding: 50px 0; }
   #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 9px 18px; border-radius: 999px; display: none; z-index: 2000; }
@@ -318,18 +342,26 @@ function wizard(existing) {
   let step = 0;
   const titles = [["מי מחפש, ואיפה?", "הלוח נבנה סביב האדם, לא סביב הלוח."], ["כמה, וכמה גדול?", "נמשוך גם קצת מעל התקציב, רק כדי להשוות מחירים."],
     ["מה חשוב?", "לחיצה אחת: יתרון. שתיים: חובה. שלוש: לא חשוב."], ["מה לא להראות?", "מודעות כאלה יוסתרו, ואפשר תמיד להציץ בהן."]];
-  const tog = (on, text, sub, flip) => h("div", { class: "tog" + (on ? " on" : ""), onclick: () => { flip(); draw(); } }, h("i"), h("div", {}, h("b", {}, text), sub && h("div", { class: "muted", style: "font-size:12.5px" }, sub)));
+  // One kind of option everywhere: a tile with an icon, a name and a line under it (what it means, or its state).
+  const tile = (icon, text, sub, cls, flip) => h("button", { type: "button", class: "tile " + (cls || ""), onclick: () => { flip(); draw(); } },
+    h("span", { class: "ti" }, icon), h("b", {}, text), h("small", {}, sub || ""));
+  // What still has to be filled before going on. Checked on every keystroke, whatever the order of filling.
+  let nextBtn = null, hint = null;
+  const missing = () => step === 0 ? [!d.name.trim() && "שם לפרופיל", !d.city && "עיר"].filter(Boolean) : [];
+  const check = () => { if (!nextBtn) return; const m = missing(); nextBtn.disabled = !!m.length; hint.textContent = m.length ? "חסר: " + m.join(", ") : ""; };
   const draw = () => {
     const city = META.cities.find((c) => c.name === d.city);
     const body = [
       () => [
         h("div", { class: "row2" },
-          h("div", { class: "q" }, h("label", {}, "שם הפרופיל"), h("input", { type: "text", value: d.name, placeholder: "אבא, אני, דנה...", oninput: (e) => d.name = e.target.value })),
+          h("div", { class: "q" }, h("label", {}, "שם הפרופיל"), h("input", { type: "text", value: d.name, placeholder: "אבא, אני, דנה...", oninput: (e) => { d.name = e.target.value; check(); } })),
           h("div", { class: "q", style: "flex:1" }, h("label", {}, "מי יגור שם? ", h("small", {}, "משפט אחד, לא חובה")), h("input", { type: "text", style: "width:100%", value: d.who, placeholder: "מבוגר שגר לבד, קשה לו עם מדרגות", oninput: (e) => d.who = e.target.value }))),
-        h("div", { class: "q" }, h("label", {}, "עיר"), h("div", { class: "pick" }, META.cities.map((c) => h("button", { class: d.city === c.name ? "on" : "", onclick: () => { if (d.city !== c.name) d.hoods = []; d.city = c.name; draw(); } }, c.name)))),
+        h("div", { class: "q" }, h("label", {}, "עיר"), h("select", { class: "citysel", onchange: (e) => { d.city = e.target.value; d.hoods = []; draw(); } },
+          h("option", { value: "", disabled: true, selected: !d.city }, "בחרו עיר מהרשימה"),
+          [...META.cities].sort((x, y) => x.name.localeCompare(y.name, "he")).map((c) => h("option", { value: c.name, selected: d.city === c.name }, c.name)))),
         city && city.hoods.length ? h("div", { class: "q" }, h("label", {}, "שכונות מועדפות ", h("small", {}, "אפשר כמה, או לדלג בשביל כל העיר")),
           h("div", { class: "pick" }, city.hoods.map((x) => h("button", { class: d.hoods.includes(x.name) ? "on" : "", onclick: () => { d.hoods = d.hoods.includes(x.name) ? d.hoods.filter((n) => n !== x.name) : [...d.hoods, x.name]; draw(); } }, x.name)))) : null,
-        d.hoods.length ? h("div", { class: "q" }, h("label", {}, "כמה רחוק מהשכונה עוד בסדר?"), h("div", { class: "seg" }, [[0.6, "ממש שם"], [1.2, "הליכה קצרה"], [2.5, "גם קצת רחוק"]].map(([v, t]) => h("button", { class: d.radius_km === v ? "on" : "", onclick: () => { d.radius_km = v; draw(); } }, t)))) : null,
+        d.hoods.length ? h("div", { class: "q" }, h("label", {}, "כמה רחוק מהשכונה עוד בסדר?"), h("div", { class: "seg" }, [[0.6, "📍 ממש שם"], [1.2, "🚶 הליכה קצרה"], [2.5, "🚲 גם קצת רחוק"]].map(([v, t]) => h("button", { class: d.radius_km === v ? "on" : "", onclick: () => { d.radius_km = v; draw(); } }, t)))) : null,
       ],
       () => [
         h("div", { class: "q" }, h("label", {}, "תקציב חודשי מקסימלי"), h("div", { class: "row2" },
@@ -340,22 +372,27 @@ function wizard(existing) {
         h("div", { class: "q" }, h("label", {}, "שטח מינימלי במ\"ר ", h("small", {}, "לא חובה")), h("input", { type: "number", value: d.sqm_min ?? "", style: "width:120px", oninput: (e) => d.sqm_min = e.target.value })),
       ],
       () => [
-        tog(d.private_only, "בלי תיווך", "רק מודעות של בעלי דירות", () => d.private_only = !d.private_only),
-        tog(d.access.need, "בלי מדרגות", "מעלית, או קומה נמוכה", () => d.access.need = !d.access.need),
+        h("div", { class: "q" }, h("label", {}, "תנאי חובה"), h("div", { class: "tiles big" },
+          tile("👤", "בלי תיווך", "רק מודעות של בעלי דירות", d.private_only ? "on" : "", () => d.private_only = !d.private_only),
+          tile("🛗", "בלי מדרגות", "מעלית, או קומה נמוכה", d.access.need ? "on" : "", () => d.access.need = !d.access.need))),
         d.access.need ? h("div", { class: "q" }, h("label", {}, "בלי מעלית, עד איזו קומה?"), h("div", { class: "seg" }, [[0, "קרקע בלבד"], [1, "עד קומה 1"], [2, "עד קומה 2"]].map(([v, t]) => h("button", { class: d.access.max_floor === v ? "on" : "", onclick: () => { d.access.max_floor = v; draw(); } }, t)))) : null,
-        h("div", { class: "q" }, h("label", {}, "בדירה ", h("small", {}, "ירוק: יתרון. כתום: חובה.")), h("div", { class: "pick" }, Object.entries(META.features).filter(([k]) => k !== "elevator").map(([k, t]) =>
-          h("button", { class: d.features[k] || "", onclick: () => { const n = { undefined: "nice", nice: "must", must: undefined }[d.features[k]]; if (n) d.features[k] = n; else delete d.features[k]; draw(); } }, t)))),
+        h("div", { class: "q" }, h("label", {}, "בדירה ", h("small", {}, "כל לחיצה מחליפה: יתרון, חובה, לא חשוב")), h("div", { class: "tiles" }, Object.entries(META.features).filter(([k]) => k !== "elevator").map(([k, t]) =>
+          tile(FICON[k] || "•", t, { nice: "יתרון", must: "חובה" }[d.features[k]] || "", d.features[k] || "",
+            () => { const n = { undefined: "nice", nice: "must", must: undefined }[d.features[k]]; if (n) d.features[k] = n; else delete d.features[k]; })))),
       ],
-      () => [["roommates", "מודעות שותפים", "חדר בדירה, או מי שמחפש שותף"], ["religious", "מיועד לשומרי שבת / דתיים", "כשבעל הדירה כותב את זה במודעה"], ["basement", "מרתפים", "גם כשהלוח רושם אותם כקומת קרקע"]]
-        .map(([k, t, s]) => tog(d.hide.includes(k), t, s, () => d.hide = d.hide.includes(k) ? d.hide.filter((x) => x !== k) : [...d.hide, k])),
+      () => [h("div", { class: "tiles big", style: "margin-top:16px" },
+        [["roommates", "👥", "מודעות שותפים", "חדר בדירה, או מי שמחפש שותף"], ["religious", "🕯️", "מיועד לשומרי שבת / דתיים", "כשבעל הדירה כותב את זה במודעה"], ["basement", "🕳️", "מרתפים", "גם כשהלוח רושם אותם כקומת קרקע"]]
+          .map(([k, icon, t, s]) => tile(icon, t, d.hide.includes(k) ? "מוסתר" : s, d.hide.includes(k) ? "on" : "", () => d.hide = d.hide.includes(k) ? d.hide.filter((x) => x !== k) : [...d.hide, k])))],
     ][step]();
-    const ok = step !== 0 || (d.name.trim() && d.city);
+    hint = h("span", { class: "whint" });
+    nextBtn = h("button", { class: "btn pop", onclick: () => { if (missing().length) return check(); if (step < 3) { step++; draw(); } else finish(); } }, step < 3 ? "הלאה" : existing ? "שמירה" : "בנו לי את הלוח");
     $root.replaceChildren(h("div", { class: "center" }, logo(), h("div", { class: "wiz" },
       h("div", { class: "dots" }, titles.map((_, i) => h("i", { class: i <= step ? "on" : "" }))),
       h("h2", {}, titles[step][0]), h("div", { class: "muted" }, titles[step][1]), body,
       h("div", { class: "wnav" },
         h("button", { class: "btn ghost", onclick: () => step ? (step--, draw()) : go(existing ? "#/p/" + existing.id : "#/") }, step ? "חזרה" : "ביטול"),
-        h("button", { class: "btn pop", disabled: !ok, onclick: step < 3 ? () => { step++; draw(); } : finish }, step < 3 ? "הלאה" : existing ? "שמירה" : "בנו לי את הלוח")))));
+        h("div", { class: "wgo" }, hint, nextBtn)))));
+    check();
   };
   const finish = async () => {
     const { name, _pickMax, ...prefs } = d;
@@ -376,15 +413,45 @@ function wizard(existing) {
 
 // ---------- pulling ----------
 function syncing(pid, name) {
-  const steps = h("div", { class: "steps" });
-  $root.replaceChildren(h("div", { class: "center" }, logo(), h("div", { class: "hero" }, h("span", { class: "spin" }), " מושכים מודעות אמיתיות", name ? " בשביל " + name : ""),
-    h("div", { class: "muted" }, "דרך הכרום שלך, כל לוח בלשונית רקע משלו, בקצב של גולש רגיל. כמה דקות."), steps));
+  const cards = Object.entries(META.boards).map(([board, he]) => {
+    const c = { board, he, was: "", state: h("span", { class: "sbs" }), msg: h("div", { class: "sbm", dir: "auto" }, "מחכה לתורו"), count: h("div", { class: "sbc", dir: "auto" }), bar: h("i") };
+    c.el = h("div", { class: "sb idle" }, h("div", { class: "sbh" }, h("span", { class: "chip b-" + board }, he), c.state), c.msg, h("div", { class: "sbar" }, c.bar), c.count);
+    return c;
+  });
+  const other = h("div", { class: "muted", style: "margin-top:10px;font-size:13px" });
+  const set = (el, text) => { if (el.textContent !== text) el.textContent = text; };
+  const LABEL = { work: [h("span", { class: "spin" }), " קורא"], done: ["✓ הסתיים"], bad: ["⚠ לא הצליח"], wait: ["⏸ מחכה"], idle: [], skip: ["לא נמשך הפעם"] };
+  $root.replaceChildren(h("div", { class: "center" }, logo(), h("div", { class: "hero" }, "מושכים מודעות אמיתיות", name ? " בשביל " + name : ""),
+    h("div", { class: "muted" }, "דרך הכרום שלך, כל לוח בלשונית רקע משלו, בקצב של גולש רגיל. כמה דקות."), h("div", { class: "sboards" }, cards.map((c) => c.el)), other));
+  // Nothing is rebuilt between looks: only a text, a bar or a state that really changed is touched.
+  const show = (s) => {
+    const rest = [];
+    for (const c of cards) { c.last = ""; c.sum = ""; }
+    for (const t of s.steps) {
+      const c = cards.find((x) => t.startsWith(x.he + ": "));
+      if (!c) { rest.push(t); continue; }
+      c.last = t.slice(c.he.length + 2);
+      if (/^\d+ מודעות/.test(c.last)) c.sum = c.last;
+    }
+    for (const c of cards) {
+      const m = c.last, prog = m.match(/\((\d+)\/(\d+)\)\s*$/), over = s.done ? s.done.includes(c.board) : !s.running;
+      const state = /לא הצליח|תקלה אצלנו/.test(m) ? "bad" : /^מחכה לך|^נמשך לפני/.test(m) ? "wait" : !m ? (s.running ? "idle" : "skip") : over ? "done" : "work";
+      if (state !== c.was) { c.was = state; c.el.className = "sb " + state; c.state.replaceChildren(...LABEL[state].map((x) => typeof x === "string" ? x : x.cloneNode())); }
+      set(c.msg, m || (state === "skip" ? "" : "מחכה לתורו"));
+      set(c.count, c.sum && c.sum !== m ? c.sum : "");
+      c.bar.style.width = (state === "done" ? 100 : state !== "work" ? 0 : prog ? Math.max(40, 40 + 60 * prog[1] / prog[2]) : c.sum ? 40 : 12) + "%";
+    }
+    set(other, rest.join(" · "));
+  };
   clearInterval(pollT);
-  pollT = setInterval(async () => {
-    const s = await api("sync");
-    steps.replaceChildren(...s.steps.map((t) => h("div", {}, t)));
-    if (!s.running) { clearInterval(pollT); if (s.error) toast("הסנכרון נכשל: " + s.error, 9000); board(pid, true); }
-  }, 1200);
+  const look = async () => {
+    let s;
+    try { s = await api("sync"); } catch (e) { return; }   // one missed look changes nothing on screen
+    show(s);
+    if (!s.running) { clearInterval(pollT); if (s.error) toast("הסנכרון נכשל: " + s.error, 9000); setTimeout(() => board(pid, true), 700); }
+  };
+  look();
+  pollT = setInterval(look, 1200);
 }
 
 // ---------- board ----------
@@ -571,18 +638,21 @@ function modal(a, opt = {}) {
   const el = h("div", { class: "mcard", onclick: (e) => e.stopPropagation() },
     h("div", { class: "mhead" }, ring(a, true),
       h("div", { style: "min-width:0;flex:1" }, h("div", { class: "l1" }, h("span", { class: "mprice" }, nis(a.price)), h("span", { class: "mfacts" }, factsOf(a))), h("div", { class: "muted" }, where || "כתובת לא צוינה"), h("div", { class: "l3" }, chipsOf(a))),
+      h("div", { class: "mhsrc" }, sources(a, ro)),
       h("div", { class: "mnav" },
         !ro && h("button", { class: "btn ghost", disabled: at <= 0, title: "הקודמת (חץ ימינה)", onclick: () => select(list[at - 1].id) }, "→"),
         !ro && at >= 0 && h("span", { class: "muted" }, `${at + 1} / ${list.length}`),
         !ro && h("button", { class: "btn ghost", disabled: at < 0 || at >= list.length - 1, title: "הבאה (חץ שמאלה)", onclick: () => select(list[at + 1].id) }, "←"),
         !ro && h("button", { class: "btn", title: "סגירה (Esc)", onclick: () => select(null) }, "✕"))),
     h("div", { class: "mbody" },
-      h("div", { class: "mgrid" + (a.lat ? "" : " solo") }, gal, a.lat && h("div", { class: "side" }, streetBox(a), aroundBox(a))),
-      sources(a, ro),
+      h("div", { class: "mmedia" + (a.lat ? "" : " solo") }, gal, a.lat && h("div", { class: "side" }, streetBox(a), aroundBox(a))),
+      h("div", { class: "mdetail" },
       h("div", { class: "dgrid" },
-        card("בקצרה", "", h("div", { class: "facts" }, fact("💰", "מחיר", nis(a.price)), fact("🛏️", "חדרים", a.rooms), fact("📐", "שטח", a.sqm && a.sqm + " מ\"ר"), fact("🏢", "קומה", floorHe(a)),
+        card("בקצרה", "wide", h("div", { class: "facts" },
           fact("🏠", "סוג", META.types[a.type]), fact("📅", "כניסה", a.immediate ? "מיידית" : a.entrance && day(a.entrance)), fact("⏱️", "בלוח", a.days_listed != null && (a.days_listed ? a.days_listed + " ימים" : "מהיום")),
           fact("👤", "מפרסם", sellers), fact("📍", "מהשכונה", a.dist_km != null && opt.hoods !== false && P.prefs.hoods.length && a.dist_km.toFixed(1) + " ק\"מ"))),
+        card("מה כתב בעל הדירה", "wide", a.summary && h("div", { class: "sum", dir: "auto" }, a.summary),
+          h("div", { class: "txt", dir: "auto" }, a.description || (a.has_detail ? "לא נכתב תיאור." : "המודעה המלאה עוד לא נקראה.")), a.furniture && h("div", { class: "muted", dir: "auto" }, "🛋️ " + a.furniture)),
         card("התאמה לפרופיל", "", h("div", { class: "fitline" }, h("b", { class: a.fit }, a.fit === "yes" ? "מתאימה" : a.fit === "maybe" ? "חסר מידע במודעה" : "לא עוברת את תנאי החובה")),
           (a.no.length || a.unknown.length || a.warn.length) ? h("div", { class: "why" }, a.no.map((t) => h("span", { class: "chip bad" }, t)), a.unknown.map((t) => h("span", { class: "chip warn" }, t)), a.warn.map((t) => h("span", { class: "chip warn" }, t))) : null,
           a.why.map(([pts, t]) => h("div", { class: "kv" }, h("span", {}, t), h("b", { class: pts > 0 ? "plus" : "minus" }, (pts > 0 ? "+" : "") + pts)))),
@@ -593,17 +663,18 @@ function modal(a, opt = {}) {
           m && h("div", { class: "mbar" }, h("i"), h("b", { style: `left:${Math.max(4, Math.min(96, 50 + m.delta_pct * 1.6))}%;background:${m.delta_pct <= 0 ? "var(--mint)" : "#ffb84d"}` })),
           m && h("div", { class: "muted" }, `${m.n} דירות בגודל דומה, עד 2 ק"מ, מכל הלוחות`),
           a.haggle.length ? h("div", { class: "msep" }, "🤝 מקום למיקוח: " + a.haggle.join(" · ")) : null),
-        card("מה כתב בעל הדירה", "wide", a.summary && h("div", { class: "sum", dir: "auto" }, a.summary),
-          h("div", { class: "txt", dir: "auto" }, a.description || (a.has_detail ? "לא נכתב תיאור." : "המודעה המלאה עוד לא נקראה.")), a.furniture && h("div", { class: "muted", dir: "auto" }, "🛋️ " + a.furniture)),
         card("מה יש בדירה", "", h("div", { class: "why" }, a.features.map((f) => h("span", { class: "chip" }, (FICON[f] || "") + " " + META.features[f])), a.on_pillars && h("span", { class: "chip" }, "🏛️ על עמודים"),
           !a.features_known && h("span", { class: "chip warn" }, "המאפיינים עוד לא ידועים"), a.features_known && !a.features.length && h("span", { class: "muted" }, "לא סומן דבר במודעה"))),
         card("במרחק הליכה", "", WALK.filter((k) => a.near[k]).map((k) => h("div", { class: "kv" }, h("span", { dir: "auto" }, `${GLYPH[k]} ${a.near[k].name}`), h("span", {}, `${a.near[k].min} דק'`)))),
         card("הסביבה", "", a.insights.map((t) => h("div", { dir: "auto" }, "• " + t)), a.park_walk_min && h("div", {}, `• ${a.park_walk_min} דקות הליכה לפארק`), a.rail && h("div", {}, "• רכבת קרובה: " + a.rail)),
-        !ro && card("אנחנו", "", a.marks.filter((k) => !k.mine).map((k) => h("div", { class: "mark" }, h("span", { class: "bub" }, k.name[0]), h("div", {}, h("b", {}, k.name), k.status && h("span", { class: "chip " + (k.status === "rejected" ? "bad" : "good") }, STATUS[k.status]), k.note && h("div", { dir: "auto" }, k.note)))),
-          h("div", { class: "seg st" }, Object.entries(STATUS).map(([v, t]) => h("button", { class: (a.status === v ? "on " : "") + v, onclick: () => save({ status: a.status === v ? "" : v }) }, t))),
-          h("input", { type: "text", placeholder: "הערה שלך, כולם בחיפוש רואים", value: a.note || "", dir: "auto", onchange: (e) => save({ note: e.target.value }) })),
-        card("מה קרה למודעה", "tl", timeline.map(([t, text]) => h("div", {}, h("time", {}, day(t)), h("span", {}, text)))))),
-    !ro && h("div", { class: "act" }, shareBtn, h("span", { class: "grow" }),
+        card("מה קרה למודעה", "tl", timeline.map(([t, text]) => h("div", {}, h("time", {}, day(t)), h("span", {}, text))))))),
+    !ro && h("div", { class: "act" },
+      h("b", { class: "us" }, "אנחנו"),
+      h("div", { class: "seg st" }, Object.entries(STATUS).map(([v, t]) => h("button", { class: (a.status === v ? "on " : "") + v, onclick: () => save({ status: a.status === v ? "" : v }) }, t))),
+      h("input", { type: "text", placeholder: "הערה שלך, כולם בחיפוש רואים", value: a.note || "", dir: "auto", onchange: (e) => save({ note: e.target.value }) }),
+      a.marks.filter((k) => !k.mine).map((k) => h("span", { class: "mark", title: k.name + (k.note ? ": " + k.note : "") }, h("span", { class: "bub" }, k.name[0]),
+        k.status && h("span", { class: "chip " + (k.status === "rejected" ? "bad" : "good") }, STATUS[k.status]), k.note && h("span", { class: "mnote", dir: "auto" }, k.note))),
+      shareBtn,
       a.lat && h("a", { href: `https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lon}`, target: "_blank", rel: "noopener" }, "גוגל מפות ↗")));
   el.gal = gal;
   document.body.append(h("div", { id: "modal", class: ro ? "page" : "", onclick: () => !ro && select(null) }, el));
@@ -665,7 +736,7 @@ function filterPanel() {
     g("מחיר עד", h("input", { type: "number", step: 100, placeholder: "₪", value: x.price, style: "width:100px", onchange: (e) => set("price", e.target.value) })),
     g("חדרים", h("div", { class: "row2", style: "gap:6px" }, rooms("rooms_min", "מ-"), rooms("rooms_max", "עד"))),
     g("גישה", seg("access", [["any", "הכל"], ["nostairs", "בלי מדרגות"], ["ground", "קרקע"], ["lift", "מעלית"]])),
-    g("חייב להיות בדירה", chips("feats", Object.entries(META.features).filter(([k]) => k !== "elevator"))),
+    g("חייב להיות בדירה", chips("feats", Object.entries(META.features).filter(([k]) => k !== "elevator").map(([k, t]) => [k, (FICON[k] ? FICON[k] + " " : "") + t]))),
     g("עד 8 דקות הליכה", chips("walk", WALK.map((k) => [k, GLYPH[k] + " " + P.kinds[k].split(" /")[0]]))),
     g("עוד", h("div", { class: "pick" }, flag("photos", "עם תמונות"), flag("below", "מתחת לשוק"), flag("multi", "ביותר מלוח אחד"), flag("noBasement", "בלי מרתפים"), flag("noReligious", "בלי \"לשומרי שבת\""))),
     h("div", { class: "fg", style: "align-self:end" }, h("button", { class: "btn ghost", onclick: () => { F.x = Object.assign({}, X0); draw(); } }, "ניקוי")));

@@ -12,8 +12,6 @@ changed in each ad since last time.
 Everything runs on your machine: no server, no sign-up, and your data stays in one folder on your computer.
 The interface is in Hebrew.
 
-🍪 **Enjoyed the app? [Buy me a treat](https://treat.dogware.ai/)**
-
 ## 🧰 What you need
 
 | | |
