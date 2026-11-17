@@ -8,6 +8,7 @@ globalThis.__luachCollectors.homeless = async (JOB) => {
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const clean = (s) => (s || "").replace(/ /g, " ").replace(/\s+/g, " ").trim();
   const errors = [];
+  const DEAL = location.pathname.startsWith("/sale") ? "sale" : "rent"; // the board the tab is on
 
   if (JOB.mode === "details") {
     const items = {};
@@ -15,7 +16,7 @@ globalThis.__luachCollectors.homeless = async (JOB) => {
     for (const id of JOB.ids) {
       if (refused) break;
       try {
-        const r = await fetch(`/rent/viewad,${id}.aspx`);
+        const r = await fetch(`/${DEAL}/viewad,${id}.aspx`);
         if (!r.ok) { errors.push(`${r.status} מודעה ${id}`); refused = true; break; }
         const doc = new DOMParser().parseFromString(await r.text(), "text/html");
         const og = doc.querySelector('meta[property="og:description"]')?.getAttribute("content") || "";
@@ -23,7 +24,7 @@ globalThis.__luachCollectors.homeless = async (JOB) => {
         doc.querySelectorAll(".IconOption h3").forEach((h3) => { kv[clean(h3.textContent).replace(/:$/, "")] = clean(h3.parentElement.textContent.replace(h3.textContent, "")); });
         const icon = (el) => (/([\w-]+)\.svg/.exec(el.querySelector("img")?.getAttribute("src") || "") || [])[1];
         const imgs = [...doc.querySelectorAll("img")].map((i) => i.getAttribute("src") || i.getAttribute("data-src") || "")
-          .filter((s) => /uploads\.homeless\.co\.il\/rent/.test(s)).map((s) => s.replace(/\/(300|1200)\//, "/"));
+          .filter((s) => /uploads\.homeless\.co\.il\/(rent|sale)/.test(s)).map((s) => s.replace(/\/(300|1200)\//, "/"));
         items[id] = {
           description: og.includes(" - ") ? og.slice(og.indexOf(" - ") + 3) : null, // the owner's phone and name are not read
           on: [...doc.querySelectorAll(".IconOption.on")].map(icon).filter(Boolean),

@@ -45,6 +45,11 @@
   .chip.b-yad2 { background: #ffe9d6; color: #b3530a; font-weight: 600; }
   .chip.b-madlan { background: var(--sky-soft); color: var(--sky); font-weight: 600; }
   .chip.b-komo { background: #efe4fb; color: #6b3fb5; font-weight: 600; }
+  .chip.b-homeless { background: #e2f1e5; color: #2c7a43; font-weight: 600; }
+  .chip i { font-style: normal; font-size: 11px; line-height: 1; }
+  .chip.time { background: none; box-shadow: inset 0 0 0 1px var(--line); color: var(--soft); }
+  .chip.deal { background: var(--ink); color: #fff; font-weight: 600; vertical-align: middle; }
+  .chips-end { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; margin-inline-start: auto; }
   .top a.chip { text-decoration: none; cursor: pointer; }
   .seg { display: inline-flex; border: 1.5px solid var(--line); border-radius: 999px; background: var(--card); padding: 2px; gap: 2px; }
   .seg button { border: 0; background: none; border-radius: 999px; padding: 4px 12px; font-size: 13px; }
@@ -103,7 +108,12 @@
   /* board */
   .app { display: flex; flex-direction: column; flex: 1; min-height: 0; } .app > * { flex: none; } .app > .main { flex: 1; }
   .top { display: flex; align-items: center; gap: 14px; padding: 10px 18px; }
-  .top .who { font-weight: 600; background: var(--card); border: 1.5px solid var(--ink); border-radius: 999px; padding: 4px 14px; }
+  .top .who { font-weight: 600; background: var(--card); border: 1.5px solid var(--ink); border-radius: 999px; padding: 4px 14px; white-space: nowrap; }
+  .top .who .deal { font-weight: 500; color: var(--soft); margin-inline-start: 9px; padding-inline-start: 9px; border-inline-start: 1.5px solid var(--line); }
+  .top .btn { padding: 5px 16px; }
+  .alert { display: inline-flex; align-items: center; gap: 8px; background: var(--sun-soft); color: var(--sun); border-radius: 999px; padding: 3px 12px; font-size: 12.5px; font-weight: 600; }
+  .alert a { color: inherit; text-decoration: none; } .alert a:hover { text-decoration: underline; }
+  .alert button { border: 1.5px solid var(--ink); background: var(--card); color: var(--ink); border-radius: 999px; padding: 0 10px; font-size: 12px; font-weight: 600; margin-inline-end: -8px; }
   .top .stat { color: var(--soft); font-size: 13px; }
   .grow { flex: 1; }
   .bar { display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center; padding: 0 18px 10px; }
@@ -133,12 +143,12 @@
   .ad { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; flex: none; }
   .ad.open { border-color: var(--ink); box-shadow: var(--pop); }
   .ad.gone, .ad.rejected { opacity: .62; }
-  .head { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 11px; align-items: center; padding: 7px 9px; cursor: pointer; }
+  .head { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 10px; cursor: pointer; }
   .thumb { width: 62px; height: 62px; border-radius: 10px; object-fit: cover; background: #eee7d8; display: grid; place-items: center; color: var(--soft); font-size: 11px; }
-  .l1 { display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; }
+  .l1 { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; } .list .l1 .price { min-width: 66px; } .sale .list .l1 .price { min-width: 104px; }
   .price { font-weight: 800; font-size: 17px; letter-spacing: -.01em; }
   .l2 { color: var(--soft); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .l3 { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 3px; }
+  .l3 { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; margin-top: 4px; }
   .ring { width: 40px; height: 40px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; font-size: 13.5px; position: relative; }
   .ring::before { content: ""; position: absolute; inset: 4px; border-radius: 50%; background: var(--card); }
   .ring span { position: relative; }
@@ -164,7 +174,7 @@
   .why { display: flex; flex-wrap: wrap; gap: 4px; }
   .tl div { display: flex; gap: 8px; } .tl time { color: var(--soft); width: 62px; flex: none; }
   .act { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .act input { flex: 1; min-width: 150px; }
+  .act input { flex: 1; min-width: 150px; text-align: right; }
   .act a { color: var(--sky); font-weight: 600; text-decoration: none; white-space: nowrap; }
   .seg.st button.on.rejected { background: var(--red); } .seg.st button.on { background: var(--mint); }
   .ring.big { width: 58px; height: 58px; font-size: 19px; flex: none; }
@@ -236,7 +246,7 @@
   .dgrid { columns: 2; column-gap: 10px; }   /* the wide cards span every column, the rest pack under them */
   @media (min-width: 1500px) { .dgrid { columns: 3; } }
   .dgrid .dcard { break-inside: avoid; margin-bottom: 10px; padding: 9px 12px; gap: 5px; } .dgrid .dcard.wide { column-span: all; }
-  .dcard.wide .facts { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .dcard.wide .facts { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); }
   .mhsrc { flex: none; max-width: 44%; } .mhsrc .srcrow { justify-content: flex-end; } .mhsrc .grow { display: none; }
   .dcard { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 11px 13px; font-size: 13.5px; display: grid; gap: 6px; }
   .dcard.wide { grid-column: span 2; } .dcard h4 { margin: 0; font-size: 12px; letter-spacing: .04em; color: var(--soft); font-weight: 600; }
@@ -261,7 +271,7 @@
   .panelwrap { padding: 0 18px; } .panelwrap:empty { display: none; } .panelwrap .fpanel { margin: 0 0 10px; }
   @media (max-width: 980px) {
     .bar { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; } .bar > * { flex: none; }
-    .frame { height: 250px; } .top .chip { white-space: normal; }
+    .frame { height: 250px; } .top .alert { white-space: normal; border-radius: 14px; }
     body:has(.app) #root { flex: 1 0 auto; } .top { flex-wrap: wrap; gap: 8px; } .top .stat { order: 9; flex-basis: 100%; }
     #modal { padding: 0; } .mcard { border-radius: 0; border: 0; height: 100%; } .mhead { flex-wrap: wrap; padding: 10px 12px; } .mbody { padding: 12px; }
     .mbody, #modal.page .mbody { display: flex; flex-direction: column; overflow: auto; height: auto; } .mbody > * { flex: none; }
@@ -324,6 +334,10 @@ const ago = (iso) => {
 };
 // The ad's own clock on its board: when the owner last updated it, or else when it was published.
 const touched = (a) => a.updated_at ? ["עודכנה", ago(a.updated_at), a.updated_at] : a.listed_at ? ["פורסמה", ago(a.listed_at), a.listed_at] : null;
+// A profile searches for a flat to rent or to buy; a few words and number sizes follow from that.
+const SALE = () => !!(P && P.prefs && P.prefs.deal === "sale");
+const dealChip = (deal) => h("span", { class: "chip deal" }, h("i", {}, deal === "sale" ? "🏡" : "🔑"), deal === "sale" ? "קנייה" : "השכרה");
+const pinText = (a) => !a.price ? "?" : SALE() ? (a.price / 1e6).toFixed(2) : (a.price / 1000).toFixed(1);
 const day = (iso) => iso ? new Date(iso).toLocaleDateString("he-IL", { day: "numeric", month: "numeric" }) : "";
 const floorHe = (a) => a.floor == null ? null : a.floor <= 0 ? (a.floor < 0 ? "מרתף" : "קרקע") : "קומה " + a.floor + (a.top_floor ? "/" + a.top_floor : "");
 const go = (hash) => { location.hash = hash; };
@@ -348,7 +362,7 @@ async function home() {
     extNote(),
     h("div", { class: "pgrid" },
       profiles.map((p) => h("div", { class: "pcard", onclick: () => go("#/p/" + p.id) },
-        h("h3", {}, p.name),
+        h("h3", {}, p.name, " ", dealChip(p.prefs.deal)),
         h("div", { class: "muted" }, [p.prefs.city, p.prefs.hoods.join(", ")].filter(Boolean).join(" · ")),
         h("div", { class: "muted" }, "עד " + nis(p.prefs.price_max) + " · " + (p.prefs.rooms_min ?? "") + "–" + (p.prefs.rooms_max ?? "") + " חדרים"),
         h("div", { style: "margin-top:10px" }, h("span", { class: "big" }, String(p.fits)), " מתאימות מתוך " + p.total),
@@ -359,7 +373,7 @@ async function home() {
 // ---------- questionnaire ----------
 function wizard(existing) {
   const d = existing ? JSON.parse(JSON.stringify({ name: existing.name, ...existing.prefs })) :
-    { name: "", who: "", city: "", hoods: [], radius_km: 1.2, price_max: 5000, rooms_min: 2, rooms_max: 3, sqm_min: "", private_only: false,
+    { name: "", who: "", deal: "rent", city: "", hoods: [], radius_km: 1.2, price_max: 5000, rooms_min: 2, rooms_max: 3, sqm_min: "", private_only: false,
       access: { need: false, max_floor: 1 }, features: {}, hide: ["roommates"] };
   let step = 0;
   const titles = [["מי מחפש, ואיפה?", "הלוח נבנה סביב האדם, לא סביב הלוח."], ["כמה, וכמה גדול?", "נמשוך גם קצת מעל התקציב, רק כדי להשוות מחירים."],
@@ -372,9 +386,17 @@ function wizard(existing) {
   const missing = () => step === 0 ? [!d.name.trim() && "שם לפרופיל", !d.city && "עיר"].filter(Boolean) : [];
   const check = () => { if (!nextBtn) return; const m = missing(); nextBtn.disabled = !!m.length; hint.textContent = m.length ? "חסר: " + m.join(", ") : ""; };
   const draw = () => {
-    const city = META.cities.find((c) => c.name === d.city);
+    const city = META.cities.find((c) => c.name === d.city), sale = d.deal === "sale";
+    // Rent and purchase are different searches with different sizes of numbers: switching sets sensible starting ones.
+    const setDeal = (deal) => { if (d.deal === deal) return; d.deal = deal;
+      Object.assign(d, deal === "sale" ? { price_max: 2500000, rooms_min: 3, rooms_max: 4, hide: d.hide.filter((x) => x !== "roommates") }
+        : { price_max: 5000, rooms_min: 2, rooms_max: 3, hide: [...new Set([...d.hide, "roommates"])] }); };
     const body = [
       () => [
+        existing ? h("div", { class: "q" }, h("label", {}, "מחפשים ", dealChip(d.deal), " ", h("small", {}, "חיפוש נשאר מה שנפתח. לסוג השני פותחים פרופיל חדש"))) :
+          h("div", { class: "q" }, h("label", {}, "מה מחפשים?"), h("div", { class: "tiles big" },
+            tile("🔑", "דירה להשכרה", "מחיר לחודש", sale ? "" : "on", () => setDeal("rent")),
+            tile("🏡", "דירה לקנייה", "מחיר מלא, והשוואה לפי מחיר למ\"ר", sale ? "on" : "", () => setDeal("sale")))),
         h("div", { class: "row2" },
           h("div", { class: "q" }, h("label", {}, "שם הפרופיל"), h("input", { type: "text", value: d.name, placeholder: "אבא, אני, דנה...", oninput: (e) => { d.name = e.target.value; check(); } })),
           h("div", { class: "q", style: "flex:1" }, h("label", {}, "מי יגור שם? ", h("small", {}, "משפט אחד, לא חובה")), h("input", { type: "text", style: "width:100%", value: d.who, placeholder: "מבוגר שגר לבד, קשה לו עם מדרגות", oninput: (e) => d.who = e.target.value }))),
@@ -386,9 +408,9 @@ function wizard(existing) {
         d.hoods.length ? h("div", { class: "q" }, h("label", {}, "כמה רחוק מהשכונה עוד בסדר?"), h("div", { class: "seg" }, [[0.6, "📍 ממש שם"], [1.2, "🚶 הליכה קצרה"], [2.5, "🚲 גם קצת רחוק"]].map(([v, t]) => h("button", { class: d.radius_km === v ? "on" : "", onclick: () => { d.radius_km = v; draw(); } }, t)))) : null,
       ],
       () => [
-        h("div", { class: "q" }, h("label", {}, "תקציב חודשי מקסימלי"), h("div", { class: "row2" },
-          h("input", { type: "number", step: 100, value: d.price_max, style: "width:120px", oninput: (e) => d.price_max = +e.target.value }),
-          h("div", { class: "pick" }, [3500, 4500, 5500, 7000, 9000, 12000].map((v) => h("button", { class: d.price_max === v ? "on" : "", onclick: () => { d.price_max = v; draw(); } }, nis(v)))))),
+        h("div", { class: "q" }, h("label", {}, sale ? "תקציב מקסימלי" : "תקציב חודשי מקסימלי"), h("div", { class: "row2" },
+          h("input", { type: "number", step: sale ? 50000 : 100, value: d.price_max, style: `width:${sale ? 150 : 120}px`, oninput: (e) => d.price_max = +e.target.value }),
+          h("div", { class: "pick" }, (sale ? [1500000, 2000000, 2500000, 3000000, 4000000, 5000000] : [3500, 4500, 5500, 7000, 9000, 12000]).map((v) => h("button", { class: d.price_max === v ? "on" : "", onclick: () => { d.price_max = v; draw(); } }, nis(v)))))),
         h("div", { class: "q" }, h("label", {}, "חדרים ", h("small", {}, "לחיצה על הקטן ואז על הגדול")), h("div", { class: "pick" }, [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6].map((v) =>
           h("button", { class: v >= d.rooms_min && v <= d.rooms_max ? "on" : "", onclick: () => { if (d._pickMax && v >= d.rooms_min) { d.rooms_max = v; d._pickMax = false; } else { d.rooms_min = d.rooms_max = v; d._pickMax = true; } draw(); } }, String(v))))),
         h("div", { class: "q" }, h("label", {}, "שטח מינימלי במ\"ר ", h("small", {}, "לא חובה")), h("input", { type: "number", value: d.sqm_min ?? "", style: "width:120px", oninput: (e) => d.sqm_min = e.target.value })),
@@ -398,13 +420,13 @@ function wizard(existing) {
           tile("👤", "בלי תיווך", "רק מודעות של בעלי דירות", d.private_only ? "on" : "", () => d.private_only = !d.private_only),
           tile("🛗", "בלי מדרגות", "מעלית, או קומה נמוכה", d.access.need ? "on" : "", () => d.access.need = !d.access.need))),
         d.access.need ? h("div", { class: "q" }, h("label", {}, "בלי מעלית, עד איזו קומה?"), h("div", { class: "seg" }, [[0, "קרקע בלבד"], [1, "עד קומה 1"], [2, "עד קומה 2"]].map(([v, t]) => h("button", { class: d.access.max_floor === v ? "on" : "", onclick: () => { d.access.max_floor = v; draw(); } }, t)))) : null,
-        h("div", { class: "q" }, h("label", {}, "בדירה ", h("small", {}, "כל לחיצה מחליפה: יתרון, חובה, לא חשוב")), h("div", { class: "tiles" }, Object.entries(META.features).filter(([k]) => k !== "elevator").map(([k, t]) =>
+        h("div", { class: "q" }, h("label", {}, "בדירה ", h("small", {}, "כל לחיצה מחליפה: יתרון, חובה, לא חשוב")), h("div", { class: "tiles" }, Object.entries(META.features).filter(([k]) => k !== "elevator" && !(sale && (k === "furnished" || k === "pets"))).map(([k, t]) =>
           tile(FICON[k] || "•", t, { nice: "יתרון", must: "חובה" }[d.features[k]] || "", d.features[k] || "",
             () => { const n = { undefined: "nice", nice: "must", must: undefined }[d.features[k]]; if (n) d.features[k] = n; else delete d.features[k]; })))),
       ],
       () => [h("div", { class: "tiles big", style: "margin-top:16px" },
         [["roommates", "👥", "מודעות שותפים", "חדר בדירה, או מי שמחפש שותף"], ["religious", "🕯️", "מיועד לשומרי שבת / דתיים", "כשבעל הדירה כותב את זה במודעה"], ["basement", "🕳️", "מרתפים", "גם כשהלוח רושם אותם כקומת קרקע"]]
-          .map(([k, icon, t, s]) => tile(icon, t, d.hide.includes(k) ? "מוסתר" : s, d.hide.includes(k) ? "on" : "", () => d.hide = d.hide.includes(k) ? d.hide.filter((x) => x !== k) : [...d.hide, k])))],
+          .filter(([k]) => !(sale && k === "roommates")).map(([k, icon, t, s]) => tile(icon, t, d.hide.includes(k) ? "מוסתר" : s, d.hide.includes(k) ? "on" : "", () => d.hide = d.hide.includes(k) ? d.hide.filter((x) => x !== k) : [...d.hide, k])))],
     ][step]();
     hint = h("span", { class: "whint" });
     nextBtn = h("button", { class: "btn pop", onclick: () => { if (missing().length) return check(); if (step < 3) { step++; draw(); } else finish(); } }, step < 3 ? "הלאה" : existing ? "שמירה" : "בנו לי את הלוח");
@@ -505,35 +527,49 @@ const passes = (a) => {
   if (x.noReligious && a.flags.includes("religious")) return false;
   return true;
 };
-const SORT = { score: null, price: (a, b) => (a.price ?? 1e9) - (b.price ?? 1e9), fresh: (a, b) => (a.days_listed ?? 999) - (b.days_listed ?? 999), near: (a, b) => (a.dist_km ?? 99) - (b.dist_km ?? 99) };
+const SORT = { score: null, price: (a, b) => (a.price ?? 1e9) - (b.price ?? 1e9), fresh: (a, b) => (a.days_listed ?? 999) - (b.days_listed ?? 999), near: (a, b) => (a.dist_km ?? 99) - (b.dist_km ?? 99), sqm: (a, b) => (a.per_sqm ?? 1e12) - (b.per_sqm ?? 1e12) };
 const shown = () => { const ads = P.ads.filter(passes); if (SORT[F.sort]) ads.sort(SORT[F.sort]); return ads; };
 const CHANGE = (c) => c.field === "price" ? `המחיר ${c.to < c.from ? "ירד" : "עלה"} מ-${nis(c.from)} ל-${nis(c.to)}` : c.field === "gone" ? "ירדה מהלוח" : c.field === "back" ? "חזרה ללוח"
   : c.field === "description" ? "הטקסט עודכן" : c.field === "images" ? `תמונות: ${c.from} ← ${c.to}` : c.field === "entrance" ? "תאריך הכניסה השתנה" : `${{ rooms: "חדרים", sqm: "שטח", floor: "קומה", seller: "מפרסם" }[c.field] || c.field}: ${c.from} ← ${c.to}`;
 const ringColor = (a) => a.fit === "no" ? "#cfc6b3" : a.score >= 75 ? "var(--mint)" : a.score >= 60 ? "#e2a100" : "var(--coral)";
 const ring = (a, big) => h("div", { class: "ring" + (big ? " big" : ""), style: `background: conic-gradient(${ringColor(a)} ${a.fit === "no" ? 0 : a.score}%, #eee6d6 0)`, title: a.fit === "no" ? "לא עוברת את תנאי החובה" : "ציון התאמה לפרופיל" }, h("span", {}, a.fit === "no" ? "–" : String(a.score)));
-const factsOf = (a) => [a.rooms != null && a.rooms + " חד'", a.sqm && a.sqm + " מ\"ר", floorHe(a), META.types[a.type] !== "דירה" && META.types[a.type]].filter(Boolean).join(" · ");
+const factsOf = (a) => [a.rooms != null && a.rooms + " חד'", a.sqm && a.sqm + " מ\"ר", floorHe(a), META.types[a.type] !== "דירה" && META.types[a.type], a.per_sqm && nis(a.per_sqm) + " למ\"ר"].filter(Boolean).join(" · ");
 const SELLER = { private: "פרטי", agent: "תיווך" };
 
+// One tag = one icon and a few words, with one colour per meaning: green is good news, yellow asks to check, red
+// rules the ad out, coral is ours (new, favourite), plain is a fact. Always in this order: ours, what happened to
+// the ad, the fit, the money, what the owner wrote; then, at the far end, its clock and its sources.
+const tag = (cls, icon, text, title) => h("span", { class: "chip " + cls, title }, h("i", {}, icon), text);
 function chipsOf(a) {
-  const chips = [];
-  if (a.fav_by.length) chips.push(h("span", { class: "chip fav", title: "סימנו: " + a.fav_by.join(", ") }, "♥ " + a.fav_by.join(", ")));
-  if (a.gone_since) chips.push(h("span", { class: "chip bad" }, "ירדה מהלוח"));
-  if (a.is_new) chips.push(h("span", { class: "chip new" }, "חדש"));
-  const drop = a.recent.find((c) => c.field === "price");
-  if (drop) chips.push(h("span", { class: "chip " + (drop.to < drop.from ? "good" : "warn") }, drop.to < drop.from ? "ירד מחיר" : "עלה מחיר"));
-  if (a.fit === "no") chips.push(h("span", { class: "chip bad" }, a.no[0]));
-  else if (a.unknown.length) chips.push(h("span", { class: "chip warn" }, a.unknown[0]));
-  else if (a.warn.length) chips.push(h("span", { class: "chip warn" }, "לברר: מדרגות"));
-  if (a.market && a.market.delta_pct <= -5) chips.push(h("span", { class: "chip good" }, -a.market.delta_pct + "% מתחת לשוק"));
-  if (a.market && a.market.delta_pct >= 8) chips.push(h("span", { class: "chip warn" }, a.market.delta_pct + "% מעל השוק"));
-  if (a.haggle.length) chips.push(h("span", { class: "chip" }, "מקום למיקוח"));
-  if (a.flags.includes("religious")) chips.push(h("span", { class: "chip" }, "לשומרי שבת"));
-  if (a.flags.includes("basement")) chips.push(h("span", { class: "chip" }, "מרתף"));
-  if (a.status && !PICKED.includes(a.status)) chips.push(h("span", { class: "chip bad" }, "פסלתי"));
-  const t = touched(a);
-  if (t && t[1]) chips.push(h("span", { class: "chip", title: t[0] + " בלוח: " + new Date(t[2]).toLocaleString("he-IL", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }) }, "🕒 " + t[0] + " " + t[1]));
-  a.boards.forEach((b) => chips.push(h("span", { class: "chip b-" + b.board }, META.boards[b.board])));
-  return chips;
+  const c = [];
+  if (a.fav_by.length) c.push(tag("fav", "♥", a.fav_by.join(", "), "סימנו: " + a.fav_by.join(", ")));
+  if (a.status && !PICKED.includes(a.status)) c.push(tag("bad", "👎", "פסלתי"));
+  if (a.gone_since) c.push(tag("bad", "🚫", "ירדה מהלוח", "מאז " + day(a.gone_since)));
+  if (a.is_new) c.push(tag("new", "🆕", "חדש"));
+  const drop = a.recent.find((x) => x.field === "price");
+  if (drop) c.push(tag(drop.to < drop.from ? "good" : "warn", drop.to < drop.from ? "📉" : "📈", drop.to < drop.from ? "ירד מחיר" : "עלה מחיר", `מ-${nis(drop.from)} ל-${nis(drop.to)}`));
+  if (a.fit === "no") c.push(tag("bad", "✕", a.no[0], a.no.join(" · ")));
+  else if (a.unknown.length) c.push(tag("warn", "❔", a.unknown[0], a.unknown.join(" · ")));
+  else if (a.warn.length) c.push(tag("warn", "⚠️", "לברר: מדרגות", a.warn.join(" · ")));
+  const m = a.market, unit = m && m.per === "sqm" ? " למ\"ר" : "", within = m && `מול ${m.n} דירות דומות עד ${m.km || 2} ק"מ`;
+  if (a.flags.includes("odd_price")) c.push(tag("warn", "❔", "מחיר חריג", `${-m.delta_pct}% מתחת לדומות: לברר מה בדיוק מוצע`));
+  else if (m && m.delta_pct <= -5) c.push(tag("good", "↓", -m.delta_pct + "% מתחת לשוק" + unit, within));
+  if (m && m.delta_pct >= 8) c.push(tag("warn", "↑", m.delta_pct + "% מעל השוק" + unit, within));
+  if (a.haggle.length) c.push(tag("", "🤝", "מקום למיקוח", a.haggle.join(" · ")));
+  if (SALE()) {
+    if (a.flags.includes("key_money")) c.push(tag("bad", "🗝️", "דמי מפתח", "לפי הטקסט של המודעה: לא בעלות על הדירה"));
+    if (a.flags.includes("needs_work")) c.push(tag("warn", "🔨", "דרוש שיפוץ", "לפי המודעה"));
+    if (a.flags.includes("new_build")) c.push(tag("", "🏗️", "מקבלן", "דירה חדשה מקבלן או בפרויקט, לפי המודעה"));
+    if (a.flags.includes("renewal")) c.push(tag("", "♻️", "התחדשות עירונית", "המודעה מזכירה תמ\"א 38 או פינוי-בינוי"));
+    if (a.flags.includes("rented")) c.push(tag("", "📄", "מושכרת", "המודעה מזכירה שוכר או תשואה"));
+  }
+  if (a.flags.includes("religious")) c.push(tag("", "🕯️", "לשומרי שבת"));
+  if (a.flags.includes("basement")) c.push(tag("", "🕳️", "מרתף"));
+  const t = touched(a), end = [];
+  if (t && t[1]) end.push(tag("time", "🕒", t[0] + " " + t[1], t[0] + " בלוח: " + new Date(t[2]).toLocaleString("he-IL", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })));
+  a.boards.forEach((b) => end.push(h("span", { class: "chip b-" + b.board, title: "המודעה מופיעה ב" + META.boards[b.board] }, META.boards[b.board])));
+  c.push(h("span", { class: "chips-end" }, end));
+  return c;
 }
 
 function row(a) {
@@ -541,7 +577,7 @@ function row(a) {
   return h("article", { class: "ad" + (openId === a.id ? " open" : "") + (a.gone_since ? " gone" : "") + (a.status === "rejected" ? " rejected" : ""), id: "ad-" + a.id,
     onmouseenter: () => pins[a.id]?.classList.add("hot"), onmouseleave: () => openId !== a.id && pins[a.id]?.classList.remove("hot") },
     h("div", { class: "head", onclick: () => select(a.id) },
-      a.images[0] ? h("img", { class: "thumb", src: a.images[0], loading: "lazy", referrerPolicy: "no-referrer", alt: "" }) : h("div", { class: "thumb" }, "אין תמונה"),
+      a.images[0] ? h("img", { class: "thumb", src: a.images[0], loading: "lazy", referrerPolicy: "no-referrer", alt: "", onerror: (e) => e.target.replaceWith(h("div", { class: "thumb" }, "אין תמונה")) }) : h("div", { class: "thumb" }, "אין תמונה"),
       h("div", { style: "min-width:0" }, h("div", { class: "l1" }, h("span", { class: "price" }, nis(a.price)), h("span", {}, factsOf(a))), h("div", { class: "l2" }, where || "כתובת לא צוינה"), h("div", { class: "l3" }, chipsOf(a))),
       ring(a)));
 }
@@ -613,7 +649,7 @@ function aroundBox(a) {
       L.marker([n.lat, n.lon], { icon: L.divIcon({ html: h("div", { class: "poi hit" }, GLYPH[k]), className: "", iconSize: [0, 0] }) })
         .bindTooltip(h("div", { dir: "rtl" }, h("b", {}, `${n.min}'`), " " + n.name), { permanent: true, direction: "top", offset: [0, -13], className: "tw small", opacity: 1 }).addTo(mini);
     }
-    L.marker([a.lat, a.lon], { icon: L.divIcon({ html: h("div", { class: "pin hot" }, a.price ? (a.price / 1000).toFixed(1) : "?"), className: "", iconSize: [0, 0] }), zIndexOffset: 9000 }).addTo(mini);
+    L.marker([a.lat, a.lon], { icon: L.divIcon({ html: h("div", { class: "pin hot" }, pinText(a)), className: "", iconSize: [0, 0] }), zIndexOffset: 9000 }).addTo(mini);
     mini.fitBounds(pts, { padding: [40, 40], maxZoom: 17 });
   }, 80);
   return h("div", { class: "pane" }, h("div", { class: "ptitle" }, "🚶 מה יש מסביב", h("span", { class: "muted" }, "דקות הליכה, הערכה")), el);
@@ -673,8 +709,9 @@ function modal(a, opt = {}) {
       h("div", { class: "mdetail" },
       h("div", { class: "dgrid" },
         card("בקצרה", "wide", h("div", { class: "facts" },
-          fact("🏠", "סוג", META.types[a.type]), fact("📅", "כניסה", a.immediate ? "מיידית" : a.entrance && day(a.entrance)), fact("⏱️", "בלוח", a.days_listed != null && (a.days_listed ? a.days_listed + " ימים" : "מהיום")),
-          fact("👤", "מפרסם", sellers), fact("📍", "מהשכונה", a.dist_km != null && opt.hoods !== false && P.prefs.hoods.length && a.dist_km.toFixed(1) + " ק\"מ"))),
+          fact("🏠", "סוג", META.types[a.type]), fact("📅", "כניסה", a.immediate ? "מיידית" : a.entrance && new Date(a.entrance).toLocaleDateString("he-IL", { day: "numeric", month: "numeric", year: "2-digit" }) + (a.entrance_flexible ? " (גמיש)" : "")),
+          fact("🧱", "מצב", a.condition), fact("⏱️", "בלוח", a.days_listed != null && (a.days_listed ? a.days_listed + " ימים" : "מהיום")),
+          fact("👤", "מפרסם", sellers), fact("📐", "מחיר למ\"ר", a.per_sqm && nis(a.per_sqm)), fact("🕒", "עודכנה", a.updated_at && ago(a.updated_at)), fact("📍", "מהשכונה", a.dist_km != null && opt.hoods !== false && P.prefs.hoods.length && a.dist_km.toFixed(1) + " ק\"מ"))),
         card("מה כתב בעל הדירה", "wide", a.summary && h("div", { class: "sum", dir: "auto" }, a.summary),
           h("div", { class: "txt", dir: "auto" }, a.description || (a.has_detail ? "לא נכתב תיאור." : "המודעה המלאה עוד לא נקראה.")), a.furniture && h("div", { class: "muted", dir: "auto" }, "🛋️ " + a.furniture)),
         card("התאמה לפרופיל", "", h("div", { class: "fitline" }, h("b", { class: a.fit }, a.fit === "yes" ? "מתאימה" : a.fit === "maybe" ? "חסר מידע במודעה" : "לא עוברת את תנאי החובה")),
@@ -682,10 +719,13 @@ function modal(a, opt = {}) {
           a.why.map(([pts, t]) => h("div", { class: "kv" }, h("span", {}, t), h("b", { class: pts > 0 ? "plus" : "minus" }, (pts > 0 ? "+" : "") + pts)))),
         card("כסף", "", c && c.parts.map(([k, v]) => h("div", { class: "kv" }, h("span", {}, k), h("span", {}, nis(v)))),
           c && c.parts.length > 1 && h("div", { class: "kv total" }, h("span", {}, "סה\"כ לחודש"), h("span", {}, nis(c.total))),
+          c && c.per_sqm && h("div", { class: "kv" }, h("span", {}, "מחיר למ\"ר"), h("span", {}, nis(c.per_sqm))),
           c && c.included.length ? h("div", { class: "muted" }, "כלול לפי המודעה: " + c.included.join(", ")) : null, c && c.excluded.length ? h("div", { class: "muted" }, "לא כלול: " + c.excluded.join(", ")) : null,
-          m && h("div", { class: "msep" }, m.delta_pct === 0 ? "במחיר החציוני של דירות דומות" : h("b", {}, Math.abs(m.delta_pct) + "% " + (m.delta_pct < 0 ? "מתחת" : "מעל")), m.delta_pct !== 0 && " לדירות דומות · חציון " + nis(m.median)),
+          m && h("div", { class: "msep" }, m.delta_pct === 0 ? "במחיר החציוני של דירות דומות" : h("b", {}, Math.abs(m.delta_pct) + "% " + (m.delta_pct < 0 ? "מתחת" : "מעל")), m.delta_pct !== 0 && (m.per === "sqm" ? " למחיר למ\"ר בדירות דומות · חציון " + nis(m.median) + " למ\"ר" : " לדירות דומות · חציון " + nis(m.median))),
           m && h("div", { class: "mbar" }, h("i"), h("b", { style: `left:${Math.max(4, Math.min(96, 50 + m.delta_pct * 1.6))}%;background:${m.delta_pct <= 0 ? "var(--mint)" : "#ffb84d"}` })),
-          m && h("div", { class: "muted" }, `${m.n} דירות בגודל דומה, עד 2 ק"מ, מכל הלוחות`),
+          m && h("div", { class: "muted" }, `${m.n} דירות בגודל דומה, עד ${m.km || 2} ק"מ, מכל הלוחות`),
+          c && c.monthly && c.monthly.length ? [h("div", { class: "msep" }, "עלויות שוטפות לחודש, לפי המודעה"), c.monthly.map(([k, v]) => h("div", { class: "kv" }, h("span", {}, k), h("span", {}, nis(v)))),
+            c.monthly.length > 1 && h("div", { class: "kv total" }, h("span", {}, "סה\"כ לחודש"), h("span", {}, nis(c.monthly_total)))] : null,
           a.haggle.length ? h("div", { class: "msep" }, "🤝 מקום למיקוח: " + a.haggle.join(" · ")) : null),
         card("מה יש בדירה", "", h("div", { class: "why" }, a.features.map((f) => h("span", { class: "chip" }, (FICON[f] || "") + " " + META.features[f])), a.on_pillars && h("span", { class: "chip" }, "🏛️ על עמודים"),
           !a.features_known && h("span", { class: "chip warn" }, "המאפיינים עוד לא ידועים"), a.features_known && !a.features.length && h("span", { class: "muted" }, "לא סומן דבר במודעה"))),
@@ -695,7 +735,7 @@ function modal(a, opt = {}) {
     !ro && h("div", { class: "act" },
       h("b", { class: "us" }, "אנחנו"),
       h("div", { class: "seg st" }, Object.entries(STATUS).map(([v, t]) => h("button", { class: (a.status === v ? "on " : "") + v, onclick: () => save({ status: a.status === v ? "" : v }) }, t))),
-      h("input", { type: "text", placeholder: "הערה שלך, כולם בחיפוש רואים", value: a.note || "", dir: "auto", onchange: (e) => save({ note: e.target.value }) }),
+      h("input", { type: "text", placeholder: "הערה שלך, כולם בחיפוש רואים", value: a.note || "", dir: "rtl", onchange: (e) => save({ note: e.target.value }) }),
       a.marks.filter((k) => !k.mine).map((k) => h("span", { class: "mark", title: k.name + (k.note ? ": " + k.note : "") }, h("span", { class: "bub" }, k.name[0]),
         k.status && h("span", { class: "chip " + (k.status === "rejected" ? "bad" : "good") }, STATUS[k.status]), k.note && h("span", { class: "mnote", dir: "auto" }, k.note))),
       shareBtn,
@@ -756,13 +796,13 @@ function filterPanel() {
   const g = (label, ...kids) => h("div", { class: "fg" }, h("label", {}, label), ...kids);
   return h("div", { class: "fpanel" },
     g("מקור", chips("boards", Object.entries(META.boards))),
-    g("מפרסם", seg("seller", [["any", "הכל"], ["private", "פרטי"], ["agent", "תיווך"]])),
-    g("מחיר עד", h("input", { type: "number", step: 100, placeholder: "₪", value: x.price, style: "width:100px", onchange: (e) => set("price", e.target.value) })),
+    g("מפרסם", seg("seller", [["any", "הכל"], ["private", "👤 פרטי"], ["agent", "🏢 תיווך"]])),
+    g("מחיר עד", h("input", { type: "number", step: SALE() ? 50000 : 100, placeholder: "₪", value: x.price, style: `width:${SALE() ? 130 : 100}px`, onchange: (e) => set("price", e.target.value) })),
     g("חדרים", h("div", { class: "row2", style: "gap:6px" }, rooms("rooms_min", "מ-"), rooms("rooms_max", "עד"))),
-    g("גישה", seg("access", [["any", "הכל"], ["nostairs", "בלי מדרגות"], ["ground", "קרקע"], ["lift", "מעלית"]])),
+    g("גישה", seg("access", [["any", "הכל"], ["nostairs", "♿ בלי מדרגות"], ["ground", "🌱 קרקע"], ["lift", "🛗 מעלית"]])),
     g("חייב להיות בדירה", chips("feats", Object.entries(META.features).filter(([k]) => k !== "elevator").map(([k, t]) => [k, (FICON[k] ? FICON[k] + " " : "") + t]))),
     g("עד 8 דקות הליכה", chips("walk", WALK.map((k) => [k, GLYPH[k] + " " + P.kinds[k].split(" /")[0]]))),
-    g("עוד", h("div", { class: "pick" }, flag("photos", "עם תמונות"), flag("below", "מתחת לשוק"), flag("multi", "ביותר מלוח אחד"), flag("noBasement", "בלי מרתפים"), flag("noReligious", "בלי \"לשומרי שבת\""))),
+    g("עוד", h("div", { class: "pick" }, flag("photos", "📷 עם תמונות"), flag("below", "↓ מתחת לשוק"), flag("multi", "🔁 ביותר מלוח אחד"), flag("noBasement", "🕳️ בלי מרתפים"), flag("noReligious", "🕯️ בלי \"לשומרי שבת\""))),
     h("div", { class: "fg", style: "align-self:end" }, h("button", { class: "btn ghost", onclick: () => { F.x = Object.assign({}, X0); draw(); } }, "ניקוי")));
 }
 
@@ -795,7 +835,7 @@ function draw() {
     seg("status", [["todo", "לבדוק"], ["picked", "סימנתי"], ["rejected", "פסלתי"], ["all", "הכל"]]),
     h("div", { class: "seg" }, h("button", { class: F.news ? "on" : "", onclick: () => { F.news = !F.news; draw(); } }, `מה חדש${news ? " · " + news : ""}`)),
     h("div", { class: "seg" }, h("button", { class: F.panel || n ? "on" : "", onclick: () => { F.panel = !F.panel; draw(); } }, `סינון${n ? " · " + n : ""} ${F.panel ? "▴" : "▾"}`)),
-    h("select", { onchange: (e) => { F.sort = e.target.value; draw(); } }, [["score", "לפי התאמה"], ["price", "הזול קודם"], ["fresh", "הטרי קודם"], ["near", "הקרוב קודם"]].map(([v, t]) => h("option", { value: v, selected: F.sort === v }, t))),
+    h("select", { onchange: (e) => { F.sort = e.target.value; draw(); } }, [["score", "לפי התאמה"], ["price", "הזול קודם"], ...(SALE() ? [["sqm", "הזול למ\"ר קודם"]] : []), ["fresh", "הטרי קודם"], ["near", "הקרוב קודם"]].map(([v, t]) => h("option", { value: v, selected: F.sort === v }, t))),
     h("input", { type: "search", placeholder: "רחוב, מילה...", value: F.q, onchange: (e) => { F.q = e.target.value.trim(); draw(); } }),
     h("span", { class: "muted" }, ads.length + " מודעות")]).filter(Boolean));
   document.querySelector(".panelwrap").replaceChildren(...(F.panel && !fav ? [filterPanel()] : []));
@@ -803,7 +843,7 @@ function draw() {
   layer.clearLayers(); pins = {};
   for (const a of [...ads].reverse()) {
     if (!a.lat) continue;
-    const el = h("div", { class: "pin " + (a.fav_by.length ? "fav " : "") + a.fit + (a.id === openId ? " hot" : "") }, (a.fav_by.length ? "♥ " : "") + (a.price ? (a.price / 1000).toFixed(1) : "?"));
+    const el = h("div", { class: "pin " + (a.fav_by.length ? "fav " : "") + a.fit + (a.id === openId ? " hot" : "") }, (a.fav_by.length ? "♥ " : "") + (pinText(a)));
     pins[a.id] = el;
     L.marker([a.lat, a.lon], { icon: L.divIcon({ html: el, className: "", iconSize: [0, 0] }), zIndexOffset: a.score * 10 + (a.fav_by.length ? 2000 : 0) }).on("click", () => select(a.id))
       .bindTooltip(() => tip(a), { direction: "top", offset: [0, -14], className: "tw", opacity: 1 }).addTo(layer);
@@ -845,21 +885,23 @@ async function board(pid, refit) {
   const s = ME.owner ? await api("sync") : { running: false };
   if (s.running && s.profile === pid) return syncing(pid, P.name);
   $root.replaceChildren(h("div", { class: "app" },
-    h("div", { class: "top" }, logo(), h("span", { class: "who" }, P.name), h("span", { class: "stat" }),
-      // A board that is not answering as it should stays here, with the way to fix it, until it works again.
-      ME.owner && Object.entries(P.board_state || {}).filter(([, st]) => !st.ok).map(([b, st]) => h("a", { class: "chip warn", title: st.detail || "", target: "_blank", rel: "noopener", href: P.fix_url[b] },
-        META.boards[b] + ": " + (st.why === "human" ? "מבקש אימות אנושי. לפתוח ולעבור את הבדיקה"
-          : st.why === "login" ? (st.worked_before ? "ההתחברות הפסיקה לעבוד. להתחבר שוב" : "בלי התחברות רק 20 מודעות. להתחבר")
-          : "לא ענה בסנכרון האחרון") + " ↗")),
-      ME.owner && Object.entries(P.board_state || {}).filter(([, st]) => !st.ok && st.why === "human" && !st.retry).map(([b]) => h("button", { class: "btn ghost", style: "padding:1px 11px;font-size:12px",
-        title: "אחרי שעברת את הבדיקה באתר של הלוח", onclick: async (e) => { try { await api(`boards/${b}/retry`, {}); e.target.textContent = "ננסה בסנכרון הבא"; e.target.disabled = true; } catch (err) { toast(err.message); } } }, "פתרתי")),
+    h("div", { class: "top" }, logo(),
+      h("span", { class: "who" }, P.name, h("span", { class: "deal" }, SALE() ? "🏡 קנייה" : "🔑 השכרה")),
+      h("span", { class: "stat" }),
       h("span", { class: "grow" }),
+      // A board that is not answering as it should stays here, with the way to fix it, until it works again.
+      ME.owner && Object.entries(P.board_state || {}).filter(([, st]) => !st.ok).map(([b, st]) => h("span", { class: "alert", title: st.detail || "" },
+        h("a", { target: "_blank", rel: "noopener", href: P.fix_url[b] }, "⚠️ " + META.boards[b] + ": " + (st.why === "human" ? "מבקש אימות אנושי, לפתוח ולעבור"
+          : st.why === "login" ? (st.worked_before ? "ההתחברות הפסיקה לעבוד, להתחבר שוב" : "בלי התחברות רק 20 מודעות, להתחבר")
+          : "לא ענה בסנכרון האחרון") + " ↗"),
+        st.why === "human" && !st.retry && h("button", { title: "אחרי שעברת את הבדיקה באתר של הלוח",
+          onclick: async (e) => { try { await api(`boards/${b}/retry`, {}); e.target.textContent = "ננסה בסנכרון הבא"; e.target.disabled = true; } catch (err) { toast(err.message); } } }, "פתרתי"))),
       h("button", { class: "btn ghost people", onclick: shareDialog, title: "מי בחיפוש, הזמנות, מכשירים" }, P.people.map((x) => h("span", { class: "bub" + (x.id === ME.person ? " me" : "") }, x.name[0])), " שיתוף"),
       ME.owner && h("button", { class: "btn ghost", onclick: () => go(`#/p/${pid}/edit`) }, "עריכה"),
       ME.owner && h("button", { class: "btn pop", onclick: async () => { try { await api(`profiles/${pid}/sync`, {}); syncing(pid, P.name); } catch (e) { toast(e.message); } } }, "סנכרון")),
     extNote(),
     h("div", { class: "bar" }), h("div", { class: "panelwrap" }),
-    h("div", { class: "main" }, h("div", { class: "list" }), h("div", { class: "frame" }, h("div", { class: "tape" }, "המפה של " + P.name), h("div", { id: "map" }), h("div", { class: "layers" })))));
+    h("div", { class: "main" + (SALE() ? " sale" : "") }, h("div", { class: "list" }), h("div", { class: "frame" }, h("div", { class: "tape" }, "המפה של " + P.name), h("div", { id: "map" }), h("div", { class: "layers" })))));
   map = L.map("map", { zoomControl: false, attributionControl: true }).setView([P.city.lat || 32.08, P.city.lon || 34.88], 14);
   L.control.zoom({ position: "bottomleft" }).addTo(map);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
@@ -901,7 +943,7 @@ async function join(token) {
 async function sharedAd(token) {
   let r;
   try { r = await api("shared/" + token); } catch (e) { return plain(h("h2", {}, "המודעה לא זמינה"), h("div", { class: "muted" }, e.message)); }
-  P = { id: null, prefs: { hoods: [] }, ads: [r.ad], kinds: META.kinds };
+  P = { id: null, prefs: { hoods: [], deal: r.deal }, ads: [r.ad], kinds: META.kinds };
   $root.replaceChildren(h("div", { class: "center", style: "max-width:none;padding:14px 18px 0" }, logo(), h("div", { class: "muted", style: "margin-top:4px" }, `${r.by || "מישהו"} שיתף איתך מודעה אחת`)));
   modal(r.ad, { readonly: true, hoods: false });
 }

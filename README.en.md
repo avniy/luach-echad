@@ -2,7 +2,7 @@
 
 # 🏠 לוח אחד (Luach Echad, "one board")
 
-All the Israeli apartment rental boards in one place, on your own computer.
+All the Israeli apartment boards, for rent and for sale, in one place, on your own computer.
 
 The app reads your search on yad2, Madlan, Komo and Homeless, merges the ads into one shape, recognises the same flat
 when it appears on several boards, and ranks everything by what matters to you: area, budget, rooms, no brokers, no
@@ -46,8 +46,9 @@ window opens at `http://127.0.0.1:7461`.
 
 ## 🚀 Using it
 
-1. **A new profile.** Click "+ פרופיל חדש" and answer the questionnaire: city, neighbourhoods, budget, rooms, what is
-   a must and what is a plus. A profile is one person's search. You can have several.
+1. **A new profile.** Click "+ פרופיל חדש" and answer the questionnaire: rent or buy, city, neighbourhoods, budget,
+   rooms, what is a must and what is a plus. A profile is one search of one person, to rent or to buy. You can
+   have several.
 2. **Sync ("סנכרון").** The app opens a background tab in Chrome for each board (up to four), reads the boards side by
    side, each at the pace of an ordinary visitor, and closes the tabs about two minutes after it finishes. A few
    minutes in all. Chrome has to stay open, and you can keep working in it meanwhile.
@@ -83,7 +84,16 @@ Contacting the owner is something you do yourself, on the board.
 
 **What the app covers**
 
-- **Rent only.**
+- **Rent or buy, one of them per profile.** For a purchase the market comparison is by price per square metre
+  against similar flats nearby. "Key money" ads (דמי מפתח) do not count as a fit, and a price far below its
+  surroundings is marked "odd price" rather than a bargain. New from a developer, needs renovation, urban renewal
+  and a flat with a tenant are marked from what the ad says, so they can be wrong.
+- **A purchase search has far more ads.** Up to 8 pages of yad2 are read plus what its map returns (in a test:
+  624 of 1,432), and up to 6 pages of Komo. A wide search is not read to its end: narrow the budget and the rooms.
+  Developers' projects that yad2 lists separately are left out.
+- **Not worked out for a purchase:** purchase tax, mortgage, fees and other costs of the deal. The price is the
+  asking price in the ad.
+- **Purchase was tested** in Petah Tikva on yad2, Komo and Homeless. On Madlan it was not tested.
 - **118 cities and towns:** every large city and most towns that have rentals on yad2. The full list is in the
   questionnaire, where you pick the city. A town with no rental ads on yad2 right now is not included.
   Tested in depth only in Petah Tikva and Ramat Gan. Most towns were checked on yad2 only: Komo, Homeless and

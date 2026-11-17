@@ -3,18 +3,27 @@
 Every board has: a search URL built from a profile, a collector script (collectors/<board>.js) that runs inside the
 board's own page, and two normalizers (list item, full ad). Everything after this file sees one shape only:
 
-    id "board:native", board, url, seller (private | agent), agency, price (NIS a month), rooms, sqm, floor (0 = ground),
-    top_floor, type (TYPES), type_raw, city, hood, street, house_no, lat, lon, images, listed_at,
+    id "board:native", board, url, seller (private | agent), agency, price (NIS: a month for rent, the asking price
+    for sale), rooms, sqm, floor (0 = ground),
+    top_floor, type (TYPES), type_raw, city, hood, street, house_no, lat, lon, images, listed_at, updated_at,
+    condition (the board's own words: new, renovated, needs work), entrance_flexible,
     features (FEATURES), features_known, on_pillars, description, furniture, entrance, immediate,
     vaad (a month), arnona (a month), board_events [{at, price, kind}], insights [text], park_walk_min, rail
 """
 import re
+from datetime import datetime, timedelta
 from urllib.parse import quote, urlencode
 
 TYPES = {"apartment": "דירה", "unit": "יחידת דיור", "garden": "דירת גן", "roof": "גג / פנטהאוז", "studio": "סטודיו",
          "basement": "מרתף / פרטר", "house": "בית פרטי", "duplex": "דופלקס", "parking": "חניה", "storage": "מחסן",
-         "other": "אחר"}
-NOT_A_HOME = {"parking", "storage"}
+         "land": "מגרש", "other": "אחר"}
+NOT_A_HOME = {"parking", "storage", "land"}
+# A profile searches one kind of deal. Each board has its own address for each; the ads have the same shape.
+DEALS = {"rent": "השכרה", "sale": "קנייה"}
+
+
+def deal_of(prefs):
+    return "sale" if prefs.get("deal") == "sale" else "rent"
 FEATURES = {"elevator": "מעלית", "accessible": "נגישה", "mamad": "ממ\"ד", "shelter": "מקלט", "parking": "חניה",
             "balcony": "מרפסת", "ac": "מיזוג", "furnished": "מרוהטת", "renovated": "משופצת", "pets": "חיות מחמד",
             "bars": "סורגים", "storage": "מחסן", "boiler": "דוד שמש"}
@@ -45,7 +54,7 @@ def _price(v):
 YAD2_TYPES = {"דירה": "apartment", "יחידת דיור": "unit", "דירת גן": "garden", "גג/ פנטהאוז": "roof",
               "גג/פנטהאוז": "roof", "סטודיו/ לופט": "studio", "סטודיו/לופט": "studio", "מרתף/ פרטר": "basement",
               "מרתף/פרטר": "basement", "בית פרטי/ קוטג'": "house", "בית פרטי/קוטג'": "house", "דו משפחתי": "house",
-              "דופלקס": "duplex", "טריפלקס": "duplex", "חניה": "parking", "מחסן": "storage"}
+              "דופלקס": "duplex", "טריפלקס": "duplex", "חניה": "parking", "מחסן": "storage", "מגרשים": "land"}
 YAD2_MAP_FEATURES = {"elevator": "elevator", "accessibility": "accessible", "shelter": "mamad", "parking": "parking",
                      "balcony": "balcony", "airConditioner": "ac", "furniture": "furnished", "renovated": "renovated",
                      "pets": "pets", "bars": "bars"}
@@ -71,7 +80,7 @@ def yad2_url(city, prefs, margin):
         q["minRooms"] = max(1, prefs["rooms_min"] - 0.5)
     if prefs.get("rooms_max"):
         q["maxRooms"] = prefs["rooms_max"] + 0.5
-    return "https://www.yad2.co.il/realestate/rent?" + urlencode(q)
+    return f"https://www.yad2.co.il/realestate/{'forsale' if deal_of(prefs) == 'sale' else 'rent'}?" + urlencode(q)
 
 
 def yad2_item(a, tagged):
@@ -88,6 +97,9 @@ def yad2_item(a, tagged):
         "type_raw": a.get("property"), "city": a.get("city"), "hood": a.get("hood"), "street": a.get("street"),
         "house_no": a.get("houseNo"), "lat": a.get("lat"), "lon": a.get("lon"), "images": a.get("images") or [],
         "listed_at": a.get("approvedAt"),
+        # The list already says when the board shows a struck-out earlier price.
+        **({"board_events": [{"at": None, "price": a["priceBefore"], "kind": "before"}]}
+           if a.get("priceBefore") and a.get("price") and a["priceBefore"] != a["price"] else {}),
         **({"features": feats, "features_known": True} if tagged is not None and on_map else {}),
     }
 
@@ -100,6 +112,8 @@ def yad2_detail(d):
         "features_known": True,
         "description": meta.get("description"), "furniture": d.get("furnitureInfo"),
         "entrance": add.get("entranceDate"), "immediate": bool(inp.get("isImmediateEntrance")),
+        "entrance_flexible": bool(add.get("isEnterDateFlexible")),
+        "condition": (add.get("propertyCondition") or {}).get("text"),
         "top_floor": _int(add.get("buildingTopFloor")), "on_pillars": bool(add.get("isPillarBuilding")),
         "vaad": _int(d.get("houseCommittee")),
         "arnona": round(d["propertyTax"] / 2) if isinstance(d.get("propertyTax"), (int, float)) else None,  # yad2 asks per 2 months
@@ -135,7 +149,7 @@ def madlan_url(city, prefs, margin):
     rlo = max(1, prefs["rooms_min"] - 0.5) if prefs.get("rooms_min") else ""
     rhi = prefs["rooms_max"] + 0.5 if prefs.get("rooms_max") else ""
     filters = f"_{lo}-{hi}_{rlo:g}-{rhi:g}" if rlo != "" and rhi != "" else f"_{lo}-{hi}_"
-    return f"https://www.madlan.co.il/for-rent/{quote(madlan_slug(city))}?filters={filters}"
+    return f"https://www.madlan.co.il/for-{deal_of(prefs)}/{quote(madlan_slug(city))}?filters={filters}"
 
 
 def madlan_item(a):
@@ -185,7 +199,7 @@ def madlan_detail(d):
 # Komo gives an address but no map pin (app.py's locate() places it), and says who the seller is and what the flat
 # has only inside the full ad. Its search filters tell which ads are private and which have an elevator.
 
-KOMO_TYPES = [("יחידת דיור", "unit"), ("דירת גן", "garden"), ("גג", "roof"), ("פנטהאוז", "roof"), ("סטודיו", "studio"),
+KOMO_TYPES = [("מגרש", "land"), ("לופט", "studio"), ("יחידת דיור", "unit"), ("דירת גן", "garden"), ("גג", "roof"), ("פנטהאוז", "roof"), ("סטודיו", "studio"),
               ("דופלקס", "duplex"), ("מרתף", "basement"), ("פרטר", "basement"), ("וילות", "house"), ("בית", "house"),
               ("קוטג", "house"), ("חניה", "parking"), ("מחסן", "storage"), ("דירה", "apartment")]
 KOMO_ON = {"mamad": "mamad", "maalit": "elevator", "soragim": "bars", "mizug": "ac", "boiler": "boiler",
@@ -204,7 +218,7 @@ def komo_url(city, prefs, margin):
         q["toRooms"] = f"{prefs['rooms_max'] + 0.5:g}"
     if prefs.get("private_only"):
         q["privateOnly"] = 1  # Komo shows 20 ads without signing in: spend them on the ones that can fit
-    return "https://www.komo.co.il/code/nadlan/apartments-for-rent.asp?" + urlencode(q)
+    return f"https://www.komo.co.il/code/nadlan/apartments-for-{deal_of(prefs)}.asp?" + urlencode(q)
 
 
 def komo_item(a, private_search, with_elevator, elevator_complete):
@@ -235,6 +249,20 @@ def komo_item(a, private_search, with_elevator, elevator_complete):
     return out
 
 
+AGO = {"דקה": 60, "דקות": 60, "שעה": 3600, "שעות": 3600, "שעתיים": 7200, "יום": 86400, "ימים": 86400, "יומיים": 172800,
+       "שבוע": 604800, "שבועות": 604800, "שבועיים": 1209600, "חודש": 2592000, "חודשים": 2592000, "חודשיים": 5184000}
+
+
+def _ago(text):
+    """Komo writes "updated 3 hours ago": the time that was, or None. From a day up, the date only."""
+    m = re.search(r"לפני:?\s*(\d+)?\s*(" + "|".join(sorted(AGO, key=len, reverse=True)) + ")", text or "")
+    if not m:
+        return None
+    secs = int(m.group(1) or 1) * AGO[m.group(2)]
+    at = datetime.now() - timedelta(seconds=secs)
+    return at.isoformat(timespec="seconds") if secs < 86400 else at.strftime("%Y-%m-%dT00:00:00")
+
+
 def komo_detail(d):
     feats = {KOMO_ON[c] for c in d.get("on") or [] if c in KOMO_ON}
     if _int(d.get("parking")):
@@ -247,7 +275,8 @@ def komo_detail(d):
     out = {
         "features": sorted(feats), "features_known": True, "elevator_known": True,
         "seller": "private" if "פרטי" in (d.get("seller") or "") else "agent",
-        "description": d.get("description"), "furniture": d.get("furniture"),
+        "description": d.get("description"), "furniture": d.get("furniture"), "condition": d.get("condition"),
+        "updated_at": _ago(d.get("updated")),
         "entrance": f"{ent.group(3)}-{ent.group(2)}-{ent.group(1)}T00:00:00" if ent else None,
         "immediate": "מיידי" in (d.get("entrance") or ""),
         "top_floor": _int(re.sub(r"\D", "", d.get("floors") or "") or None),
@@ -286,17 +315,19 @@ def homeless_url(city, prefs, margin):
         parts.append(f"inumber4={int((max(1, prefs['rooms_min'] - 0.5) - 1) * 2 + 1)}")
     if prefs.get("rooms_max"):
         parts.append(f"inumber4_1={int((prefs['rooms_max'] + 0.5 - 1) * 2 + 1)}")
-    return "https://www.homeless.co.il/rent/" + "$$".join(parts)
+    return f"https://www.homeless.co.il/{deal_of(prefs)}/" + "$$".join(parts)
 
 
-def homeless_item(a):
+def homeless_item(a, deal="rent"):
+    m = re.match(r"^(.*?)\s+(\d+)\S*$", a.get("street") or "")  # the sale board often writes the house number too
     return {
         "id": "homeless:" + a["id"], "board": "homeless", "native_id": a["id"],
-        "url": f"https://www.homeless.co.il/rent/viewad,{a['id']}.aspx", "seller": "private", "agency": None,
+        "url": f"https://www.homeless.co.il/{deal}/viewad,{a['id']}.aspx", "seller": "private", "agency": None,
         "price": _price(a.get("price")), "rooms": _num(a.get("rooms")),
         "floor": {"קרקע": 0, "מרתף": -1}.get(a.get("floor"), _int(a.get("floor"))),
         "type": next((t for word, t in KOMO_TYPES if word in (a.get("type") or "")), "other"), "type_raw": a.get("type"),
-        "city": a.get("city"), "hood": a.get("hood") or None, "street": a.get("street") or None,
+        "city": a.get("city"), "hood": a.get("hood") or None, "street": (m.group(1) if m else a.get("street")) or None,
+        "house_no": _int(m.group(2)) if m else None,
         "images": [a["image"]] if a.get("image") else None,
         "entrance": _il_date(a.get("entrance")), "immediate": a.get("entrance") == "מיידי" or None,
         "updated_at": _il_date(a.get("updated")),
@@ -327,7 +358,7 @@ def read_text(ad):
     """Things owners write in the text that the board's own fields get wrong or do not have."""
     text = " ".join(filter(None, [ad.get("description"), ad.get("furniture")]))
     flags, included, excluded = [], set(), set()
-    if not text:
+    if not text and not ad.get("condition"):
         return {"flags": flags, "included": [], "excluded": []}
     if re.search(r"מחפש\S* שות|שותף או שותפה|משותפ\S* לכל|מטבח\S* (ענק\S* )?(מאובזר )?ו?משותפ|והמטבח משותפים|לאישה בלבד|לבחורה בלבד", text):
         flags.append("roommates")
@@ -335,6 +366,18 @@ def read_text(ad):
         flags.append("religious")
     if ad.get("type") == "basement" or (re.search(r"מרתף|תת.?קרקעי|חצר אנגלית", text) and not re.search(r"(לא|אינה|שאינה|אינו) ב?מרתף", text)):
         flags.append("basement")
+    # What matters to a buyer and no board has a field for.
+    if re.search(r"(?<!לא )(?<!ללא )(דמי מפתח|דמ\"פ|דיירות מוגנת|דייר מוגן)", text):
+        flags.append("key_money")
+    if re.search(r"תמ\"?א\s?38|תמ״א|פינוי[ -]?בינוי|התחדשות עירונית", text):
+        flags.append("renewal")
+    if re.search(r"דירה מושכרת|מושכרת (ב|ל|עד)|מושכר (ב|ל|עד)|שוכר(ים)? קיימ|תשואה", text):
+        flags.append("rented")
+    cond = ad.get("condition") or ""
+    if "מקבלן" in cond or re.search(r"ישירות מה?קבלן|חדשה? מקבלן|על הנייר|דירות אחרונות|הון עצמי החל|מחיר למשתכן", text):
+        flags.append("new_build")
+    if re.search(r"דרוש\S* שיפוץ|זקוק\S* לשיפוץ", cond + " " + text):
+        flags.append("needs_work")
     m = re.search(r"(\d+)\s*מדרגות|(שני|שתי|שלוש\S*|כמה|מספר|מס') (גרמי )?מדרגות|חצי קומה", text)
     if m:
         flags.append("stairs")

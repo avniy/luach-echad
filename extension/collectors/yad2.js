@@ -5,6 +5,7 @@
 globalThis.__luachCollectors = globalThis.__luachCollectors || {};
 globalThis.__luachCollectors.yad2 = async (JOB) => {
   const PAUSE = 450;
+  const DEAL = location.pathname.includes("/forsale") ? "forsale" : "rent"; // the search the tab is on
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   const errors = [];
   const getJson = async (url, opts) => {
@@ -53,6 +54,7 @@ globalThis.__luachCollectors.yad2 = async (JOB) => {
     floor: a.address?.house?.floor ?? null, lat: a.address?.coords?.lat ?? null, lon: a.address?.coords?.lon ?? null,
     images: (a.metaData?.images || (a.metaData?.coverImage ? [a.metaData.coverImage] : [])).slice(0, 12),
     agency: a.customer?.agencyName ?? null, approvedAt: a.dates?.approvedAt ?? null, onMap: false,
+    priceBefore: a.priceBeforeTag ?? null,
   });
   const ads = {};
   const take = (list, fromMap) => {
@@ -80,7 +82,7 @@ globalThis.__luachCollectors.yad2 = async (JOB) => {
   for (let page = 2; page <= lastPage; page++) {
     const qs = new URLSearchParams({ ...params, page: String(page) });
     qs.delete("region");
-    let j = await getJson(dataUrl(`/realestate/rent/${slug}?${qs}`), { headers: { "x-nextjs-data": "1" } });
+    let j = await getJson(dataUrl(`/realestate/${DEAL}/${slug}?${qs}`), { headers: { "x-nextjs-data": "1" } });
     if (j?.pageProps?.__N_REDIRECT) {
       await sleep(PAUSE);
       j = await getJson(dataUrl("/realestate" + j.pageProps.__N_REDIRECT), { headers: { "x-nextjs-data": "1" } });
@@ -91,7 +93,7 @@ globalThis.__luachCollectors.yad2 = async (JOB) => {
   }
 
   // The map answers with up to 200 located ads per request; with a feature filter it tells which ads have it.
-  const mapUrl = (extra) => "https://gw.yad2.co.il/realestate-feed/rent/map?" + new URLSearchParams({ ...params, ...extra });
+  const mapUrl = (extra) => `https://gw.yad2.co.il/realestate-feed/${DEAL}/map?` + new URLSearchParams({ ...params, ...extra });
   const base = await getJson(mapUrl({}), { credentials: "include" });
   const mapOk = !!base?.data?.markers;
   take(base?.data?.markers, true);

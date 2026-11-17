@@ -42,7 +42,9 @@ except ImportError:
 if getattr(LOCAL, "MAPS_KEY_FILE", None):
     MAPS_KEY_FILE = Path(LOCAL.MAPS_KEY_FILE)
 PORT = 7461
-MARGIN = 1.25          # pull up to 25% over the budget: the market comparison needs the ads just above it
+# Pull a little over the budget: the market comparison needs the ads just above it. Less for a purchase, where a
+# search already returns far more ads than one pull reads.
+MARGIN = {"rent": 1.25, "sale": 1.1}
 STATUSES = ["", "shortlist", "contacted", "visit", "rejected"]
 TRACKED = ["price", "description", "rooms", "sqm", "floor", "seller", "entrance"]
 YAD2_FEATURES = list(boards.YAD2_MAP_FEATURES)
@@ -76,7 +78,9 @@ def load_profile(pid):
     path = profile_path(pid)
     if not path.exists():
         raise KeyError("no such profile")
-    return json.loads(path.read_text(encoding="utf-8"))
+    p = json.loads(path.read_text(encoding="utf-8"))
+    p["prefs"].setdefault("deal", "rent")  # profiles from before the app could search for a purchase
+    return p
 
 
 def save_profile(p):
@@ -91,7 +95,7 @@ def list_profiles(person=people.OWNER):
     """The profiles this person may see: all of them for the owner, the ones they were invited to for anyone else."""
     out = []
     for path in sorted(PROFILES.glob("*.json")):
-        p = json.loads(path.read_text(encoding="utf-8"))
+        p = load_profile(path.stem)
         if person != people.OWNER and person not in p.get("members", []):
             continue
         vs = build_views(p, person)
@@ -110,6 +114,7 @@ def clean_prefs(raw):
     hoods = {h["name"] for h in CITIES[raw["city"]]["hoods"]}
     return {
         "who": str(raw.get("who") or "")[:200],
+        "deal": boards.deal_of(raw),
         "city": raw["city"],
         "hoods": [h for h in raw.get("hoods") or [] if h in hoods],
         "radius_km": min(max(num(raw.get("radius_km")) or 1.2, 0.3), 10),
@@ -247,6 +252,8 @@ def fit_of(ad, prefs, text):
     for flag in prefs.get("hide", []):
         if flag in text["flags"]:
             no.append(hide_he[flag])
+    if boards.deal_of(prefs) == "sale" and "key_money" in text["flags"]:
+        no.append("דמי מפתח: לא בעלות על הדירה")
     return ("no" if no else "maybe" if unknown else "yes"), no, unknown, warn
 
 
@@ -318,29 +325,45 @@ def find_duplicates(ads):
     return dup
 
 
-def market_of(ad, pool):
-    """Price against similar flats nearby (both boards): similar rooms and size, within 2 km. Needs 6 to speak."""
+def market_of(ad, pool, deal="rent"):
+    """Price against similar flats nearby (all boards): similar rooms and size, within 2 km. Needs 6 to speak.
+    Rent compares the monthly price. A purchase compares the price per square metre (flats for sale differ far
+    more in size), with one room more or less; an ad without a size falls back to the whole price."""
     if not ad.get("price") or ad.get("rooms") is None:
         return None
+    per_sqm = deal == "sale" and bool(ad.get("sqm"))
+    mine = ad["price"] / ad["sqm"] if per_sqm else ad["price"]
     comps = []
     for o in pool:
-        if o["id"] == ad["id"] or abs((o.get("rooms") or 99) - ad["rooms"]) > 0.5:
+        if o["id"] == ad["id"] or abs((o.get("rooms") or 99) - ad["rooms"]) > (1 if per_sqm else 0.5):
+            continue
+        if per_sqm and not o.get("sqm"):
             continue
         if ad.get("sqm") and o.get("sqm") and not 0.7 <= o["sqm"] / ad["sqm"] <= 1.4:
             continue
         d = km_between(ad, o)
         if d is not None and d > 2:
             continue
-        comps.append(o["price"])
-    if len(comps) < 6:
+        comps.append((d, o["price"] / o["sqm"] if per_sqm else o["price"]))
+    # A price per metre belongs to a neighbourhood: when there are enough flats within 1 km, only they count.
+    near = [c for c in comps if c[0] is not None and c[0] <= 1]
+    km = 1 if per_sqm and len(near) >= 8 else 2
+    values = [v for _, v in (near if km == 1 else comps)]
+    if len(values) < 6:
         return None
-    med = statistics.median(comps)
-    return {"median": round(med), "n": len(comps), "delta_pct": round((ad["price"] - med) / med * 100)}
+    med = statistics.median(values)
+    return {"median": round(med), "n": len(values), "delta_pct": round((mine - med) / med * 100),
+            "per": "sqm" if per_sqm else "flat", "km": km}
 
 
-def cost_of(ad, text):
+def cost_of(ad, text, deal="rent"):
     if not ad.get("price"):
         return None
+    if deal == "sale":  # the price is paid once; the bills are what living there costs every month
+        monthly = [[k, v] for k, v in (["ועד בית", ad.get("vaad")], ["ארנונה", ad.get("arnona")]) if v]
+        return {"parts": [["מחיר מבוקש", ad["price"]]], "total": ad["price"], "included": [], "excluded": [],
+                "per_sqm": round(ad["price"] / ad["sqm"]) if ad.get("sqm") else None,
+                "monthly": monthly, "monthly_total": sum(v for _, v in monthly)}
     parts = [["שכירות", ad["price"]]]
     if ad.get("vaad") and "vaad" not in text["included"]:
         parts.append(["ועד בית", ad["vaad"]])
@@ -429,10 +452,10 @@ def near_of(ad, by_kind):
     return out
 
 
-def haggle_of(ad, now):
+def haggle_of(ad, now, deal="rent"):
     why = []
     listed = parse_time(ad.get("listed_at"))
-    if listed and (now - listed).days >= 30:
+    if listed and (now - listed).days >= (60 if deal == "sale" else 30):  # a flat for sale stays up longer
         why.append(f"{(now - listed).days} ימים באוויר")
     drops = sum(1 for e in ad.get("board_events") or [] if e.get("kind") in ("priceDrop", "before"))
     drops += sum(1 for c in ad.get("changes") or [] if c["field"] == "price" and c["to"] < c["from"])
@@ -443,6 +466,8 @@ def haggle_of(ad, now):
 
 def score_of(v, prefs, ad):
     s, why = 55, []
+    sale = boards.deal_of(prefs) == "sale"
+    similar = "מחיר למ\"ר בדירות דומות" if (v["market"] or {}).get("per") == "sqm" else "דירות דומות"
 
     def add(points, text):
         nonlocal s
@@ -461,16 +486,18 @@ def score_of(v, prefs, ad):
     if nice:
         add(min(16, 4 * len(nice)), "יש " + ", ".join(nice))
     m = v["market"]
-    if m:
+    if m and "odd_price" in v["flags"]:
+        add(-6, f"מחיר חריג, {-m['delta_pct']}% מתחת לדומות: לברר מה בדיוק מוצע")
+    elif m:
         d = m["delta_pct"]
         if d <= -10:
-            add(10, f"{-d}% מתחת לדירות דומות")
+            add(10, f"{-d}% מתחת ל{similar}")
         elif d <= -3:
-            add(5, f"{-d}% מתחת לדירות דומות")
+            add(5, f"{-d}% מתחת ל{similar}")
         elif d > 10:
-            add(-8, f"{d}% מעל דירות דומות")
+            add(-8, f"{d}% מעל {similar}")
         elif d >= 3:
-            add(-4, f"{d}% מעל דירות דומות")
+            add(-4, f"{d}% מעל {similar}")
     if prefs["access"]["need"]:
         if "accessible" in feats:
             add(6, "מסומנת נגישה")
@@ -491,8 +518,8 @@ def score_of(v, prefs, ad):
     if v["days_listed"] is not None:
         if v["days_listed"] <= 3:
             add(3, "מודעה טרייה")
-        elif v["days_listed"] > 60:
-            add(-3, "מפורסמת מעל חודשיים")
+        elif v["days_listed"] > (120 if sale else 60):
+            add(-3, "מפורסמת מעל " + ("ארבעה חודשים" if sale else "חודשיים"))
     if v["fit"] == "maybe":
         add(-6, "חסר מידע במודעה")
     why.sort(key=lambda w: -abs(w[0]))
@@ -502,6 +529,7 @@ def score_of(v, prefs, ad):
 def build_views(p, me=people.OWNER):
     """Every stored ad with all that is worked out from it for this profile. Nothing here is saved."""
     prefs, now = p["prefs"], datetime.now()
+    deal = boards.deal_of(prefs)
     who = people.names()
     city = CITIES.get(prefs["city"], {})
     centers = [h for h in city.get("hoods", []) if h["name"] in prefs["hoods"]]
@@ -511,7 +539,7 @@ def build_views(p, me=people.OWNER):
     dup = find_duplicates(live)
     by_id = {a["id"]: a for a in ads}
     pool = [a for a in live if a["id"] not in dup and a.get("price") and a.get("type") not in boards.NOT_A_HOME
-            and "roommates" not in texts[a["id"]]["flags"]]
+            and "roommates" not in texts[a["id"]]["flags"] and "key_money" not in texts[a["id"]]["flags"]]
     with_insights = [a for a in live if a.get("insights")]
     widened, last_url = set(), {}  # (board, sync time) of every pull whose search differed from the one before it
     for s in p["meta"].get("syncs") or []:
@@ -535,7 +563,7 @@ def build_views(p, me=people.OWNER):
         for t in twins:  # what the other board knows and this one does not
             merged["features"] = sorted(feats_of(merged) | feats_of(t))
             merged["features_known"] = merged.get("features_known") or t.get("features_known")
-            for k in ("description", "insights", "park_walk_min", "rail", "vaad", "arnona", "top_floor", "board_events"):
+            for k in ("description", "insights", "park_walk_min", "rail", "vaad", "arnona", "top_floor", "board_events", "condition"):
                 if not merged.get(k) and t.get(k):
                     merged[k] = t[k]
             if not merged.get("images"):
@@ -574,10 +602,12 @@ def build_views(p, me=people.OWNER):
                   "features": [x["board"] for x in [ad] + twins if x.get("features_known")],
                   "location": merged.get("loc_approx") or (ad["board"] if merged.get("lat") else None),
                   "insights": ("near" if insights_from is not None else "own") if insights else None},
-            fit=fit, no=no, unknown=unknown, warn=warn, flags=text["flags"], area=area,
+            fit=fit, no=no, unknown=unknown, warn=warn, flags=list(text["flags"]), area=area,
+            condition=merged.get("condition"), entrance_flexible=bool(merged.get("entrance_flexible")),
             dist_km=round(dist, 2) if dist is not None else None,
-            market=market_of(merged, pool) if merged.get("type") not in boards.NOT_A_HOME else None,
-            cost=cost_of(merged, text), haggle=haggle_of(merged, now),
+            market=market_of(merged, pool, deal) if merged.get("type") not in boards.NOT_A_HOME else None,
+            cost=cost_of(merged, text, deal), haggle=haggle_of(merged, now, deal),
+            per_sqm=round(merged["price"] / merged["sqm"]) if deal == "sale" and merged.get("price") and merged.get("sqm") else None,
             insights=insights, insights_from=insights_from, near=near_of(merged, by_kind),
             days_listed=(now - listed).days if listed else None,
             listed_at=listed.isoformat(timespec="seconds") if listed else None,
@@ -590,6 +620,8 @@ def build_views(p, me=people.OWNER):
         v["marks"] = [{"person": k, "name": who.get(k, "?"), "mine": k == me, "status": m.get("status", ""),
                        "note": m.get("note", ""), "at": m.get("at")} for k, m in marks.items() if m.get("status") or m.get("note")]
         v["fav_by"] = [m["name"] for m in v["marks"] if m["status"] in ("shortlist", "contacted", "visit")]
+        if v["market"] and v["market"]["delta_pct"] <= -40:
+            v["flags"].append("odd_price")  # a bait price, a share of a flat, key money: never a plain bargain
         v["score"], v["why"] = score_of(v, prefs, merged) if fit != "no" else (0, [])
         out.append(v)
     rank = {"yes": 0, "maybe": 1, "no": 2}
@@ -790,13 +822,14 @@ def pull_feed(board, url, city, say):
         return {"ads": res["ads"], "total": None, "complete": not res.get("hasNext"), "errors": []}
     if board != "madlan":
         bridge("navigate", url=url)
-        res = run_job(board, {"mode": "feed", "features": YAD2_FEATURES, "maxPages": 8})
+        feats = [f for f in YAD2_FEATURES if not ("/forsale" in url and f == "pets")]  # no such filter for a purchase
+        res = run_job(board, {"mode": "feed", "features": feats, "maxPages": 8})
         if res.get("blocked"):
             # A browser the board has not seen before first gets a "checking your browser" page that passes by
             # itself in a few seconds. Wait and read the open page once more; nothing new is asked of the board.
             # A real check (one that wants a person) is still there afterwards, and is reported as such.
             time.sleep(9)
-            res = run_job(board, {"mode": "feed", "features": YAD2_FEATURES, "maxPages": 8})
+            res = run_job(board, {"mode": "feed", "features": feats, "maxPages": 8})
         if "ads" not in res:
             raise BridgeError(HUMAN_CHECK if res.get("blocked") else "; ".join(res.get("errors") or []) or "הלוח לא החזיר מודעות")
         return res
@@ -836,13 +869,20 @@ def pull_details(board, ids):
     return items, False, errors
 
 
-def normalize_item(board, raw, res):
+def normalize_item(board, raw, res, deal="rent"):
+    norm = _normalize_item(board, raw, res, deal)
+    if deal == "sale" and norm.get("price") and norm["price"] < 50000:
+        norm["price"] = None  # "1,234" on a flat for sale is an owner who does not want to say
+    return norm
+
+
+def _normalize_item(board, raw, res, deal):
     if board == "yad2":
         return boards.yad2_item(raw, {f: set(t) for f, t in res["features"].items()} if res.get("mapOk") else None)
     if board == "komo":
         return boards.komo_item(raw, res["private_search"], set(res["elevator"]), res["elevator_complete"])
     if board == "homeless":
-        return boards.homeless_item(raw)
+        return boards.homeless_item(raw, deal)
     return boards.madlan_item(raw)
 
 
@@ -862,7 +902,8 @@ def save_details(pid, board, items, now):
 
 def sync_board(p, board, city, now, say):
     prefs, he = p["prefs"], boards.BOARDS[board]
-    url = getattr(boards, board + "_url")(city, prefs, MARGIN)
+    deal = boards.deal_of(prefs)
+    url = getattr(boards, board + "_url")(city, prefs, MARGIN[deal])
     say(f"{he}: פותח את החיפוש")
     res = pull_feed(board, url, city, say)
     errors = list(res.get("errors") or [])
@@ -870,7 +911,7 @@ def sync_board(p, board, city, now, say):
     with LOCK:
         p = load_profile(p["id"])
         for raw in res["ads"]:
-            norm = normalize_item(board, raw, res)
+            norm = normalize_item(board, raw, res, deal)
             seen.add(norm["id"])
             r = merge_ad(p, norm, now)
             new += r == "new"
@@ -990,6 +1031,11 @@ def sync(pid, say=print, only=None, done=None):
     with LOCK:
         p = load_profile(pid)
     city, now = CITIES[p["prefs"]["city"]], now_iso()
+    old_ext = tuple(int(x) for x in re.findall(r"\d+", EXT["version"] or "0")[:2]) < (1, 1)
+    if boards.deal_of(p["prefs"]) == "sale" and not hasattr(LOCAL, "browser") and browser_ready() and old_ext:
+        # The extension from before 1.1 reads every yad2 and Homeless tab as a rent search.
+        raise BridgeError("חיפוש לקנייה צריך את התוסף המעודכן: ב-chrome://extensions לוחצים על חץ הרענון של "
+                          "\"לוח אחד: קורא הלוחות\", ואז מרעננים את הדף הזה")
 
     def one(board):
         st = load_state()["boards"].get(board) or {}
@@ -1268,6 +1314,7 @@ class Handler(BaseHTTPRequestHandler):
         if method == "GET" and parts == ["meta"]:
             return self.send({"cities": [{"name": c["name"], "lat": c["lat"], "lon": c["lon"], "hoods": c["hoods"]} for c in CITIES.values()],
                               "features": boards.FEATURES, "types": boards.TYPES, "boards": boards.BOARDS, "kinds": KINDS,
+                              "deals": boards.DEALS,
                               # the Street View key works only from this PC's own address (set at Google)
                               "maps_key": maps_key() if self.is_local else None, "local": self.is_local})
         if method == "GET" and parts == ["me"]:
@@ -1322,7 +1369,8 @@ class Handler(BaseHTTPRequestHandler):
             if not v:
                 return self.send({"error": "המודעה כבר לא קיימת"}, 404)
             v.update(status="", note="", marks=[], fav_by=[])  # one ad, without anyone's notes
-            return self.send({"ad": v, "by": people.names().get(rec["by"]), "hoods": bool(p["prefs"]["hoods"])})
+            return self.send({"ad": v, "by": people.names().get(rec["by"]), "hoods": bool(p["prefs"]["hoods"]),
+                              "deal": boards.deal_of(p["prefs"])})
 
         # ---- everything below needs a person ----
         if me is None:
@@ -1388,7 +1436,8 @@ class Handler(BaseHTTPRequestHandler):
                 with LOCK:
                     p = load_profile(pid)
                     old = p["prefs"]
-                    p["prefs"] = clean_prefs(body.get("prefs") or {})
+                    # A search stays what it was opened as: rent and sale ads never share one board.
+                    p["prefs"] = clean_prefs(dict(body.get("prefs") or {}, deal=old.get("deal")))
                     if body.get("name"):
                         p["name"] = str(body["name"]).strip()[:40]
                     save_profile(p)

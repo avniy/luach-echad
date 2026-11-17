@@ -40,7 +40,7 @@ globalThis.__luachCollectors.komo = async (JOB) => {
         items[id] = {
           seller: clean(el.querySelector(".mefarsemNew")?.textContent), // the phone stays hidden behind its button: not read
           description: from >= 0 ? lines.slice(from + 1, to > from ? to : from + 12).join("\n") : null,
-          entrance: before("תאריך כניסה"), condition: after("מצב הנכס"), floors: after("קומות בבניין"),
+          entrance: before("תאריך כניסה"), updated: lines.find((l) => l.startsWith("עודכן לפני")) || null, condition: after("מצב הנכס"), floors: after("קומות בבניין"),
           arnona: after("ארנונה"), vaad: after("ועד בית"),
           on: [...el.querySelectorAll(".modaaWNewUl li")].map((li) => li.className.trim().split(/\s+/)).filter((c) => c.length > 1).map((c) => c[0]),
           classes: [...el.querySelectorAll(".modaaWNewUl li")].map((li) => li.className.trim()),

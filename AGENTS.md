@@ -1,6 +1,7 @@
 # 🤖 For an AI agent working with this app
 
-"לוח אחד" is a local app that reads four Israeli rental boards (yad2, Madlan, Komo, Homeless) through the user's own
+"לוח אחד" is a local app that reads four Israeli apartment boards (yad2, Madlan, Komo, Homeless), for rent or for
+sale, through the user's own
 Chrome, merges the ads into one shape and ranks them against a profile. If the person you work for runs it on this
 computer, you can read the results, mark ads and start a pull for them. Setup is in `README.md`.
 
@@ -80,6 +81,7 @@ application/json` on every POST, and no `Origin` header.
 ```json
 {
   "who": "one sentence about who will live there (optional)",
+  "deal": "rent",
   "city": "פתח תקווה",
   "hoods": ["names from meta.cities[].hoods; empty = the whole city"],
   "radius_km": 1.2,
@@ -92,6 +94,12 @@ application/json` on every POST, and no `Origin` header.
   "hide": ["roommates", "religious", "basement"]
 }
 ```
+
+`deal` is `rent` (the default) or `sale`. It is set when the profile is made and never changes: open another profile
+for the other kind. Prices are per month for rent and the asking price for sale. For sale, `market` compares the
+price per square metre (`market.per` is `sqm`, `market.km` the radius used), each ad has `per_sqm`, and `flags` may
+hold `key_money`, `odd_price`, `new_build`, `needs_work`, `renewal` or `rented` (read from the ad, so not certain).
+A purchase search needs extension 1.1 or newer; the app says so when it meets an older one.
 
 `access.need` = no stairs: an elevator, or a floor up to `max_floor`. Feature keys are in `meta.features`.
 
