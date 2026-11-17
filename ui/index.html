@@ -753,11 +753,11 @@ async function board(pid, refit) {
     h("div", { class: "top" }, logo(), h("span", { class: "who" }, P.name), h("span", { class: "stat" }),
       // A board that is not answering as it should stays here, with the way to fix it, until it works again.
       ME.owner && Object.entries(P.board_state || {}).filter(([, st]) => !st.ok).map(([b, st]) => h("a", { class: "chip warn", title: st.detail || "", target: "_blank", rel: "noopener", href: P.fix_url[b] },
-        META.boards[b] + ": " + (st.why === "human" ? "מבקש אימות אנושי. לפתוח, ללחוץ ולהחזיק"
+        META.boards[b] + ": " + (st.why === "human" ? "מבקש אימות אנושי. לפתוח ולעבור את הבדיקה"
           : st.why === "login" ? (st.worked_before ? "ההתחברות הפסיקה לעבוד. להתחבר שוב" : "בלי התחברות רק 20 מודעות. להתחבר")
           : "לא ענה בסנכרון האחרון") + " ↗")),
       ME.owner && Object.entries(P.board_state || {}).filter(([, st]) => !st.ok && st.why === "human" && !st.retry).map(([b]) => h("button", { class: "btn ghost", style: "padding:1px 11px;font-size:12px",
-        title: "אחרי שלחצת והחזקת באתר של הלוח", onclick: async (e) => { try { await api(`boards/${b}/retry`, {}); e.target.textContent = "ננסה בסנכרון הבא"; e.target.disabled = true; } catch (err) { toast(err.message); } } }, "פתרתי")),
+        title: "אחרי שעברת את הבדיקה באתר של הלוח", onclick: async (e) => { try { await api(`boards/${b}/retry`, {}); e.target.textContent = "ננסה בסנכרון הבא"; e.target.disabled = true; } catch (err) { toast(err.message); } } }, "פתרתי")),
       h("span", { class: "grow" }),
       h("button", { class: "btn ghost people", onclick: shareDialog, title: "מי בחיפוש, הזמנות, מכשירים" }, P.people.map((x) => h("span", { class: "bub" + (x.id === ME.person ? " me" : "") }, x.name[0])), " שיתוף"),
       ME.owner && h("button", { class: "btn ghost", onclick: () => go(`#/p/${pid}/edit`) }, "עריכה"),

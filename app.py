@@ -698,7 +698,7 @@ FIX_URL = {"yad2": "https://www.yad2.co.il/realestate/rent", "madlan": "https://
 # Madlan challenges a browser that comes back often. Fewer, evenly spaced visits keep it answering: at most one
 # pull every REST_HOURS, and none at all while its human check is up (every knock on that page counts against us).
 REST_HOURS = {"madlan": 6}
-TROUBLE = {"human": "מבקש אימות אנושי: לפתוח, ללחוץ ולהחזיק", "login": "ההתחברות הפסיקה לעבוד: להתחבר שוב",
+TROUBLE = {"human": "מבקש אימות אנושי: לפתוח ולעבור את הבדיקה", "login": "ההתחברות הפסיקה לעבוד: להתחבר שוב",
            "error": "הפסיק לענות"}
 
 
@@ -728,7 +728,7 @@ def note_board(board, ok, why=None, detail=None):
             pass  # the app still shows it
 
 
-HUMAN_CHECK = "הלוח מבקש אימות אנושי. פתחו אותו בכרום, לחצו והחזיקו על הכפתור, ואז סנכרנו שוב"
+HUMAN_CHECK = "הלוח מבקש אימות אנושי. פתחו אותו בכרום, עברו את הבדיקה בעצמכם, ואז סנכרנו שוב"
 # How each board is read. "pages": the tab itself goes from page to page, the way a person browses (Madlan checks
 # the pace and the kind of request). "fetch": one page is opened and the script inside it reads the rest.
 PACE = {"yad2": {"details": 60, "batch": 12}, "madlan": {"details": 5, "page_gap": 4, "ad_gap": 7}, "komo": {"details": 25, "batch": 8, "page_gap": 2.5},
@@ -787,6 +787,12 @@ def pull_feed(board, url, city, say):
     if board != "madlan":
         bridge("navigate", url=url)
         res = run_job(board, {"mode": "feed", "features": YAD2_FEATURES, "maxPages": 8})
+        if res.get("blocked"):
+            # A browser the board has not seen before first gets a "checking your browser" page that passes by
+            # itself in a few seconds. Wait and read the open page once more; nothing new is asked of the board.
+            # A real check (one that wants a person) is still there afterwards, and is reported as such.
+            time.sleep(9)
+            res = run_job(board, {"mode": "feed", "features": YAD2_FEATURES, "maxPages": 8})
         if "ads" not in res:
             raise BridgeError(HUMAN_CHECK if res.get("blocked") else "; ".join(res.get("errors") or []) or "הלוח לא החזיר מודעות")
         return res
@@ -985,7 +991,7 @@ def sync(pid, say=print, only=None):
         st = load_state()["boards"].get(board) or {}
         he = boards.BOARDS[board]
         if st.get("ok") is False and st.get("why") == "human" and not st.get("retry"):
-            say(f"{he}: מחכה לך. אחרי לחיצה והחזקה באתר, לחצו \"פתרתי\" כאן, והסנכרון הבא ינסה שוב")
+            say(f"{he}: מחכה לך. אחרי שעברת את הבדיקה באתר של הלוח, לחצו \"פתרתי\" כאן, והסנכרון הבא ינסה שוב")
             return {"board": board, "skipped": "human"}
         rest = REST_HOURS.get(board)
         last_ok = parse_time(st.get("last_ok"))
