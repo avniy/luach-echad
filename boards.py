@@ -56,6 +56,11 @@ YAD2_DETAIL_FEATURES = {"includeElevator": "elevator", "includeAirconditioner": 
                         "includeBoiler": "boiler", "includeWarehouse": "storage"}
 
 
+def plain_name(city):
+    """yad2 names a few places as two ("מיתר / כרמית"); the other boards and the map know the first name only."""
+    return city["name"].split(" / ")[0]
+
+
 def yad2_url(city, prefs, margin):
     q = {"city": city["code"]}
     if prefs.get("price_max"):
@@ -121,7 +126,7 @@ MADLAN_IMG ="https://images2.madlan.co.il/t:nonce:v=5;resize:height=640,width=64
 
 
 def madlan_slug(city):
-    return city["name"].replace(" ", "-") + "-ישראל"
+    return plain_name(city).replace(" ", "-") + "-ישראל"
 
 
 def madlan_url(city, prefs, margin):
@@ -188,7 +193,7 @@ KOMO_ON = {"mamad": "mamad", "maalit": "elevator", "soragim": "bars", "mizug": "
 
 
 def komo_url(city, prefs, margin):
-    q = {"cityName": city["name"]}
+    q = {"cityName": plain_name(city)}
     if prefs.get("price_min"):
         q["fromPrice"] = int(prefs["price_min"])
     if prefs.get("price_max"):
@@ -272,7 +277,7 @@ def _il_date(s):
 
 
 def homeless_url(city, prefs, margin):
-    parts = ["city=" + quote(HOMELESS_CITY.get(city["name"], city["name"]))]
+    parts = ["city=" + quote(HOMELESS_CITY.get(city["name"], plain_name(city)))]
     if prefs.get("price_min"):
         parts.append(f"flong3={int(prefs['price_min'])}")
     if prefs.get("price_max"):

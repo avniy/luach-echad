@@ -22,6 +22,26 @@ The person starts the app (`start.cmd`, or `python app.py serve`) and keeps it o
 from `extension/` installed. The extension is the only thing that reads the boards; without Chrome open, a pull
 answers "התוסף של לוח אחד לא מחובר".
 
+## 🧰 Installing it for the person
+
+If the person gave you the repository's address and asked you to set it up, you can do all of it but one step:
+
+1. **Python 3.10 or newer.** Check `python --version`. If it is missing, tell the person to install it from
+   python.org with "Add python.exe to PATH" ticked (or install it yourself only if they agree).
+2. **The code, in a permanent folder** (not Downloads; the extension is loaded from it):
+   `git clone <the repository's address>`, or the ZIP from the repository page (Code → Download ZIP).
+3. **The Chrome extension: the person does this, you cannot.** Chrome's extensions page cannot be driven by a
+   script. Give them the four clicks and the exact folder: `chrome://extensions` → Developer mode → Load unpacked →
+   `<the folder>\extension`.
+4. **Start it:** `start.cmd`, or `python app.py serve --open`. Leave it running.
+5. **Check:** `GET http://127.0.0.1:7461/api/me` says `"browser": true` once the app's page is open in Chrome with
+   the extension loaded. Until then a pull answers that the extension is not connected.
+6. **The first search:** ask the person what they look for (city, neighbourhoods, budget, rooms, must-haves), then
+   `POST profiles` with `prefs` as below and `POST profiles/<id>/sync`. Or let them answer the questionnaire in the
+   app.
+
+Nothing else is installed: no packages, no service, no account.
+
 ## ⌨️ From a shell
 
 ```

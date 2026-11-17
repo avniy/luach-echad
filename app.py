@@ -799,7 +799,7 @@ def pull_feed(board, url, city, say):
     ads, total, page, pages = {}, None, 1, 1
     while True:
         bridge("navigate", url=url + (f"&page={page}" if page > 1 else ""))
-        res = run_job(board, {"mode": "page", "city": city["name"]})
+        res = run_job(board, {"mode": "page", "city": boards.plain_name(city)})
         if "ads" not in res:
             if page == 1:
                 raise BridgeError(HUMAN_CHECK if res.get("blocked") else "; ".join(res.get("errors") or []) or "הלוח לא החזיר מודעות")
@@ -947,7 +947,7 @@ def locate(pid, city, say=lambda t: None):
     for ad_id, street, house, hood in todo:
         hit = None
         if street:
-            q = f"{street} {house or ''}".strip() + f", {city['name']}, ישראל"
+            q = f"{street} {house or ''}".strip() + f", {boards.plain_name(city)}, ישראל"
             if q not in cache and asked < 40:
                 if asked:
                     time.sleep(1.1)

@@ -84,10 +84,10 @@ Contacting the owner is something you do yourself, on the board.
 **What the app covers**
 
 - **Rent only.**
-- **30 cities:** Or Yehuda, Ashdod, Ashkelon, Be'er Sheva, Bnei Brak, Bat Yam, Giv'at Shmuel, Givatayim, Hod HaSharon,
-  Herzliya, Hadera, Holon, Haifa, Yehud-Monosson, Jerusalem, Kfar Saba, Lod, Modi'in-Maccabim-Re'ut, Ness Ziona,
-  Netanya, Petah Tikva, Kiryat Ono, Rosh HaAyin, Rishon LeZion, Rehovot, Ramla, Ramat Gan, Ramat HaSharon, Ra'anana,
-  Tel Aviv-Yafo. Tested in depth only in Petah Tikva. Other cities may have faults, mainly on Komo and Homeless.
+- **118 cities and towns:** every large city and most towns that have rentals on yad2. The full list is in the
+  questionnaire, where you pick the city. A town with no rental ads on yad2 right now is not included.
+  Tested in depth only in Petah Tikva and Ramat Gan. Most towns were checked on yad2 only: Komo, Homeless and
+  Madlan may miss ads there.
 - **Duplicate matching can be wrong.** The same street, floor and price with no house number count as the same
   flat. On a long street that can merge two different flats. Inside an ad you see its sources separately.
 - **Walking minutes are an estimate** (straight line times 1.3), not a real route.
@@ -156,8 +156,9 @@ get around blocks.
 
 ## 🤖 For an AI agent
 
-If you let your own AI agent work with the app, `AGENTS.md` describes the shell commands, the local interface and
-the rules it has to keep.
+Have an AI agent that works on your computer? Give it this page's address and it can download, install and start
+the app for you. Only the Chrome extension has to be loaded by you (step 3). `AGENTS.md` tells it how to install,
+the shell commands, the local interface and the rules it has to keep.
 
 ## 🍪 Enjoyed the app?
 
