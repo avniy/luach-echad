@@ -1,10 +1,10 @@
-# For an AI agent working with this app
+# 🤖 For an AI agent working with this app
 
 "לוח אחד" is a local app that reads four Israeli rental boards (yad2, Madlan, Komo, Homeless) through the user's own
 Chrome, merges the ads into one shape and ranks them against a profile. If the person you work for runs it on this
 computer, you can read the results, mark ads and start a pull for them. Setup is in `README.md`.
 
-## Rules: keep them
+## 📏 Rules: keep them
 
 - **Read only.** Never contact an owner, never send anything to a board, and do not collect owners' names or phone
   numbers. Contacting an owner is the person's own step, on the board itself.
@@ -16,13 +16,13 @@ computer, you can read the results, mark ads and start a pull for them. Setup is
 - **Home use.** The app has no passwords and speaks plain HTTP. Never expose port 7461 to the internet.
 - **Personal data stays local.** Everything is in `data/`. Do not upload it anywhere.
 
-## What has to be running
+## ▶️ What has to be running
 
 The person starts the app (`start.cmd`, or `python app.py serve`) and keeps it open in Chrome with the extension
 from `extension/` installed. The extension is the only thing that reads the boards; without Chrome open, a pull
 answers "התוסף של לוח אחד לא מחובר".
 
-## From a shell
+## ⌨️ From a shell
 
 ```
 python app.py list <profile>                 the ads that fit, best first (add --all for the ones that do not)
@@ -38,7 +38,7 @@ python app.py set <profile> <ad id> [--status S] [--note "..."] [--summary "..."
   size, floor, area (`in` the chosen neighbourhoods / `near` / `out`), price against similar flats, address, and
   the reasons.
 
-## Over HTTP, on this computer
+## 🌐 Over HTTP, on this computer
 
 `http://127.0.0.1:7461/api/...`, JSON. A request from this computer is the owner. Send `Content-Type:
 application/json` on every POST, and no `Origin` header.
@@ -75,7 +75,7 @@ application/json` on every POST, and no `Origin` header.
 
 `access.need` = no stairs: an elevator, or a floor up to `max_floor`. Feature keys are in `meta.features`.
 
-## Where things are
+## 🗂️ Where things are
 
 - `app.py`: profiles, the pull, fit / score / market comparison / duplicates (worked out when read, never stored),
   the local server.

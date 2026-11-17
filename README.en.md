@@ -1,6 +1,6 @@
 **English** · [עברית](README.md)
 
-# לוח אחד (Luach Echad, "one board")
+# 🏠 לוח אחד (Luach Echad, "one board")
 
 All the Israeli apartment rental boards in one place, on your own computer.
 
@@ -12,7 +12,9 @@ changed in each ad since last time.
 Everything runs on your machine: no server, no sign-up, and your data stays in one folder on your computer.
 The interface is in Hebrew.
 
-## What you need
+🍪 **Enjoyed the app? [Buy me a treat](https://treat.dogware.ai/)**
+
+## 🧰 What you need
 
 | | |
 |---|---|
@@ -22,7 +24,7 @@ The interface is in Hebrew.
 | Internet | An ordinary home connection |
 | Setup time | About ten minutes, once |
 
-## Install
+## ⚙️ Install
 
 **1. Python.** Download it from [python.org/downloads](https://www.python.org/downloads/) and install. On the
 installer's first screen tick **Add python.exe to PATH**.
@@ -44,7 +46,7 @@ is running in developer mode: that is expected.
 **4. Start it.** Double-click `start.cmd`. A black window opens (do not close it: it is the app), and the app's own
 window opens at `http://127.0.0.1:7461`.
 
-## Using it
+## 🚀 Using it
 
 1. **A new profile.** Click "+ פרופיל חדש" and answer the questionnaire: city, neighbourhoods, budget, rooms, what is
    a must and what is a plus. A profile is one person's search. You can have several.
@@ -62,7 +64,7 @@ window opens at `http://127.0.0.1:7461`.
 
 Contacting the owner is something you do yourself, on the board.
 
-## Limits worth knowing
+## ⚠️ Limits worth knowing
 
 **How ads are pulled**
 
@@ -98,7 +100,7 @@ Contacting the owner is something you do yourself, on the board.
 - **Home network only.** The app speaks plain HTTP and has no passwords, only invite links. Do not open it to the
   internet, neither by port forwarding nor through a tunnelling service.
 
-## Privacy
+## 🔒 Privacy
 
 - **Your data stays with you:** searches, ads, marks and notes are kept in the `data` folder inside the app's
   folder. There is no server of ours and no tracking.
@@ -107,7 +109,7 @@ Contacting the owner is something you do yourself, on the board.
   for map tiles, for finding addresses (an ad's street and city are sent) and for places around (the city's bounds
   are sent); Google Fonts and unpkg for a font and the map library; and Google Maps only when you open Street View.
 
-## What the extension may do
+## 🧩 What the extension may do
 
 The extension was built only for this app:
 
@@ -119,7 +121,7 @@ The extension was built only for this app:
   checks.
 - All its code is in the `extension` folder, a few hundred lines. You can read it.
 
-## Common problems
+## 🛠️ Common problems
 
 | What you see | What to do |
 |---|---|
@@ -132,7 +134,7 @@ The extension was built only for this app:
 | Port 7461 is taken | Another program is using it. Close it, or an earlier copy of the app |
 | I moved the folder and the extension disappeared | In `chrome://extensions` remove it and load it again from the new place |
 
-## Optional: Street View inside the app
+## 🗺️ Optional: Street View inside the app
 
 Without a key you get a link that opens in Google Maps. To embed the view in the ad:
 
@@ -140,21 +142,25 @@ Without a key you get a link that opens in Google Maps. To embed the view in the
 2. Restrict the key to the address `http://127.0.0.1:7461/*` and to the Maps Embed API only.
 3. Save it as a single line in the file `data/maps-key.txt`.
 
-## Updating and removing
+## 🔄 Updating and removing
 
 - **Update:** download again and replace the files (the `data` folder stays), then click the extension's reload
   arrow in `chrome://extensions`.
 - **Remove:** remove the extension in `chrome://extensions` and delete the folder. That is all: nothing was
   installed anywhere else.
 
-## Fair use
+## 🤝 Fair use
 
 The tool is meant for a personal apartment search. It reads what you would see yourself while browsing, at a
 person's pace, and sends you to the original ad on its board. Each board has its own terms of use, and keeping to
 them is the responsibility of whoever uses the tool. Do not use it to collect ads in bulk, to pass them on, or to
 get around blocks.
 
-## For an AI agent
+## 🤖 For an AI agent
 
 If you let your own AI agent work with the app, `AGENTS.md` describes the shell commands, the local interface and
 the rules it has to keep.
+
+## 🍪 Enjoyed the app?
+
+The app is free and stays free. Enjoyed it? **[Buy me a treat](https://treat.dogware.ai/)**.
