@@ -75,6 +75,8 @@ application/json` on every POST, and no `Origin` header.
 | `POST profiles/<id>/sync` `{board?}` | start a pull; follow it with `GET sync` (`running`, `steps`, `error`) |
 | `POST profiles/<id>/ads/<ad id>/detail` | read one ad's full page now (one page view) |
 | `POST profiles/<id>/ads/<ad id>` `{status?, note?}` | mark an ad (a summary is set from the shell: `set ... --summary`) |
+| `POST profiles/<id>/paste` `{text, url?}` | add an ad the person saw elsewhere, from its text (nothing is fetched; phone numbers are removed); answers `{id, known, missing}` |
+| `POST profiles/<id>/ads/<ad id>/remove` | remove a pasted ad (ids that start with `paste:` only) |
 
 `prefs` (what the questionnaire asks):
 
@@ -109,8 +111,13 @@ A purchase search needs extension 1.1 or newer; the app says so when it meets an
   the local server.
 - `boards.py`: per board, the search address, and the two normalizers into the one ad shape described at its top.
 - `extension/`: the Chrome extension; `extension/collectors/<board>.js` read the board's page.
-- `ui/index.html`: the whole interface.
+- `ui/index.html`: the whole interface. Its texts are Hebrew in the code; `ui/lang/<code>.json` holds one
+  translation each (`en.json` today), and a text without a line there simply shows in Hebrew.
 - `data/`: the person's searches, ads, people and settings. Not part of the repository.
+
+What a pull changed is not stored apart: every ad carries `first_seen`, `gone_since` and `changes` (each with the
+pull's time), and `meta.syncs` lists the pulls with what each board gave. An ad is marked gone only when its
+board's list was read to the end (`complete`).
 
 Known limits (which boards give how much, where locations are approximate) are listed in `README.md`: say them when
 you report results, rather than presenting a partial read as complete.

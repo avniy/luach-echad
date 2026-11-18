@@ -46,6 +46,10 @@ window opens at `http://127.0.0.1:7461`.
 
 ## 🚀 Using it
 
+The interface opens in Hebrew. The "English" link at the bottom of every screen switches it to English; what the
+boards wrote (streets, neighbourhoods, the ad's text) stays in Hebrew. The Hebrew labels below are the ones you
+see before switching.
+
 1. **A new profile.** Click "+ פרופיל חדש" and answer the questionnaire: rent or buy, city, neighbourhoods, budget,
    rooms, what is a must and what is a plus. A profile is one search of one person, to rent or to buy. You can
    have several.
@@ -60,6 +64,13 @@ window opens at `http://127.0.0.1:7461`.
 6. **Search together.** `start-lan.cmd` instead of `start.cmd` also opens the app to devices on your home network.
    With the "שיתוף" (share) button you make an invite link for a partner: they see the search, mark ads and write
    notes. Without a link nobody sees anything.
+7. **"What changed" ("🔄 מה השתנה").** After every sync a window shows what was added, what left the board, what
+   was posted again and what changed (a price, for example). The button in the top bar opens it again, also for
+   earlier syncs. An ad counts as gone only after its board was read to the end.
+8. **"＋ Ad" ("＋ מודעה").** Saw a flat somewhere else (a group, a message, a board this app does not read)?
+   Paste its text: the app reads price, rooms, size, floor and address from it, scores it and compares it with
+   the rest. The app fetches nothing by itself here: only what you pasted. Phone numbers are removed from the
+   text before it is kept.
 
 Contacting the owner is something you do yourself, on the board.
 

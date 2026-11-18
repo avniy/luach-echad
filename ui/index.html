@@ -46,6 +46,11 @@
   .chip.b-madlan { background: var(--sky-soft); color: var(--sky); font-weight: 600; }
   .chip.b-komo { background: #efe4fb; color: #6b3fb5; font-weight: 600; }
   .chip.b-homeless { background: #e2f1e5; color: #2c7a43; font-weight: 600; }
+  .chip.b-paste { background: #fdf0c4; color: #7a5a00; font-weight: 600; }
+  .spill.b-paste b, .src.b-paste b { color: #7a5a00; }
+  .pastebox { display: grid; gap: 10px; } .pastebox textarea { width: 100%; min-height: 170px; resize: vertical; line-height: 1.5; }
+  .pastebox input { width: 100%; direction: ltr; text-align: right; } html[dir=ltr] .pastebox input { text-align: left; }
+  .foot .langs { display: flex; gap: 8px; } .foot .langs a { font-weight: 500; text-decoration: underline; cursor: pointer; }
   .chip i { font-style: normal; font-size: 11px; line-height: 1; }
   .chip.time { background: none; box-shadow: inset 0 0 0 1px var(--line); color: var(--soft); }
   .chip.deal { background: var(--ink); color: #fff; font-weight: 600; vertical-align: middle; }
@@ -122,7 +127,7 @@
   .main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(50%, 1.15fr); gap: 16px; padding: 0 18px 16px; min-height: 0; }
   .list { overflow: auto; padding: 2px 2px 40px; display: flex; flex-direction: column; gap: 7px; }
   .frame { position: relative; background: var(--card); border: 1.5px solid var(--ink); border-radius: 20px; box-shadow: var(--pop); padding: 9px; min-height: 0; margin: 0 0 6px 4px; }
-  .frame .tape { position: absolute; top: -11px; right: 26px; z-index: 500; background: #ffe08a; border: 1.5px solid var(--ink); padding: 1px 12px; font-weight: 600; font-size: 12.5px; transform: rotate(2deg); border-radius: 3px; }
+  .frame .tape { position: absolute; top: -11px; inset-inline-start: 26px; z-index: 500; background: #ffe08a; border: 1.5px solid var(--ink); padding: 1px 12px; font-weight: 600; font-size: 12.5px; transform: rotate(2deg); border-radius: 3px; }
   #map { height: 100%; border-radius: 13px; direction: ltr; background: #efe9dc; }
   .extnote { margin: 10px auto; max-width: 760px; padding: 10px 14px; border: 1.5px solid var(--ink); border-radius: 12px; background: #fff3cf; font-size: 14px; line-height: 1.6; }
   .extnote code { direction: ltr; unicode-bidi: embed; background: #fff; border: 1px solid #d9cfbb; border-radius: 6px; padding: 0 5px; }
@@ -137,7 +142,7 @@
   .tip b { font-size: 15px; } .tip .l3 { margin-top: 2px; }
   .poi { transform: translate(-50%, -50%); width: 22px; height: 22px; border-radius: 50%; background: var(--card); border: 1.5px solid #8b8474; display: grid; place-items: center; font-size: 12px; line-height: 1; }
   .poi.hit { border-color: var(--ink); box-shadow: 1.5px 1.5px 0 var(--ink); width: 26px; height: 26px; font-size: 14px; }
-  .layers { position: absolute; top: 18px; left: 18px; z-index: 500; display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 62%; }
+  .layers { position: absolute; top: 18px; inset-inline-end: 18px; z-index: 500; display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 62%; }
   .layers button { border: 1.5px solid var(--line); background: var(--card); border-radius: 999px; padding: 2px 10px; font-size: 12.5px; opacity: .8; }
   .layers button.on { border-color: var(--ink); opacity: 1; font-weight: 600; box-shadow: 1.5px 1.5px 0 var(--ink); }
   .ad { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; flex: none; }
@@ -174,7 +179,7 @@
   .why { display: flex; flex-wrap: wrap; gap: 4px; }
   .tl div { display: flex; gap: 8px; } .tl time { color: var(--soft); width: 62px; flex: none; }
   .act { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-  .act input { flex: 1; min-width: 150px; text-align: right; }
+  .act input { flex: 1; min-width: 150px; text-align: start; }
   .act a { color: var(--sky); font-weight: 600; text-decoration: none; white-space: nowrap; }
   .seg.st button.on.rejected { background: var(--red); } .seg.st button.on { background: var(--mint); }
   .ring.big { width: 58px; height: 58px; font-size: 19px; flex: none; }
@@ -197,7 +202,7 @@
   .stage .nav.next { left: 12px; } .stage .nav.prev { right: 12px; }
   .stage .thumbs { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; max-width: 92%; overflow-x: auto; background: rgba(31, 28, 23, .6); padding: 5px; border-radius: 11px; }
   .stage .thumbs img { width: 46px; height: 46px; object-fit: cover; border-radius: 7px; opacity: .6; cursor: pointer; flex: none; } .stage .thumbs img.on { opacity: 1; outline: 2px solid #fff; }
-  .stage .note { position: absolute; bottom: 8px; right: 10px; z-index: 600; background: var(--card); border: 1.5px solid var(--ink); border-radius: 999px; padding: 1px 11px; font-size: 12px; }
+  .stage .note { position: absolute; bottom: 8px; inset-inline-start: 10px; z-index: 600; background: var(--card); border: 1.5px solid var(--ink); border-radius: 999px; padding: 1px 11px; font-size: 12px; }
   .leaflet-tooltip.tw.small { padding: 2px 7px; font-size: 12px; border-radius: 9px; box-shadow: 1.5px 1.5px 0 var(--ink); }
   .srcwrap h4 { margin: 0 0 7px; font-size: 13px; }
   .srcs { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 9px; }
@@ -227,13 +232,13 @@
   .gbig a { display: grid; place-items: center; width: 100%; height: 100%; min-height: 0; } .gbig img { max-width: 100%; max-height: 100%; object-fit: contain; }
   .gbig .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--card); font-size: 20px; line-height: 1; }
   .gbig .nav.next { left: 10px; } .gbig .nav.prev { right: 10px; }
-  .gcount { position: absolute; bottom: 8px; left: 10px; background: rgba(31, 28, 23, .7); color: #fff; font-size: 12px; padding: 1px 9px; border-radius: 999px; }
+  .gcount { position: absolute; bottom: 8px; inset-inline-end: 10px; background: rgba(31, 28, 23, .7); color: #fff; font-size: 12px; padding: 1px 9px; border-radius: 999px; }
   .thumbs { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; }
   .thumbs img { width: 62px; height: 48px; object-fit: cover; border-radius: 8px; opacity: .55; cursor: pointer; flex: none; border: 1.5px solid transparent; } .thumbs img.on { opacity: 1; border-color: var(--ink); }
   .side { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; min-height: 0; }
   .pane { position: relative; border: 1.5px solid var(--ink); border-radius: 16px; overflow: hidden; min-height: 0; background: #efe9dc; display: grid; }
   .pane iframe, .pane .minimap { width: 100%; height: 100%; border: 0; direction: ltr; }
-  .ptitle { position: absolute; top: 8px; right: 8px; z-index: 600; background: var(--card); border: 1.5px solid var(--ink); border-radius: 999px; padding: 1px 11px; font-size: 12.5px; font-weight: 600; display: flex; gap: 7px; align-items: center; }
+  .ptitle { position: absolute; top: 8px; inset-inline-start: 8px; z-index: 600; background: var(--card); border: 1.5px solid var(--ink); border-radius: 999px; padding: 1px 11px; font-size: 12.5px; font-weight: 600; display: flex; gap: 7px; align-items: center; }
   .ptitle .muted { font-weight: 400; font-size: 11.5px; } .ptitle a { color: var(--sky); text-decoration: none; }
   .panelink { place-self: center; color: var(--sky); font-weight: 600; text-decoration: none; }
   .srcrow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12.5px; }
@@ -247,7 +252,22 @@
   @media (min-width: 1500px) { .dgrid { columns: 3; } }
   .dgrid .dcard { break-inside: avoid; margin-bottom: 10px; padding: 9px 12px; gap: 5px; } .dgrid .dcard.wide { column-span: all; }
   .dcard.wide .facts { grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); }
-  .mhsrc { flex: none; max-width: 44%; } .mhsrc .srcrow { justify-content: flex-end; } .mhsrc .grow { display: none; }
+  .mhead { display: grid; gap: 9px; } .mhtop { display: flex; gap: 14px; align-items: center; } .mhmain { min-width: 0; flex: 1; }
+  .mhrow { display: flex; flex-wrap: wrap; gap: 5px 6px; align-items: center; padding-inline-start: 72px; } .mhrow .grow { display: none; }
+  @media (max-width: 760px) {   /* a phone: the way out gets its own line on top, the flat's line keeps the full width */
+    .mhrow { padding-inline-start: 0; } .mhtop { flex-wrap: wrap; row-gap: 8px; }
+    .mhtop .mnav { order: -1; flex-basis: 100%; justify-content: flex-end; } .mhmain { flex-basis: 0; }
+    .mhead .mhrow .srcrow:not(:first-child) { margin-inline-start: 0; padding-inline-start: 0; border-inline-start: 0; flex-basis: 100%; }
+    .chgrow .grow { display: none; }
+  }
+  .mhrow .srcrow:not(:first-child) { margin-inline-start: 6px; padding-inline-start: 12px; border-inline-start: 1.5px solid var(--line); }
+  .chghead { display: flex; gap: 8px; align-items: center; } .chghead select { flex: 1; min-width: 0; }
+  .chg { display: grid; gap: 12px; max-height: 62vh; overflow: auto; padding-inline-end: 2px; } .chg section { display: grid; gap: 5px; }
+  .chg h5 { margin: 0; font-size: 14px; display: flex; gap: 7px; align-items: center; }
+  .chgrow { display: flex; gap: 4px 9px; align-items: center; flex-wrap: wrap; padding: 6px 10px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--card); cursor: pointer; font-size: 13px; }
+  .chgrow:hover { border-color: var(--ink); } .chgrow.dim { opacity: .62; } .chgrow b { min-width: 60px; }
+  .chgall { display: flex; gap: 7px; align-items: center; font-size: 13px; color: var(--soft); cursor: pointer; }
+  .top .chgbtn { padding: 3px 12px; font-size: 13px; }
   .dcard { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 11px 13px; font-size: 13.5px; display: grid; gap: 6px; }
   .dcard.wide { grid-column: span 2; } .dcard h4 { margin: 0; font-size: 12px; letter-spacing: .04em; color: var(--soft); font-weight: 600; }
   .facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px 8px; }
@@ -287,9 +307,86 @@
 </head>
 <body>
 <div id="root"></div>
-<div class="foot"><span>לוח אחד · by <a href="https://dogware.ai/" target="_blank" rel="noopener">Dogware.ai</a></span><a class="treat" href="https://treat.dogware.ai/" target="_blank" rel="noopener">🍪 קנו לי חטיף</a></div>
+<div class="foot"><span><span id="appname">לוח אחד</span> · by <a href="https://dogware.ai/" target="_blank" rel="noopener">Dogware.ai</a></span><a class="treat" id="treatlink" href="https://treat.dogware.ai/" target="_blank" rel="noopener">🍪 קנו לי חטיף</a><span class="langs" id="langs"></span></div>
 <div id="toast"></div>
+<script src="/lang.js"></script>
 <script>
+// ---- languages ----
+// The texts in this file are Hebrew. Another language is one file, ui/lang/<code>.json: {name, dir, locale, texts}.
+// tx("text") and tx`text ${value}` translate the interface's own texts; ts(text) translates a text that came from
+// the app's server (a reason, a step, an error). What the boards wrote (streets, ads) is never in a language file
+// and stays as written.
+const LANGS = window.LANGS || {};
+const WANT = new URLSearchParams(location.search).get("lang") || localStorage.getItem("lang");  // ?lang=en: this visit only
+const LANG = LANGS[WANT] ? WANT : "he";
+document.title = LANG === "he" ? document.title : LANGS[LANG].texts[document.title] || document.title;
+const DICT = LANG === "he" ? null : LANGS[LANG].texts;
+const LOCALE = LANG === "he" ? "he-IL" : LANGS[LANG].locale || "en-GB";
+const HEB = /[֐-׿]/;
+document.documentElement.lang = LANG;
+const DIR = document.documentElement.dir = LANG === "he" ? "rtl" : LANGS[LANG].dir || "ltr";
+const FWD = DIR === "rtl" ? "←" : "→", BACK = DIR === "rtl" ? "→" : "←";  // onward and back, in the reading direction
+const PATS = !DICT ? [] : Object.entries(DICT).filter(([k]) => /\{\d+\}/.test(k) && /[֐-׿]{2}/.test(k)).map(([k, v]) =>
+  [new RegExp("^" + k.replace(/[.*+?^$()|[\]\\]/g, "\\$&").replace(/\{\d+\}/g, "(.+?)") + "$", "s"), v]);
+// openings and endings: texts that start or end with a space, a colon or a comma are pieces of a longer text
+const esc = (k) => k.replace(/[.*+?^$()|[\]\\]/g, "\\$&").replace(/\{\d+\}/g, "(.+?)");
+const FRAGS = !DICT ? [] : Object.entries(DICT).filter(([k]) => /[\u0590-\u05ff]{2}/.test(k) && (/^[\s,;]/.test(k) || /[\s:(-]$/.test(k)))
+  .sort((x, y) => y[0].length - x[0].length)
+  .map(([k, v]) => [k, v, !/\{\d+\}/.test(k) ? null : new RegExp(/^[\s,;:]/.test(k) ? "^(?<rest>.+?)" + esc(k) + "$" : "^" + esc(k) + "(?<rest>.+)$", "s")]);
+const tsSeen = new Map();
+function ts(s) {
+  if (!DICT || typeof s !== "string" || !HEB.test(s)) return s;
+  if (tsSeen.has(s)) return tsSeen.get(s);
+  let out = DICT[s];
+  const core = s.match(/^([^\p{L}\d]*)(.*?)([^\p{L}\d]*)$/su);  // "⚠️ text ", "🍪 text": the text between the signs
+  if (out === undefined && core[2] !== s && DICT[core[2]] !== undefined) out = core[1] + DICT[core[2]] + core[3];
+  if (out === undefined) for (const [re, v] of PATS) {
+    const m = s.match(re);
+    if (m) { out = v.replace(/\{(\d+)\}/g, (_, n) => ts(m[+n + 1])); break; }
+  }
+  if (out === undefined) for (const sep of [" · ", "; ", " | ", "\n", ": ", ", "]) {
+    if (!s.includes(sep)) continue;
+    const parts = s.split(sep), to = parts.map(ts);
+    if (parts.every((p, i) => !HEB.test(p) || to[i] !== p)) { out = to.join(sep); break; }   // only when every part is ours
+  }
+  // A text the code joined from pieces: one of our openings or endings with something else, or a translated
+  // opening followed by a name of ours ("The ad appears on " + a board's name).
+  const ours = (x) => { const y = ts(x); return y !== x || !HEB.test(x) ? y : null; };
+  if (out === undefined) {
+    const cut = s.search(HEB), tail = cut > 0 && /\p{L}/u.test(s.slice(0, cut)) ? ours(s.slice(cut)) : null;
+    if (tail != null) out = s.slice(0, cut) + tail;
+  }
+  if (out === undefined) for (const [k, v, re] of FRAGS) {
+    if (re) {
+      const m = s.match(re), rest = m && ours(m.groups.rest);
+      if (rest != null) { const fill = v.replace(/\{(\d+)\}/g, (_, n) => ts(m[+n + (/^[\s,;:]/.test(k) ? 2 : 1)])); out = /^[\s,;:]/.test(k) ? rest + fill : fill + rest; break; }
+    } else if (s.length > k.length && /[\s:(-]$/.test(k) && s.startsWith(k)) {
+      const rest = ours(s.slice(k.length));
+      if (rest != null) { out = v + rest; break; }
+    } else if (s.length > k.length && /^\s/.test(k) && s.endsWith(k)) {
+      const rest = ours(s.slice(0, -k.length));
+      if (rest != null) { out = rest + v; break; }
+    }
+  }
+  if (out === undefined) out = s;
+  tsSeen.set(s, out);
+  return out;
+}
+function tx(s, ...vals) {
+  if (typeof s === "string") return !DICT ? s : DICT[s] !== undefined ? DICT[s] : ts(s);
+  const to = DICT && DICT[s.map((x, i) => x + (i < vals.length ? `{${i}}` : "")).join("")];
+  if (to == null) return s.reduce((acc, x, i) => acc + x + (i < vals.length ? vals[i] : ""), "");
+  return to.replace(/\{(\d+)\}/g, (_, n) => ts(vals[n]));
+}
+// the footer is plain HTML: its two texts, and a link for every other language the app has
+for (const id of ["appname", "treatlink"]) { const el = document.getElementById(id); el.textContent = ts(el.textContent); }
+for (const [code, name] of [["he", "עברית"], ...Object.entries(LANGS).map(([c, l]) => [c, l.name || c])]) {
+  if (code === LANG) continue;
+  const a = document.createElement("a");
+  a.textContent = name; a.lang = code;
+  a.onclick = () => { localStorage.setItem("lang", code); location.reload(); };
+  document.getElementById("langs").append(a);
+}
 const $root = document.getElementById("root");
 let META = null, ME = null, P = null, map = null, layer = null, poiLayer = null, nearLayer = null, pins = {}, openId = null, pollT = null;
 const F = Object.assign({ tab: "all", fit: "fits", area: "near", status: "todo", news: false, sort: "score", q: "",
@@ -303,71 +400,72 @@ const h = (tag, attrs, ...kids) => {
     if (v == null || v === false) continue;
     if (k === "class") el.className = v;
     else if (k.startsWith("on")) el.addEventListener(k.slice(2), v);
+    else if (k === "title" || k === "placeholder") el[k] = ts(v);
     else if (k in el && k !== "list") el[k] = v;
     else el.setAttribute(k, v);
   }
-  for (const kid of kids.flat(3)) if (kid != null && kid !== false) el.append(kid);
+  for (const kid of kids.flat(3)) if (kid != null && kid !== false) el.append(typeof kid === "string" ? ts(kid) : kid);
   return el;
 };
 const api = async (path, body) => {
   if (body) window.dispatchEvent(new Event("luach-wake"));  // the extension, if it dozed off, starts listening again
   const r = await fetch("/api/" + path, body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : undefined);
   const j = await r.json().catch(() => ({}));
-  if (!r.ok) throw new Error(j.error || "שגיאה " + r.status);
+  if (!r.ok) throw new Error(j.error || tx("שגיאה ") + r.status);
   return j;
 };
-const toast = (t, ms = 4500) => { const el = document.getElementById("toast"); el.textContent = t; el.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.display = "none", ms); };
-const nis = (n) => n == null ? "בלי מחיר" : "₪" + Math.round(n).toLocaleString("en-US");
+const toast = (t, ms = 4500) => { const el = document.getElementById("toast"); el.textContent = ts(t); el.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.display = "none", ms); };
+const nis = (n) => n == null ? tx("בלי מחיר") : "₪" + Math.round(n).toLocaleString("en-US");
 // "3 hours ago" for a time the board gave. A board that gives a date only (midnight) is told in days.
 const ago = (iso) => {
   if (!iso) return null;
   const t = new Date(iso), min = (Date.now() - t) / 60000, dateOnly = /T00:00:00/.test(iso);
   const days = Math.floor((new Date().setHours(0, 0, 0, 0) - new Date(t).setHours(0, 0, 0, 0)) / 864e5);
   if (min < 0) return null;
-  if (!dateOnly && min < 60) return "לפני " + Math.max(1, Math.round(min)) + " דק'";
-  if (!dateOnly && min < 60 * 20) return Math.round(min / 60) === 1 ? "לפני שעה" : "לפני " + Math.round(min / 60) + " שעות";
-  if (days <= 0) return "היום";
-  if (days === 1) return "אתמול";
-  if (days < 14) return "לפני " + days + " ימים";
-  if (days < 60) return "לפני " + Math.round(days / 7) + " שבועות";
-  return "לפני " + Math.round(days / 30) + " חודשים";
+  if (!dateOnly && min < 60) return tx("לפני ") + Math.max(1, Math.round(min)) + tx(" דק'");
+  if (!dateOnly && min < 60 * 20) return Math.round(min / 60) === 1 ? tx("לפני שעה") : tx("לפני ") + Math.round(min / 60) + tx(" שעות");
+  if (days <= 0) return tx("היום");
+  if (days === 1) return tx("אתמול");
+  if (days < 14) return tx("לפני ") + days + tx(" ימים");
+  if (days < 60) return tx("לפני ") + Math.round(days / 7) + tx(" שבועות");
+  return tx("לפני ") + Math.round(days / 30) + tx(" חודשים");
 };
 // The ad's own clock on its board: when the owner last updated it, or else when it was published.
-const touched = (a) => a.updated_at ? ["עודכנה", ago(a.updated_at), a.updated_at] : a.listed_at ? ["פורסמה", ago(a.listed_at), a.listed_at] : null;
+const touched = (a) => a.updated_at ? [tx("עודכנה"), ago(a.updated_at), a.updated_at] : a.listed_at ? [tx("פורסמה"), ago(a.listed_at), a.listed_at] : null;
 // A profile searches for a flat to rent or to buy; a few words and number sizes follow from that.
 const SALE = () => !!(P && P.prefs && P.prefs.deal === "sale");
-const dealChip = (deal) => h("span", { class: "chip deal" }, h("i", {}, deal === "sale" ? "🏡" : "🔑"), deal === "sale" ? "קנייה" : "השכרה");
+const dealChip = (deal) => h("span", { class: "chip deal" }, h("i", {}, deal === "sale" ? "🏡" : "🔑"), deal === "sale" ? tx("קנייה") : tx("השכרה"));
 const pinText = (a) => !a.price ? "?" : SALE() ? (a.price / 1e6).toFixed(2) : (a.price / 1000).toFixed(1);
-const day = (iso) => iso ? new Date(iso).toLocaleDateString("he-IL", { day: "numeric", month: "numeric" }) : "";
-const floorHe = (a) => a.floor == null ? null : a.floor <= 0 ? (a.floor < 0 ? "מרתף" : "קרקע") : "קומה " + a.floor + (a.top_floor ? "/" + a.top_floor : "");
+const day = (iso) => iso ? new Date(iso).toLocaleDateString(LOCALE, { day: "numeric", month: "numeric" }) : "";
+const floorHe = (a) => a.floor == null ? null : a.floor <= 0 ? (a.floor < 0 ? tx("מרתף") : tx("קרקע")) : tx("קומה ") + a.floor + (a.top_floor ? "/" + a.top_floor : "");
 const go = (hash) => { location.hash = hash; };
-const logo = () => h("div", { class: "logo", onclick: () => go("#/") }, h("i"), "לוח אחד");
+const logo = () => h("div", { class: "logo", onclick: () => go("#/") }, h("i"), tx("לוח אחד"));
 
 // The boards are read by the app's extension in this Chrome. Without it nothing can be pulled: say so, with the way.
 const extNote = () => {
   if (!ME || !ME.owner || !ME.local || ME.browser !== false) return null;
   const here = document.documentElement.dataset.luachExtension;
-  return h("div", { class: "extnote" }, h("b", {}, here ? "התוסף מתחבר..." : "חסר התוסף של לוח אחד בכרום הזה."),
-    here ? " אם זה לא מסתדר תוך דקה, רעננו את הדף."
-      : [" בלעדיו אי אפשר למשוך מודעות. פותחים ", h("code", {}, "chrome://extensions"), ", מדליקים \"מצב מפתח\", לוחצים \"טעינת פריט unpacked\" ובוחרים את התיקייה ",
-        h("code", {}, "extension"), " שבתיקיית האפליקציה. אחר כך מרעננים את הדף הזה."]);
+  return h("div", { class: "extnote" }, h("b", {}, here ? tx("התוסף מתחבר...") : tx("חסר התוסף של לוח אחד בכרום הזה.")),
+    here ? tx(" אם זה לא מסתדר תוך דקה, רעננו את הדף.")
+      : [tx(" בלעדיו אי אפשר למשוך מודעות. פותחים "), h("code", {}, "chrome://extensions"), tx(", מדליקים \"מצב מפתח\", לוחצים \"טעינת פריט unpacked\" ובוחרים את התיקייה "),
+        h("code", {}, "extension"), tx(" שבתיקיית האפליקציה. אחר כך מרעננים את הדף הזה.")]);
 };
 
 // ---------- home ----------
 async function home() {
   const profiles = await api("profiles");
   $root.replaceChildren(h("div", { class: "center" }, logo(),
-    h("div", { class: "hero" }, "כל לוחות הדירות, ", h("em", {}, "בלוח אחד"), " שמכיר אותך."),
-    h("div", { class: "muted" }, "יד2, מדלן, קומו והומלס נמשכים, מנורמלים לאותו מבנה, ומדורגים לפי הפרופיל של מי שמחפש."),
+    h("div", { class: "hero" }, tx("כל לוחות הדירות, "), h("em", {}, tx("בלוח אחד")), tx(" שמכיר אותך.")),
+    h("div", { class: "muted" }, tx("יד2, מדלן, קומו והומלס נמשכים, מנורמלים לאותו מבנה, ומדורגים לפי הפרופיל של מי שמחפש.")),
     extNote(),
     h("div", { class: "pgrid" },
       profiles.map((p) => h("div", { class: "pcard", onclick: () => go("#/p/" + p.id) },
         h("h3", {}, p.name, " ", dealChip(p.prefs.deal)),
         h("div", { class: "muted" }, [p.prefs.city, p.prefs.hoods.join(", ")].filter(Boolean).join(" · ")),
-        h("div", { class: "muted" }, "עד " + nis(p.prefs.price_max) + " · " + (p.prefs.rooms_min ?? "") + "–" + (p.prefs.rooms_max ?? "") + " חדרים"),
-        h("div", { style: "margin-top:10px" }, h("span", { class: "big" }, String(p.fits)), " מתאימות מתוך " + p.total),
-        h("div", { class: "muted" }, `♥ ${p.favorites} מועדפות` + (p.members ? ` · ${p.members + 1} מחפשים יחד` : "")))),
-      ME.owner && h("div", { class: "pcard add", onclick: () => go("#/new") }, "+ פרופיל חדש"))));
+        h("div", { class: "muted" }, tx("עד ") + nis(p.prefs.price_max) + " · " + (p.prefs.rooms_min ?? "") + "–" + (p.prefs.rooms_max ?? "") + tx(" חדרים")),
+        h("div", { style: "margin-top:10px" }, h("span", { class: "big" }, String(p.fits)), tx(" מתאימות מתוך ") + p.total),
+        h("div", { class: "muted" }, tx`♥ ${p.favorites} מועדפות` + (p.members ? tx` · ${p.members + 1} מחפשים יחד` : "")))),
+      ME.owner && h("div", { class: "pcard add", onclick: () => go("#/new") }, tx("+ פרופיל חדש")))));
 }
 
 // ---------- questionnaire ----------
@@ -376,15 +474,15 @@ function wizard(existing) {
     { name: "", who: "", deal: "rent", city: "", hoods: [], radius_km: 1.2, price_max: 5000, rooms_min: 2, rooms_max: 3, sqm_min: "", private_only: false,
       access: { need: false, max_floor: 1 }, features: {}, hide: ["roommates"] };
   let step = 0;
-  const titles = [["מי מחפש, ואיפה?", "הלוח נבנה סביב האדם, לא סביב הלוח."], ["כמה, וכמה גדול?", "נמשוך גם קצת מעל התקציב, רק כדי להשוות מחירים."],
-    ["מה חשוב?", "לחיצה אחת: יתרון. שתיים: חובה. שלוש: לא חשוב."], ["מה לא להראות?", "מודעות כאלה יוסתרו, ואפשר תמיד להציץ בהן."]];
+  const titles = [[tx("מי מחפש, ואיפה?"), tx("הלוח נבנה סביב האדם, לא סביב הלוח.")], [tx("כמה, וכמה גדול?"), tx("נמשוך גם קצת מעל התקציב, רק כדי להשוות מחירים.")],
+    [tx("מה חשוב?"), tx("לחיצה אחת: יתרון. שתיים: חובה. שלוש: לא חשוב.")], [tx("מה לא להראות?"), tx("מודעות כאלה יוסתרו, ואפשר תמיד להציץ בהן.")]];
   // One kind of option everywhere: a tile with an icon, a name and a line under it (what it means, or its state).
   const tile = (icon, text, sub, cls, flip) => h("button", { type: "button", class: "tile " + (cls || ""), onclick: () => { flip(); draw(); } },
     h("span", { class: "ti" }, icon), h("b", {}, text), h("small", {}, sub || ""));
   // What still has to be filled before going on. Checked on every keystroke, whatever the order of filling.
   let nextBtn = null, hint = null;
-  const missing = () => step === 0 ? [!d.name.trim() && "שם לפרופיל", !d.city && "עיר"].filter(Boolean) : [];
-  const check = () => { if (!nextBtn) return; const m = missing(); nextBtn.disabled = !!m.length; hint.textContent = m.length ? "חסר: " + m.join(", ") : ""; };
+  const missing = () => step === 0 ? [!d.name.trim() && tx("שם לפרופיל"), !d.city && tx("עיר")].filter(Boolean) : [];
+  const check = () => { if (!nextBtn) return; const m = missing(); nextBtn.disabled = !!m.length; hint.textContent = m.length ? tx("חסר: ") + m.join(", ") : ""; };
   const draw = () => {
     const city = META.cities.find((c) => c.name === d.city), sale = d.deal === "sale";
     // Rent and purchase are different searches with different sizes of numbers: switching sets sensible starting ones.
@@ -393,48 +491,48 @@ function wizard(existing) {
         : { price_max: 5000, rooms_min: 2, rooms_max: 3, hide: [...new Set([...d.hide, "roommates"])] }); };
     const body = [
       () => [
-        existing ? h("div", { class: "q" }, h("label", {}, "מחפשים ", dealChip(d.deal), " ", h("small", {}, "חיפוש נשאר מה שנפתח. לסוג השני פותחים פרופיל חדש"))) :
-          h("div", { class: "q" }, h("label", {}, "מה מחפשים?"), h("div", { class: "tiles big" },
-            tile("🔑", "דירה להשכרה", "מחיר לחודש", sale ? "" : "on", () => setDeal("rent")),
-            tile("🏡", "דירה לקנייה", "מחיר מלא, והשוואה לפי מחיר למ\"ר", sale ? "on" : "", () => setDeal("sale")))),
+        existing ? h("div", { class: "q" }, h("label", {}, tx("מחפשים "), dealChip(d.deal), " ", h("small", {}, tx("חיפוש נשאר מה שנפתח. לסוג השני פותחים פרופיל חדש")))) :
+          h("div", { class: "q" }, h("label", {}, tx("מה מחפשים?")), h("div", { class: "tiles big" },
+            tile("🔑", tx("דירה להשכרה"), tx("מחיר לחודש"), sale ? "" : "on", () => setDeal("rent")),
+            tile("🏡", tx("דירה לקנייה"), tx("מחיר מלא, והשוואה לפי מחיר למ\"ר"), sale ? "on" : "", () => setDeal("sale")))),
         h("div", { class: "row2" },
-          h("div", { class: "q" }, h("label", {}, "שם הפרופיל"), h("input", { type: "text", value: d.name, placeholder: "אבא, אני, דנה...", oninput: (e) => { d.name = e.target.value; check(); } })),
-          h("div", { class: "q", style: "flex:1" }, h("label", {}, "מי יגור שם? ", h("small", {}, "משפט אחד, לא חובה")), h("input", { type: "text", style: "width:100%", value: d.who, placeholder: "מבוגר שגר לבד, קשה לו עם מדרגות", oninput: (e) => d.who = e.target.value }))),
-        h("div", { class: "q" }, h("label", {}, "עיר"), h("select", { class: "citysel", onchange: (e) => { d.city = e.target.value; d.hoods = []; draw(); } },
-          h("option", { value: "", disabled: true, selected: !d.city }, "בחרו עיר מהרשימה"),
+          h("div", { class: "q" }, h("label", {}, tx("שם הפרופיל")), h("input", { type: "text", value: d.name, placeholder: tx("אבא, אני, דנה..."), oninput: (e) => { d.name = e.target.value; check(); } })),
+          h("div", { class: "q", style: "flex:1" }, h("label", {}, tx("מי יגור שם? "), h("small", {}, tx("משפט אחד, לא חובה"))), h("input", { type: "text", style: "width:100%", value: d.who, placeholder: tx("מבוגר שגר לבד, קשה לו עם מדרגות"), oninput: (e) => d.who = e.target.value }))),
+        h("div", { class: "q" }, h("label", {}, tx("עיר")), h("select", { class: "citysel", onchange: (e) => { d.city = e.target.value; d.hoods = []; draw(); } },
+          h("option", { value: "", disabled: true, selected: !d.city }, tx("בחרו עיר מהרשימה")),
           [...META.cities].sort((x, y) => x.name.localeCompare(y.name, "he")).map((c) => h("option", { value: c.name, selected: d.city === c.name }, c.name)))),
-        city && city.hoods.length ? h("div", { class: "q" }, h("label", {}, "שכונות מועדפות ", h("small", {}, "אפשר כמה, או לדלג בשביל כל העיר")),
+        city && city.hoods.length ? h("div", { class: "q" }, h("label", {}, tx("שכונות מועדפות "), h("small", {}, tx("אפשר כמה, או לדלג בשביל כל העיר"))),
           h("div", { class: "pick" }, city.hoods.map((x) => h("button", { class: d.hoods.includes(x.name) ? "on" : "", onclick: () => { d.hoods = d.hoods.includes(x.name) ? d.hoods.filter((n) => n !== x.name) : [...d.hoods, x.name]; draw(); } }, x.name)))) : null,
-        d.hoods.length ? h("div", { class: "q" }, h("label", {}, "כמה רחוק מהשכונה עוד בסדר?"), h("div", { class: "seg" }, [[0.6, "📍 ממש שם"], [1.2, "🚶 הליכה קצרה"], [2.5, "🚲 גם קצת רחוק"]].map(([v, t]) => h("button", { class: d.radius_km === v ? "on" : "", onclick: () => { d.radius_km = v; draw(); } }, t)))) : null,
+        d.hoods.length ? h("div", { class: "q" }, h("label", {}, tx("כמה רחוק מהשכונה עוד בסדר?")), h("div", { class: "seg" }, [[0.6, tx("📍 ממש שם")], [1.2, tx("🚶 הליכה קצרה")], [2.5, tx("🚲 גם קצת רחוק")]].map(([v, t]) => h("button", { class: d.radius_km === v ? "on" : "", onclick: () => { d.radius_km = v; draw(); } }, t)))) : null,
       ],
       () => [
-        h("div", { class: "q" }, h("label", {}, sale ? "תקציב מקסימלי" : "תקציב חודשי מקסימלי"), h("div", { class: "row2" },
+        h("div", { class: "q" }, h("label", {}, sale ? tx("תקציב מקסימלי") : tx("תקציב חודשי מקסימלי")), h("div", { class: "row2" },
           h("input", { type: "number", step: sale ? 50000 : 100, value: d.price_max, style: `width:${sale ? 150 : 120}px`, oninput: (e) => d.price_max = +e.target.value }),
           h("div", { class: "pick" }, (sale ? [1500000, 2000000, 2500000, 3000000, 4000000, 5000000] : [3500, 4500, 5500, 7000, 9000, 12000]).map((v) => h("button", { class: d.price_max === v ? "on" : "", onclick: () => { d.price_max = v; draw(); } }, nis(v)))))),
-        h("div", { class: "q" }, h("label", {}, "חדרים ", h("small", {}, "לחיצה על הקטן ואז על הגדול")), h("div", { class: "pick" }, [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6].map((v) =>
+        h("div", { class: "q" }, h("label", {}, tx("חדרים "), h("small", {}, tx("לחיצה על הקטן ואז על הגדול"))), h("div", { class: "pick" }, [1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5, 6].map((v) =>
           h("button", { class: v >= d.rooms_min && v <= d.rooms_max ? "on" : "", onclick: () => { if (d._pickMax && v >= d.rooms_min) { d.rooms_max = v; d._pickMax = false; } else { d.rooms_min = d.rooms_max = v; d._pickMax = true; } draw(); } }, String(v))))),
-        h("div", { class: "q" }, h("label", {}, "שטח מינימלי במ\"ר ", h("small", {}, "לא חובה")), h("input", { type: "number", value: d.sqm_min ?? "", style: "width:120px", oninput: (e) => d.sqm_min = e.target.value })),
+        h("div", { class: "q" }, h("label", {}, tx("שטח מינימלי במ\"ר "), h("small", {}, tx("לא חובה"))), h("input", { type: "number", value: d.sqm_min ?? "", style: "width:120px", oninput: (e) => d.sqm_min = e.target.value })),
       ],
       () => [
-        h("div", { class: "q" }, h("label", {}, "תנאי חובה"), h("div", { class: "tiles big" },
-          tile("👤", "בלי תיווך", "רק מודעות של בעלי דירות", d.private_only ? "on" : "", () => d.private_only = !d.private_only),
-          tile("🛗", "בלי מדרגות", "מעלית, או קומה נמוכה", d.access.need ? "on" : "", () => d.access.need = !d.access.need))),
-        d.access.need ? h("div", { class: "q" }, h("label", {}, "בלי מעלית, עד איזו קומה?"), h("div", { class: "seg" }, [[0, "קרקע בלבד"], [1, "עד קומה 1"], [2, "עד קומה 2"]].map(([v, t]) => h("button", { class: d.access.max_floor === v ? "on" : "", onclick: () => { d.access.max_floor = v; draw(); } }, t)))) : null,
-        h("div", { class: "q" }, h("label", {}, "בדירה ", h("small", {}, "כל לחיצה מחליפה: יתרון, חובה, לא חשוב")), h("div", { class: "tiles" }, Object.entries(META.features).filter(([k]) => k !== "elevator" && !(sale && (k === "furnished" || k === "pets"))).map(([k, t]) =>
-          tile(FICON[k] || "•", t, { nice: "יתרון", must: "חובה" }[d.features[k]] || "", d.features[k] || "",
+        h("div", { class: "q" }, h("label", {}, tx("תנאי חובה")), h("div", { class: "tiles big" },
+          tile("👤", tx("בלי תיווך"), tx("רק מודעות של בעלי דירות"), d.private_only ? "on" : "", () => d.private_only = !d.private_only),
+          tile("🛗", tx("בלי מדרגות"), tx("מעלית, או קומה נמוכה"), d.access.need ? "on" : "", () => d.access.need = !d.access.need))),
+        d.access.need ? h("div", { class: "q" }, h("label", {}, tx("בלי מעלית, עד איזו קומה?")), h("div", { class: "seg" }, [[0, tx("קרקע בלבד")], [1, tx("עד קומה 1")], [2, tx("עד קומה 2")]].map(([v, t]) => h("button", { class: d.access.max_floor === v ? "on" : "", onclick: () => { d.access.max_floor = v; draw(); } }, t)))) : null,
+        h("div", { class: "q" }, h("label", {}, tx("בדירה "), h("small", {}, tx("כל לחיצה מחליפה: יתרון, חובה, לא חשוב"))), h("div", { class: "tiles" }, Object.entries(META.features).filter(([k]) => k !== "elevator" && !(sale && (k === "furnished" || k === "pets"))).map(([k, t]) =>
+          tile(FICON[k] || "•", t, { nice: tx("יתרון"), must: tx("חובה") }[d.features[k]] || "", d.features[k] || "",
             () => { const n = { undefined: "nice", nice: "must", must: undefined }[d.features[k]]; if (n) d.features[k] = n; else delete d.features[k]; })))),
       ],
       () => [h("div", { class: "tiles big", style: "margin-top:16px" },
-        [["roommates", "👥", "מודעות שותפים", "חדר בדירה, או מי שמחפש שותף"], ["religious", "🕯️", "מיועד לשומרי שבת / דתיים", "כשבעל הדירה כותב את זה במודעה"], ["basement", "🕳️", "מרתפים", "גם כשהלוח רושם אותם כקומת קרקע"]]
-          .filter(([k]) => !(sale && k === "roommates")).map(([k, icon, t, s]) => tile(icon, t, d.hide.includes(k) ? "מוסתר" : s, d.hide.includes(k) ? "on" : "", () => d.hide = d.hide.includes(k) ? d.hide.filter((x) => x !== k) : [...d.hide, k])))],
+        [["roommates", "👥", tx("מודעות שותפים"), tx("חדר בדירה, או מי שמחפש שותף")], ["religious", "🕯️", tx("מיועד לשומרי שבת / דתיים"), tx("כשבעל הדירה כותב את זה במודעה")], ["basement", "🕳️", tx("מרתפים"), tx("גם כשהלוח רושם אותם כקומת קרקע")]]
+          .filter(([k]) => !(sale && k === "roommates")).map(([k, icon, t, s]) => tile(icon, t, d.hide.includes(k) ? tx("מוסתר") : s, d.hide.includes(k) ? "on" : "", () => d.hide = d.hide.includes(k) ? d.hide.filter((x) => x !== k) : [...d.hide, k])))],
     ][step]();
     hint = h("span", { class: "whint" });
-    nextBtn = h("button", { class: "btn pop", onclick: () => { if (missing().length) return check(); if (step < 3) { step++; draw(); } else finish(); } }, step < 3 ? "הלאה" : existing ? "שמירה" : "בנו לי את הלוח");
+    nextBtn = h("button", { class: "btn pop", onclick: () => { if (missing().length) return check(); if (step < 3) { step++; draw(); } else finish(); } }, step < 3 ? tx("הלאה") : existing ? tx("שמירה") : tx("בנו לי את הלוח"));
     $root.replaceChildren(h("div", { class: "center" }, logo(), h("div", { class: "wiz" },
       h("div", { class: "dots" }, titles.map((_, i) => h("i", { class: i <= step ? "on" : "" }))),
       h("h2", {}, titles[step][0]), h("div", { class: "muted" }, titles[step][1]), body,
       h("div", { class: "wnav" },
-        h("button", { class: "btn ghost", onclick: () => step ? (step--, draw()) : go(existing ? "#/p/" + existing.id : "#/") }, step ? "חזרה" : "ביטול"),
+        h("button", { class: "btn ghost", onclick: () => step ? (step--, draw()) : go(existing ? "#/p/" + existing.id : "#/") }, step ? tx("חזרה") : tx("ביטול")),
         h("div", { class: "wgo" }, hint, nextBtn)))));
     check();
   };
@@ -447,7 +545,8 @@ function wizard(existing) {
         go("#/p/" + existing.id); route();
       } else {
         const r = await api("profiles", { name, prefs });
-        await api(`profiles/${r.id}/sync`, {});
+        const q = await api(`profiles/${r.id}/sync`, {});
+        if (q.fresh) { go("#/p/" + r.id); route(); return; }   // the city was read a short while ago: nothing to wait for
         go("#/p/" + r.id);
       }
     } catch (e) { toast(e.message); }
@@ -457,16 +556,18 @@ function wizard(existing) {
 
 // ---------- pulling ----------
 function syncing(pid, name) {
-  const cards = Object.entries(META.boards).map(([board, he]) => {
-    const c = { board, he, was: "", state: h("span", { class: "sbs" }), msg: h("div", { class: "sbm", dir: "auto" }, "מחכה לתורו"), count: h("div", { class: "sbc", dir: "auto" }), bar: h("i") };
+  const cards = Object.entries(META.boards).filter(([board]) => META.sync_boards.includes(board)).map(([board, he]) => {
+    const c = { board, he, was: "", state: h("span", { class: "sbs" }), msg: h("div", { class: "sbm", dir: "auto" }, tx("מחכה לתורו")), count: h("div", { class: "sbc", dir: "auto" }), bar: h("i") };
     c.el = h("div", { class: "sb idle" }, h("div", { class: "sbh" }, h("span", { class: "chip b-" + board }, he), c.state), c.msg, h("div", { class: "sbar" }, c.bar), c.count);
     return c;
   });
   const other = h("div", { class: "muted", style: "margin-top:10px;font-size:13px" });
-  const set = (el, text) => { if (el.textContent !== text) el.textContent = text; };
-  const LABEL = { work: [h("span", { class: "spin" }), " קורא"], done: ["✓ הסתיים"], bad: ["⚠ לא הצליח"], wait: ["⏸ מחכה"], idle: [], skip: ["לא נמשך הפעם"] };
-  $root.replaceChildren(h("div", { class: "center" }, logo(), h("div", { class: "hero" }, "מושכים מודעות אמיתיות", name ? " בשביל " + name : ""),
-    h("div", { class: "muted" }, "דרך הכרום שלך, כל לוח בלשונית רקע משלו, בקצב של גולש רגיל. כמה דקות."), h("div", { class: "sboards" }, cards.map((c) => c.el)), other));
+  const set = (el, text) => { text = ts(text); if (el.textContent !== text) el.textContent = text; };
+  const LABEL = { work: [h("span", { class: "spin" }), tx(" קורא")], done: [tx("✓ הסתיים")], bad: [tx("⚠ לא הצליח")], wait: [tx("⏸ מחכה")], idle: [], skip: [tx("לא נמשך הפעם")] };
+  $root.replaceChildren(h("div", { class: "center" }, logo(), h("div", { class: "hero" }, tx("מושכים מודעות אמיתיות"), name ? tx(" בשביל ") + name : ""),
+    h("div", { class: "muted" }, tx("דרך הכרום שלך, כל לוח בלשונית רקע משלו, בקצב של גולש רגיל. כמה דקות.")), h("div", { class: "sboards" }, cards.map((c) => c.el)), other));
+  // A step is written by the server as "<board>: <what it does>" and is translated whole, then shown without the name.
+  const said = (c, m) => { const whole = c.he + ": " + m, to = ts(whole), at = to.indexOf(": "); return to === whole || at < 0 ? m : to.slice(at + 2); };
   // Nothing is rebuilt between looks: only a text, a bar or a state that really changed is touched.
   const show = (s) => {
     const rest = [];
@@ -481,8 +582,8 @@ function syncing(pid, name) {
       const m = c.last, prog = m.match(/\((\d+)\/(\d+)\)\s*$/), over = s.done ? s.done.includes(c.board) : !s.running;
       const state = /לא הצליח|תקלה אצלנו/.test(m) ? "bad" : /^מחכה לך|^נמשך לפני/.test(m) ? "wait" : !m ? (s.running ? "idle" : "skip") : over ? "done" : "work";
       if (state !== c.was) { c.was = state; c.el.className = "sb " + state; c.state.replaceChildren(...LABEL[state].map((x) => typeof x === "string" ? x : x.cloneNode())); }
-      set(c.msg, m || (state === "skip" ? "" : "מחכה לתורו"));
-      set(c.count, c.sum && c.sum !== m ? c.sum : "");
+      set(c.msg, m ? said(c, m) : state === "skip" ? "" : tx("מחכה לתורו"));
+      set(c.count, c.sum && c.sum !== m ? said(c, c.sum) : "");
       c.bar.style.width = (state === "done" ? 100 : state !== "work" ? 0 : prog ? Math.max(40, 40 + 60 * prog[1] / prog[2]) : c.sum ? 40 : 12) + "%";
     }
     set(other, rest.join(" · "));
@@ -490,9 +591,9 @@ function syncing(pid, name) {
   clearInterval(pollT);
   const look = async () => {
     let s;
-    try { s = await api("sync"); } catch (e) { return; }   // one missed look changes nothing on screen
+    try { s = await api("sync?for=" + pid); } catch (e) { return; }   // one missed look changes nothing on screen
     show(s);
-    if (!s.running) { clearInterval(pollT); if (s.error) toast("הסנכרון נכשל: " + s.error, 9000); setTimeout(() => board(pid, true), 700); }
+    if (!s.running) { clearInterval(pollT); if (s.error) toast(tx("הסנכרון נכשל: ") + s.error, 9000); setTimeout(async () => { await board(pid, true); changesDialog(true); }, 700); }
   };
   look();
   pollT = setInterval(look, 1200);
@@ -529,63 +630,65 @@ const passes = (a) => {
 };
 const SORT = { score: null, price: (a, b) => (a.price ?? 1e9) - (b.price ?? 1e9), fresh: (a, b) => (a.days_listed ?? 999) - (b.days_listed ?? 999), near: (a, b) => (a.dist_km ?? 99) - (b.dist_km ?? 99), sqm: (a, b) => (a.per_sqm ?? 1e12) - (b.per_sqm ?? 1e12) };
 const shown = () => { const ads = P.ads.filter(passes); if (SORT[F.sort]) ads.sort(SORT[F.sort]); return ads; };
-const CHANGE = (c) => c.field === "price" ? `המחיר ${c.to < c.from ? "ירד" : "עלה"} מ-${nis(c.from)} ל-${nis(c.to)}` : c.field === "gone" ? "ירדה מהלוח" : c.field === "back" ? "חזרה ללוח"
-  : c.field === "description" ? "הטקסט עודכן" : c.field === "images" ? `תמונות: ${c.from} ← ${c.to}` : c.field === "entrance" ? "תאריך הכניסה השתנה" : `${{ rooms: "חדרים", sqm: "שטח", floor: "קומה", seller: "מפרסם" }[c.field] || c.field}: ${c.from} ← ${c.to}`;
+const CHANGE = (c) => c.field === "price" ? tx`המחיר ${c.to < c.from ? tx("ירד") : tx("עלה")} מ-${nis(c.from)} ל-${nis(c.to)}` : c.field === "gone" ? tx("ירדה מהלוח") : c.field === "back" ? tx("חזרה ללוח")
+  : c.field === "description" ? tx("הטקסט עודכן") : c.field === "images" ? tx`תמונות: ${c.from} ← ${c.to}` : c.field === "entrance" ? tx("תאריך הכניסה השתנה") : `${{ rooms: tx("חדרים"), sqm: tx("שטח"), floor: tx("קומה"), seller: tx("מפרסם") }[c.field] || c.field}: ${c.from} ${FWD} ${c.to}`;
 const ringColor = (a) => a.fit === "no" ? "#cfc6b3" : a.score >= 75 ? "var(--mint)" : a.score >= 60 ? "#e2a100" : "var(--coral)";
-const ring = (a, big) => h("div", { class: "ring" + (big ? " big" : ""), style: `background: conic-gradient(${ringColor(a)} ${a.fit === "no" ? 0 : a.score}%, #eee6d6 0)`, title: a.fit === "no" ? "לא עוברת את תנאי החובה" : "ציון התאמה לפרופיל" }, h("span", {}, a.fit === "no" ? "–" : String(a.score)));
-const factsOf = (a) => [a.rooms != null && a.rooms + " חד'", a.sqm && a.sqm + " מ\"ר", floorHe(a), META.types[a.type] !== "דירה" && META.types[a.type], a.per_sqm && nis(a.per_sqm) + " למ\"ר"].filter(Boolean).join(" · ");
-const SELLER = { private: "פרטי", agent: "תיווך" };
+const ring = (a, big) => h("div", { class: "ring" + (big ? " big" : ""), style: `background: conic-gradient(${ringColor(a)} ${a.fit === "no" ? 0 : a.score}%, #eee6d6 0)`, title: a.fit === "no" ? tx("לא עוברת את תנאי החובה") : tx("ציון התאמה לפרופיל") }, h("span", {}, a.fit === "no" ? "–" : String(a.score)));
+const factsOf = (a) => [a.rooms != null && a.rooms + tx(" חד'"), a.sqm && a.sqm + tx(" מ\"ר"), floorHe(a), META.types[a.type] !== "דירה" && META.types[a.type], a.per_sqm && nis(a.per_sqm) + tx(" למ\"ר")].filter(Boolean).join(" · ");
+const SELLER = { private: tx("פרטי"), agent: tx("תיווך") };
 
 // One tag = one icon and a few words, with one colour per meaning: green is good news, yellow asks to check, red
 // rules the ad out, coral is ours (new, favourite), plain is a fact. Always in this order: ours, what happened to
 // the ad, the fit, the money, what the owner wrote; then, at the far end, its clock and its sources.
 const tag = (cls, icon, text, title) => h("span", { class: "chip " + cls, title }, h("i", {}, icon), text);
-function chipsOf(a) {
+function chipsOf(a, head) {
   const c = [];
-  if (a.fav_by.length) c.push(tag("fav", "♥", a.fav_by.join(", "), "סימנו: " + a.fav_by.join(", ")));
-  if (a.status && !PICKED.includes(a.status)) c.push(tag("bad", "👎", "פסלתי"));
-  if (a.gone_since) c.push(tag("bad", "🚫", "ירדה מהלוח", "מאז " + day(a.gone_since)));
-  if (a.is_new) c.push(tag("new", "🆕", "חדש"));
+  if (a.fav_by.length) c.push(tag("fav", "♥", a.fav_by.join(", "), tx("סימנו: ") + a.fav_by.join(", ")));
+  if (a.status && !PICKED.includes(a.status)) c.push(tag("bad", "👎", tx("פסלתי")));
+  if (a.gone_since) c.push(tag("bad", "🚫", tx("ירדה מהלוח"), tx("מאז ") + day(a.gone_since)));
+  if (a.is_new) c.push(tag("new", "🆕", tx("חדש")));
   const drop = a.recent.find((x) => x.field === "price");
-  if (drop) c.push(tag(drop.to < drop.from ? "good" : "warn", drop.to < drop.from ? "📉" : "📈", drop.to < drop.from ? "ירד מחיר" : "עלה מחיר", `מ-${nis(drop.from)} ל-${nis(drop.to)}`));
+  if (drop) c.push(tag(drop.to < drop.from ? "good" : "warn", drop.to < drop.from ? "📉" : "📈", drop.to < drop.from ? tx("ירד מחיר") : tx("עלה מחיר"), tx`מ-${nis(drop.from)} ל-${nis(drop.to)}`));
   if (a.fit === "no") c.push(tag("bad", "✕", a.no[0], a.no.join(" · ")));
   else if (a.unknown.length) c.push(tag("warn", "❔", a.unknown[0], a.unknown.join(" · ")));
-  else if (a.warn.length) c.push(tag("warn", "⚠️", "לברר: מדרגות", a.warn.join(" · ")));
-  const m = a.market, unit = m && m.per === "sqm" ? " למ\"ר" : "", within = m && `מול ${m.n} דירות דומות עד ${m.km || 2} ק"מ`;
-  if (a.flags.includes("odd_price")) c.push(tag("warn", "❔", "מחיר חריג", `${-m.delta_pct}% מתחת לדומות: לברר מה בדיוק מוצע`));
-  else if (m && m.delta_pct <= -5) c.push(tag("good", "↓", -m.delta_pct + "% מתחת לשוק" + unit, within));
-  if (m && m.delta_pct >= 8) c.push(tag("warn", "↑", m.delta_pct + "% מעל השוק" + unit, within));
-  if (a.haggle.length) c.push(tag("", "🤝", "מקום למיקוח", a.haggle.join(" · ")));
+  else if (a.warn.length) c.push(tag("warn", "⚠️", tx("לברר: מדרגות"), a.warn.join(" · ")));
+  const m = a.market, unit = m && m.per === "sqm" ? tx(" למ\"ר") : "", within = m && tx`מול ${m.n} דירות דומות עד ${m.km || 2} ק"מ`;
+  if (a.flags.includes("odd_price")) c.push(tag("warn", "❔", tx("מחיר חריג"), tx`${-m.delta_pct}% מתחת לדומות: לברר מה בדיוק מוצע`));
+  else if (m && m.delta_pct <= -5) c.push(tag("good", "↓", -m.delta_pct + tx("% מתחת לשוק") + unit, within));
+  if (m && m.delta_pct >= 8) c.push(tag("warn", "↑", m.delta_pct + tx("% מעל השוק") + unit, within));
+  if (a.haggle.length) c.push(tag("", "🤝", tx("מקום למיקוח"), a.haggle.join(" · ")));
   if (SALE()) {
-    if (a.flags.includes("key_money")) c.push(tag("bad", "🗝️", "דמי מפתח", "לפי הטקסט של המודעה: לא בעלות על הדירה"));
-    if (a.flags.includes("needs_work")) c.push(tag("warn", "🔨", "דרוש שיפוץ", "לפי המודעה"));
-    if (a.flags.includes("new_build")) c.push(tag("", "🏗️", "מקבלן", "דירה חדשה מקבלן או בפרויקט, לפי המודעה"));
-    if (a.flags.includes("renewal")) c.push(tag("", "♻️", "התחדשות עירונית", "המודעה מזכירה תמ\"א 38 או פינוי-בינוי"));
-    if (a.flags.includes("rented")) c.push(tag("", "📄", "מושכרת", "המודעה מזכירה שוכר או תשואה"));
+    if (a.flags.includes("key_money")) c.push(tag("bad", "🗝️", tx("דמי מפתח"), tx("לפי הטקסט של המודעה: לא בעלות על הדירה")));
+    if (a.flags.includes("needs_work")) c.push(tag("warn", "🔨", tx("דרוש שיפוץ"), tx("לפי המודעה")));
+    if (a.flags.includes("new_build")) c.push(tag("", "🏗️", tx("מקבלן"), tx("דירה חדשה מקבלן או בפרויקט, לפי המודעה")));
+    if (a.flags.includes("renewal")) c.push(tag("", "♻️", tx("התחדשות עירונית"), tx("המודעה מזכירה תמ\"א 38 או פינוי-בינוי")));
+    if (a.flags.includes("rented")) c.push(tag("", "📄", tx("מושכרת"), tx("המודעה מזכירה שוכר או תשואה")));
   }
-  if (a.flags.includes("religious")) c.push(tag("", "🕯️", "לשומרי שבת"));
-  if (a.flags.includes("basement")) c.push(tag("", "🕳️", "מרתף"));
+  if (a.flags.includes("religious")) c.push(tag("", "🕯️", tx("לשומרי שבת")));
+  if (a.flags.includes("basement")) c.push(tag("", "🕳️", tx("מרתף")));
   const t = touched(a), end = [];
-  if (t && t[1]) end.push(tag("time", "🕒", t[0] + " " + t[1], t[0] + " בלוח: " + new Date(t[2]).toLocaleString("he-IL", { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })));
-  a.boards.forEach((b) => end.push(h("span", { class: "chip b-" + b.board, title: "המודעה מופיעה ב" + META.boards[b.board] }, META.boards[b.board])));
+  if (t && t[1]) end.push(tag("time", "🕒", t[0] + " " + t[1], t[0] + tx(" בלוח: ") + new Date(t[2]).toLocaleString(LOCALE, { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })));
+  if (head) return c.concat(end);   // the ad view: one row from the reading side; its sources follow in the same row
+  a.boards.forEach((b) => end.push(h("span", { class: "chip b-" + b.board, title: tx("המודעה מופיעה ב") + META.boards[b.board] }, META.boards[b.board])));
   c.push(h("span", { class: "chips-end" }, end));
   return c;
 }
 
+const pieces = (list) => list.filter(Boolean).flatMap((x, i) => [i ? " · " : null, h("bdi", {}, x)]).filter(Boolean);
 function row(a) {
-  const where = [[a.street, a.house_no].filter(Boolean).join(" "), a.hood, a.dist_km != null && P.prefs.hoods.length && a.dist_km.toFixed(1) + " ק\"מ"].filter(Boolean).join(" · ");
+  const where = pieces([[a.street, a.house_no].filter(Boolean).join(" "), a.hood, a.dist_km != null && P.prefs.hoods.length && a.dist_km.toFixed(1) + tx(" ק\"מ")]);
   return h("article", { class: "ad" + (openId === a.id ? " open" : "") + (a.gone_since ? " gone" : "") + (a.status === "rejected" ? " rejected" : ""), id: "ad-" + a.id,
     onmouseenter: () => pins[a.id]?.classList.add("hot"), onmouseleave: () => openId !== a.id && pins[a.id]?.classList.remove("hot") },
     h("div", { class: "head", onclick: () => select(a.id) },
-      a.images[0] ? h("img", { class: "thumb", src: a.images[0], loading: "lazy", referrerPolicy: "no-referrer", alt: "", onerror: (e) => e.target.replaceWith(h("div", { class: "thumb" }, "אין תמונה")) }) : h("div", { class: "thumb" }, "אין תמונה"),
-      h("div", { style: "min-width:0" }, h("div", { class: "l1" }, h("span", { class: "price" }, nis(a.price)), h("span", {}, factsOf(a))), h("div", { class: "l2" }, where || "כתובת לא צוינה"), h("div", { class: "l3" }, chipsOf(a))),
+      a.images[0] ? h("img", { class: "thumb", src: a.images[0], loading: "lazy", referrerPolicy: "no-referrer", alt: "", onerror: (e) => e.target.replaceWith(h("div", { class: "thumb" }, tx("אין תמונה"))) }) : h("div", { class: "thumb" }, tx("אין תמונה")),
+      h("div", { style: "min-width:0" }, h("div", { class: "l1" }, h("span", { class: "price" }, nis(a.price)), h("span", {}, factsOf(a))), h("div", { class: "l2" }, where.length ? where : tx("כתובת לא צוינה")), h("div", { class: "l3" }, chipsOf(a))),
       ring(a)));
 }
 
 // ---------- the ad, in full ----------
 let mini = null;
 const FICON = { elevator: "🛗", accessible: "♿", mamad: "🛡️", shelter: "⛑️", parking: "🅿️", balcony: "🌤️", ac: "❄️", furnished: "🛋️", renovated: "✨", pets: "🐾", bars: "🔒", storage: "📦", boiler: "☀️" };
-const STATUS = { shortlist: "♥ מועדפת", contacted: "☎ דיברנו", visit: "👣 ביקור", rejected: "✕ לא" };
+const STATUS = { shortlist: tx("♥ מועדפת"), contacted: tx("☎ דיברנו"), visit: tx("👣 ביקור"), rejected: tx("✕ לא") };
 function closeModal() {
   if (mini) { mini.remove(); mini = null; }
   document.getElementById("modal")?.remove();
@@ -596,14 +699,14 @@ function linkBox(url, note) {
   const input = h("input", { type: "text", readOnly: true, value: url, dir: "ltr", onclick: (e) => e.target.select() });
   const copy = async (e) => {
     try { await navigator.clipboard.writeText(url); } catch (_) { input.select(); document.execCommand("copy"); }
-    e.target.textContent = "הועתק ✓";
+    e.target.textContent = tx("הועתק ✓");
   };
-  return h("div", { class: "linkbox" }, h("div", { class: "row2", style: "gap:6px;flex-wrap:nowrap" }, input, h("button", { class: "btn", onclick: copy }, "העתקה"),
-    h("a", { class: "btn ghost", target: "_blank", rel: "noopener", href: "https://wa.me/?text=" + encodeURIComponent(url) }, "וואטסאפ")), note && h("div", { class: "muted" }, note));
+  return h("div", { class: "linkbox" }, h("div", { class: "row2", style: "gap:6px;flex-wrap:nowrap" }, input, h("button", { class: "btn", onclick: copy }, tx("העתקה")),
+    h("a", { class: "btn ghost", target: "_blank", rel: "noopener", href: "https://wa.me/?text=" + encodeURIComponent(url) }, tx("וואטסאפ"))), note && h("div", { class: "muted" }, note));
 }
 
 function gallery(a) {
-  if (!a.images.length) return h("div", { class: "gallery none" }, "אין תמונות במודעה");
+  if (!a.images.length) return h("div", { class: "gallery none" }, tx("אין תמונות במודעה"));
   let at = 0;
   const big = h("img", { referrerPolicy: "no-referrer", alt: "" }), count = h("span", { class: "gcount" });
   const thumbs = h("div", { class: "thumbs" }, a.images.map((src, i) => h("img", { src, referrerPolicy: "no-referrer", loading: "lazy", alt: "", onclick: () => show(i) })));
@@ -616,7 +719,7 @@ function gallery(a) {
   };
   const el = h("div", { class: "gallery" },
     h("div", { class: "gbig" }, h("a", { target: "_blank", rel: "noopener", onclick: (e) => { e.currentTarget.href = a.images[at]; } }, big), count,
-      a.images.length > 1 && h("button", { class: "nav next", onclick: () => show(at + 1), title: "הבאה" }, "‹"), a.images.length > 1 && h("button", { class: "nav prev", onclick: () => show(at - 1), title: "הקודמת" }, "›")),
+      a.images.length > 1 && h("button", { class: "nav next", onclick: () => show(at + 1), title: tx("הבאה") }, "‹"), a.images.length > 1 && h("button", { class: "nav prev", onclick: () => show(at - 1), title: tx("הקודמת") }, "›")),
     a.images.length > 1 && thumbs);
   show(0);
   el.step = (d) => show(at + d);
@@ -626,10 +729,10 @@ function gallery(a) {
 function streetBox(a) {
   if (!a.lat) return null;
   const pano = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${a.lat},${a.lon}`;
-  const note = a.loc_approx === "hood" ? "מרכז השכונה בלבד" : "מיקום משוער";
-  return h("div", { class: "pane" }, h("div", { class: "ptitle" }, "📷 מבט מהרחוב", h("span", { class: "muted" }, note), h("a", { href: pano, target: "_blank", rel: "noopener" }, "↗")),
+  const note = a.loc_approx === "hood" ? tx("מרכז השכונה בלבד") : tx("מיקום משוער");
+  return h("div", { class: "pane" }, h("div", { class: "ptitle" }, tx("📷 מבט מהרחוב"), h("span", { class: "muted" }, note), h("a", { href: pano, target: "_blank", rel: "noopener" }, "↗")),
     META.maps_key ? h("iframe", { src: `https://www.google.com/maps/embed/v1/streetview?key=${encodeURIComponent(META.maps_key)}&location=${a.lat},${a.lon}&fov=85`, allowFullscreen: true, referrerPolicy: "origin", loading: "lazy" })
-      : h("a", { class: "panelink", href: pano, target: "_blank", rel: "noopener" }, "לפתוח מבט מהרחוב בגוגל מפות ↗"));
+      : h("a", { class: "panelink", href: pano, target: "_blank", rel: "noopener" }, tx("לפתוח מבט מהרחוב בגוגל מפות ↗")));
 }
 
 // The ad's own surroundings: the nearest everyday place of each kind, with walking minutes.
@@ -647,22 +750,22 @@ function aroundBox(a) {
       pts.push([n.lat, n.lon]);
       L.polyline([[a.lat, a.lon], [n.lat, n.lon]], { color: "#24201a", weight: 1.5, dashArray: "3 6" }).addTo(mini);
       L.marker([n.lat, n.lon], { icon: L.divIcon({ html: h("div", { class: "poi hit" }, GLYPH[k]), className: "", iconSize: [0, 0] }) })
-        .bindTooltip(h("div", { dir: "rtl" }, h("b", {}, `${n.min}'`), " " + n.name), { permanent: true, direction: "top", offset: [0, -13], className: "tw small", opacity: 1 }).addTo(mini);
+        .bindTooltip(h("div", { dir: DIR }, h("b", {}, `${n.min}'`), " " + n.name), { permanent: true, direction: "top", offset: [0, -13], className: "tw small", opacity: 1 }).addTo(mini);
     }
     L.marker([a.lat, a.lon], { icon: L.divIcon({ html: h("div", { class: "pin hot" }, pinText(a)), className: "", iconSize: [0, 0] }), zIndexOffset: 9000 }).addTo(mini);
     mini.fitBounds(pts, { padding: [40, 40], maxZoom: 17 });
   }, 80);
-  return h("div", { class: "pane" }, h("div", { class: "ptitle" }, "🚶 מה יש מסביב", h("span", { class: "muted" }, "דקות הליכה, הערכה")), el);
+  return h("div", { class: "pane" }, h("div", { class: "ptitle" }, tx("🚶 מה יש מסביב"), h("span", { class: "muted" }, tx("דקות הליכה, הערכה"))), el);
 }
 
 // One small pill per board that lists the flat, then where each part of the merged ad came from.
 function sources(a, ro) {
   const prices = new Set(a.boards.map((b) => b.price).filter(Boolean)), low = Math.min(...prices);
   const p = a.prov;
-  const where = p.location === "street" ? "לפי הכתובת (OpenStreetMap)" : p.location === "hood" ? "מרכז השכונה בלבד" : p.location ? "הנעץ של " + META.boards[p.location] : "לא ידוע";
-  const from = [p.description && ["📝", "תיאור: " + META.boards[p.description]], p.features.length && ["🧩", "מאפיינים: " + p.features.map((b) => META.boards[b]).join(" + ")],
-    ["📍", "מיקום: " + where], p.insights && ["🏘️", "סביבה: מדלן" + (p.insights === "near" ? ` (מודעה ${a.insights_from} מ' מכאן)` : "")],
-    Object.keys(a.near).length && ["🚶", "הליכה: OpenStreetMap"], a.lat && ["📷", "מבט מהרחוב: Google"]].filter(Boolean);
+  const where = p.location === "street" ? tx("לפי הכתובת (OpenStreetMap)") : p.location === "hood" ? tx("מרכז השכונה בלבד") : p.location ? tx("הנעץ של ") + META.boards[p.location] : tx("לא ידוע");
+  const from = [p.description && ["📝", tx("תיאור: ") + META.boards[p.description]], p.features.length && ["🧩", tx("מאפיינים: ") + p.features.map((b) => META.boards[b]).join(" + ")],
+    ["📍", tx("מיקום: ") + where], p.insights && ["🏘️", tx("סביבה: מדלן") + (p.insights === "near" ? tx` (מודעה ${a.insights_from} מ' מכאן)` : "")],
+    Object.keys(a.near).length && ["🚶", tx("הליכה: OpenStreetMap")], a.lat && ["📷", tx("מבט מהרחוב: Google")]].filter(Boolean);
   const readFull = (b) => async (e) => {
     e.preventDefault(); e.stopPropagation();
     e.target.disabled = true; e.target.textContent = "…";
@@ -670,11 +773,14 @@ function sources(a, ro) {
     catch (err) { toast(err.message, 9000); e.target.disabled = false; e.target.textContent = "⤓"; }
   };
   return h("div", { class: "srcrow" },
-    h("span", { class: "slabel" }, a.boards.length > 1 ? `אותה דירה ב-${a.boards.length} לוחות` + (prices.size > 1 ? " · מחיר שונה" : "") : "מקור"),
-    a.boards.map((b) => h("a", { class: "spill b-" + b.board, href: b.url, target: "_blank", rel: "noopener",
-      title: `${META.boards[b.board]}: ${SELLER[b.seller] || "מפרסם לא ידוע"}, ${b.has_detail ? "המודעה המלאה נקראה" : "רק שורה מהרשימה"}, נראתה ${day(b.last_seen)}` },
+    h("span", { class: "slabel" }, a.boards.length > 1 ? tx`אותה דירה ב-${a.boards.length} לוחות` + (prices.size > 1 ? tx(" · מחיר שונה") : "") : tx("מקור")),
+    a.boards.map((b) => h(b.url ? "a" : "span", { class: "spill b-" + b.board, ...(b.url ? { href: b.url, target: "_blank", rel: "noopener" } : {}),
+      title: tx`${META.boards[b.board]}: ${SELLER[b.seller] || tx("מפרסם לא ידוע")}, ${b.has_detail ? tx("המודעה המלאה נקראה") : tx("רק שורה מהרשימה")}, נראתה ${day(b.last_seen)}` },
       h("b", {}, META.boards[b.board]), h("span", { class: prices.size > 1 && b.price === low ? "low" : "" }, nis(b.price)), h("span", {}, b.seller === "private" ? "👤" : b.seller === "agent" ? "🏢" : "❔"),
-      h("span", {}, b.has_detail ? "✓" : "○"), "↗", !b.has_detail && !ro && ME.owner && h("button", { title: "לקרוא את המודעה המלאה מהלוח", onclick: readFull(b) }, "⤓"))),
+      h("span", {}, b.has_detail ? "✓" : "○"), b.url && "↗", !b.has_detail && !ro && ME.owner && h("button", { title: tx("לקרוא את המודעה המלאה מהלוח"), onclick: readFull(b) }, "⤓"),
+      b.board === "paste" && !ro && ME.owner && h("button", { title: tx("להסיר את המודעה שהודבקה"), onclick: async (e) => {
+        e.preventDefault(); e.stopPropagation();
+        try { await api(`profiles/${P.id}/ads/${b.id}/remove`, {}); P = await api("profiles/" + P.id); draw(); select(P.ads.some((x) => x.id === a.id) ? a.id : null); } catch (err) { toast(err.message); } } }, "🗑"))),
     h("span", { class: "grow" }),
     from.map(([icon, text]) => h("span", { class: "pv", title: text }, icon)));
 }
@@ -683,63 +789,67 @@ function modal(a, opt = {}) {
   closeModal();
   const ro = !!opt.readonly, m = a.market, c = a.cost, list = ro ? [a] : visibleAds(), at = list.findIndex((x) => x.id === a.id);
   const save = async (body) => { try { await api(`profiles/${P.id}/ads/${a.id}`, body); P = await api("profiles/" + P.id); draw(); modal(P.ads.find((x) => x.id === a.id) || a); } catch (e) { toast(e.message); } };
-  const timeline = [[a.first_seen, "ראינו אותה לראשונה"],
-    ...(a.board_events || []).map((e) => [e.at, e.kind === "new" ? "פורסמה ב-" + nis(e.price) : e.kind === "before" ? "המחיר הקודם בלוח: " + nis(e.price) : "המחיר ירד ל-" + nis(e.price)]),
+  const timeline = [[a.first_seen, tx("ראינו אותה לראשונה")],
+    ...(a.board_events || []).map((e) => [e.at, e.kind === "new" ? tx("פורסמה ב-") + nis(e.price) : e.kind === "before" ? tx("המחיר הקודם בלוח: ") + nis(e.price) : tx("המחיר ירד ל-") + nis(e.price)]),
     ...(a.changes || []).map((ch) => [ch.at, CHANGE(ch)])].sort((x, y) => String(x[0] || "").localeCompare(String(y[0] || "")));
-  const where = [[a.street, a.house_no].filter(Boolean).join(" "), a.hood, a.city].filter(Boolean).join(" · ");
+  const where = pieces([[a.street, a.house_no].filter(Boolean).join(" "), a.hood, a.city]);
   const fact = (icon, label, value) => value != null && value !== "" && value !== false && h("div", { class: "fact" }, h("span", { class: "fi" }, icon), h("div", {}, h("small", {}, label), h("b", { dir: "auto" }, String(value))));
   const sellers = [...new Set(a.boards.map((b) => SELLER[b.seller]).filter(Boolean))].join(" / ");
   const card = (title, cls, ...kids) => kids.flat().some(Boolean) ? h("section", { class: "dcard " + (cls || "") }, h("h4", {}, title), ...kids) : null;
   const gal = gallery(a);
   const shareBtn = h("button", { class: "btn ghost", onclick: async (e) => {
-    try { const r = await api(`profiles/${P.id}/ads/${a.id}/share`, {}); e.target.replaceWith(linkBox(r.url, `מי שמקבל רואה רק את המודעה הזאת, בלי הערות, למשך ${r.days} יום. עובד ברשת הביתית.`)); }
+    try { const r = await api(`profiles/${P.id}/ads/${a.id}/share`, {}); e.target.replaceWith(linkBox(r.url, tx`מי שמקבל רואה רק את המודעה הזאת, בלי הערות, למשך ${r.days} יום. עובד ברשת הביתית.`)); }
     catch (err) { toast(err.message, 8000); }
-  } }, "🔗 שיתוף המודעה");
+  } }, tx("🔗 שיתוף המודעה"));
   const el = h("div", { class: "mcard", onclick: (e) => e.stopPropagation() },
-    h("div", { class: "mhead" }, ring(a, true),
-      h("div", { style: "min-width:0;flex:1" }, h("div", { class: "l1" }, h("span", { class: "mprice" }, nis(a.price)), h("span", { class: "mfacts" }, factsOf(a))), h("div", { class: "muted" }, where || "כתובת לא צוינה"), h("div", { class: "l3" }, chipsOf(a))),
-      h("div", { class: "mhsrc" }, sources(a, ro)),
+    // The head: who the flat is (score, price, the basics, the address) and the way out; under it one row that
+    // starts from the reading side: its tags, then where the ad comes from.
+    h("div", { class: "mhead" }, h("div", { class: "mhtop" }, ring(a, true),
+      h("div", { class: "mhmain" }, h("div", { class: "l1" }, h("span", { class: "mprice" }, nis(a.price)), h("span", { class: "mfacts" }, factsOf(a))), h("div", { class: "muted" }, where.length ? where : tx("כתובת לא צוינה"))),
       h("div", { class: "mnav" },
-        !ro && h("button", { class: "btn ghost", disabled: at <= 0, title: "הקודמת (חץ ימינה)", onclick: () => select(list[at - 1].id) }, "→"),
+        !ro && h("button", { class: "btn ghost", disabled: at <= 0, title: tx("הקודמת (חץ ימינה)"), onclick: () => select(list[at - 1].id) }, BACK),
         !ro && at >= 0 && h("span", { class: "muted" }, `${at + 1} / ${list.length}`),
-        !ro && h("button", { class: "btn ghost", disabled: at < 0 || at >= list.length - 1, title: "הבאה (חץ שמאלה)", onclick: () => select(list[at + 1].id) }, "←"),
-        !ro && h("button", { class: "btn", title: "סגירה (Esc)", onclick: () => select(null) }, "✕"))),
+        !ro && h("button", { class: "btn ghost", disabled: at < 0 || at >= list.length - 1, title: tx("הבאה (חץ שמאלה)"), onclick: () => select(list[at + 1].id) }, FWD),
+        !ro && h("button", { class: "btn", title: tx("סגירה (Esc)"), onclick: () => select(null) }, "✕"))),
+      h("div", { class: "mhrow" }, chipsOf(a, true), sources(a, ro))),
     h("div", { class: "mbody" },
       h("div", { class: "mmedia" + (a.lat ? "" : " solo") }, gal, a.lat && h("div", { class: "side" }, streetBox(a), aroundBox(a))),
       h("div", { class: "mdetail" },
       h("div", { class: "dgrid" },
-        card("בקצרה", "wide", h("div", { class: "facts" },
-          fact("🏠", "סוג", META.types[a.type]), fact("📅", "כניסה", a.immediate ? "מיידית" : a.entrance && new Date(a.entrance).toLocaleDateString("he-IL", { day: "numeric", month: "numeric", year: "2-digit" }) + (a.entrance_flexible ? " (גמיש)" : "")),
-          fact("🧱", "מצב", a.condition), fact("⏱️", "בלוח", a.days_listed != null && (a.days_listed ? a.days_listed + " ימים" : "מהיום")),
-          fact("👤", "מפרסם", sellers), fact("📐", "מחיר למ\"ר", a.per_sqm && nis(a.per_sqm)), fact("🕒", "עודכנה", a.updated_at && ago(a.updated_at)), fact("📍", "מהשכונה", a.dist_km != null && opt.hoods !== false && P.prefs.hoods.length && a.dist_km.toFixed(1) + " ק\"מ"))),
-        card("מה כתב בעל הדירה", "wide", a.summary && h("div", { class: "sum", dir: "auto" }, a.summary),
-          h("div", { class: "txt", dir: "auto" }, a.description || (a.has_detail ? "לא נכתב תיאור." : "המודעה המלאה עוד לא נקראה.")), a.furniture && h("div", { class: "muted", dir: "auto" }, "🛋️ " + a.furniture)),
-        card("התאמה לפרופיל", "", h("div", { class: "fitline" }, h("b", { class: a.fit }, a.fit === "yes" ? "מתאימה" : a.fit === "maybe" ? "חסר מידע במודעה" : "לא עוברת את תנאי החובה")),
+        card(tx("בקצרה"), "wide", h("div", { class: "facts" },
+          fact("🚪", tx("חדרים"), a.rooms), fact("📏", tx("גודל"), a.sqm && a.sqm + tx(" מ\"ר")),
+          fact("🏢", tx("קומה"), a.floor == null ? null : a.floor < 0 ? tx("מרתף") : a.floor === 0 ? tx("קרקע") : a.top_floor ? tx`${a.floor} מתוך ${a.top_floor}` : a.floor),
+          fact("🏠", tx("סוג"), META.types[a.type]), fact("📅", tx("כניסה"), a.immediate ? tx("מיידית") : a.entrance && new Date(a.entrance).toLocaleDateString(LOCALE, { day: "numeric", month: "numeric", year: "2-digit" }) + (a.entrance_flexible ? tx(" (גמיש)") : "")),
+          fact("🧱", tx("מצב"), a.condition), fact("⏱️", tx("בלוח"), a.days_listed != null && (a.days_listed ? a.days_listed + tx(" ימים") : tx("מהיום"))),
+          fact("👤", tx("מפרסם"), sellers), fact("📐", tx("מחיר למ\"ר"), a.per_sqm && nis(a.per_sqm)), fact("🕒", tx("עודכנה"), a.updated_at && ago(a.updated_at)), fact("📍", tx("מהשכונה"), a.dist_km != null && opt.hoods !== false && P.prefs.hoods.length && a.dist_km.toFixed(1) + tx(" ק\"מ")))),
+        card(tx("מה כתב בעל הדירה"), "wide", a.summary && h("div", { class: "sum", dir: "auto" }, a.summary),
+          h("div", { class: "txt", dir: "auto" }, a.description || (a.has_detail ? tx("לא נכתב תיאור.") : tx("המודעה המלאה עוד לא נקראה."))), a.furniture && h("div", { class: "muted", dir: "auto" }, "🛋️ " + a.furniture)),
+        card(tx("התאמה לפרופיל"), "", h("div", { class: "fitline" }, h("b", { class: a.fit }, a.fit === "yes" ? tx("מתאימה") : a.fit === "maybe" ? tx("חסר מידע במודעה") : tx("לא עוברת את תנאי החובה"))),
           (a.no.length || a.unknown.length || a.warn.length) ? h("div", { class: "why" }, a.no.map((t) => h("span", { class: "chip bad" }, t)), a.unknown.map((t) => h("span", { class: "chip warn" }, t)), a.warn.map((t) => h("span", { class: "chip warn" }, t))) : null,
           a.why.map(([pts, t]) => h("div", { class: "kv" }, h("span", {}, t), h("b", { class: pts > 0 ? "plus" : "minus" }, (pts > 0 ? "+" : "") + pts)))),
-        card("כסף", "", c && c.parts.map(([k, v]) => h("div", { class: "kv" }, h("span", {}, k), h("span", {}, nis(v)))),
-          c && c.parts.length > 1 && h("div", { class: "kv total" }, h("span", {}, "סה\"כ לחודש"), h("span", {}, nis(c.total))),
-          c && c.per_sqm && h("div", { class: "kv" }, h("span", {}, "מחיר למ\"ר"), h("span", {}, nis(c.per_sqm))),
-          c && c.included.length ? h("div", { class: "muted" }, "כלול לפי המודעה: " + c.included.join(", ")) : null, c && c.excluded.length ? h("div", { class: "muted" }, "לא כלול: " + c.excluded.join(", ")) : null,
-          m && h("div", { class: "msep" }, m.delta_pct === 0 ? "במחיר החציוני של דירות דומות" : h("b", {}, Math.abs(m.delta_pct) + "% " + (m.delta_pct < 0 ? "מתחת" : "מעל")), m.delta_pct !== 0 && (m.per === "sqm" ? " למחיר למ\"ר בדירות דומות · חציון " + nis(m.median) + " למ\"ר" : " לדירות דומות · חציון " + nis(m.median))),
+        card(tx("כסף"), "", c && c.parts.map(([k, v]) => h("div", { class: "kv" }, h("span", {}, k), h("span", {}, nis(v)))),
+          c && c.parts.length > 1 && h("div", { class: "kv total" }, h("span", {}, tx("סה\"כ לחודש")), h("span", {}, nis(c.total))),
+          c && c.per_sqm && h("div", { class: "kv" }, h("span", {}, tx("מחיר למ\"ר")), h("span", {}, nis(c.per_sqm))),
+          c && c.included.length ? h("div", { class: "muted" }, tx("כלול לפי המודעה: ") + c.included.join(", ")) : null, c && c.excluded.length ? h("div", { class: "muted" }, tx("לא כלול: ") + c.excluded.join(", ")) : null,
+          m && h("div", { class: "msep" }, m.delta_pct === 0 ? tx("במחיר החציוני של דירות דומות") : h("b", {}, Math.abs(m.delta_pct) + "% " + (m.delta_pct < 0 ? tx("מתחת") : tx("מעל"))), m.delta_pct !== 0 && (m.per === "sqm" ? tx(" למחיר למ\"ר בדירות דומות · חציון ") + nis(m.median) + tx(" למ\"ר") : tx(" לדירות דומות · חציון ") + nis(m.median))),
           m && h("div", { class: "mbar" }, h("i"), h("b", { style: `left:${Math.max(4, Math.min(96, 50 + m.delta_pct * 1.6))}%;background:${m.delta_pct <= 0 ? "var(--mint)" : "#ffb84d"}` })),
-          m && h("div", { class: "muted" }, `${m.n} דירות בגודל דומה, עד ${m.km || 2} ק"מ, מכל הלוחות`),
-          c && c.monthly && c.monthly.length ? [h("div", { class: "msep" }, "עלויות שוטפות לחודש, לפי המודעה"), c.monthly.map(([k, v]) => h("div", { class: "kv" }, h("span", {}, k), h("span", {}, nis(v)))),
-            c.monthly.length > 1 && h("div", { class: "kv total" }, h("span", {}, "סה\"כ לחודש"), h("span", {}, nis(c.monthly_total)))] : null,
-          a.haggle.length ? h("div", { class: "msep" }, "🤝 מקום למיקוח: " + a.haggle.join(" · ")) : null),
-        card("מה יש בדירה", "", h("div", { class: "why" }, a.features.map((f) => h("span", { class: "chip" }, (FICON[f] || "") + " " + META.features[f])), a.on_pillars && h("span", { class: "chip" }, "🏛️ על עמודים"),
-          !a.features_known && h("span", { class: "chip warn" }, "המאפיינים עוד לא ידועים"), a.features_known && !a.features.length && h("span", { class: "muted" }, "לא סומן דבר במודעה"))),
-        card("במרחק הליכה", "", WALK.filter((k) => a.near[k]).map((k) => h("div", { class: "kv" }, h("span", { dir: "auto" }, `${GLYPH[k]} ${a.near[k].name}`), h("span", {}, `${a.near[k].min} דק'`)))),
-        card("הסביבה", "", a.insights.map((t) => h("div", { dir: "auto" }, "• " + t)), a.park_walk_min && h("div", {}, `• ${a.park_walk_min} דקות הליכה לפארק`), a.rail && h("div", {}, "• רכבת קרובה: " + a.rail)),
-        card("מה קרה למודעה", "tl", timeline.map(([t, text]) => h("div", {}, h("time", {}, day(t)), h("span", {}, text))))))),
+          m && h("div", { class: "muted" }, tx`${m.n} דירות בגודל דומה, עד ${m.km || 2} ק"מ, מכל הלוחות`),
+          c && c.monthly && c.monthly.length ? [h("div", { class: "msep" }, tx("עלויות שוטפות לחודש, לפי המודעה")), c.monthly.map(([k, v]) => h("div", { class: "kv" }, h("span", {}, k), h("span", {}, nis(v)))),
+            c.monthly.length > 1 && h("div", { class: "kv total" }, h("span", {}, tx("סה\"כ לחודש")), h("span", {}, nis(c.monthly_total)))] : null,
+          a.haggle.length ? h("div", { class: "msep" }, tx("🤝 מקום למיקוח: ") + a.haggle.join(" · ")) : null),
+        card(tx("מה יש בדירה"), "", h("div", { class: "why" }, a.features.map((f) => h("span", { class: "chip" }, (FICON[f] || "") + " " + META.features[f])), a.on_pillars && h("span", { class: "chip" }, tx("🏛️ על עמודים")),
+          !a.features_known && h("span", { class: "chip warn" }, tx("המאפיינים עוד לא ידועים")), a.features_known && !a.features.length && h("span", { class: "muted" }, tx("לא סומן דבר במודעה")))),
+        card(tx("במרחק הליכה"), "", WALK.filter((k) => a.near[k]).map((k) => h("div", { class: "kv" }, h("span", { dir: "auto" }, `${GLYPH[k]} ${a.near[k].name}`), h("span", {}, tx`${a.near[k].min} דק'`)))),
+        card(tx("הסביבה"), "", a.insights.map((t) => h("div", { dir: "auto" }, "• " + t)), a.park_walk_min && h("div", {}, tx`• ${a.park_walk_min} דקות הליכה לפארק`), a.rail && h("div", {}, tx("• רכבת קרובה: ") + a.rail)),
+        card(tx("מה קרה למודעה"), "tl", timeline.map(([t, text]) => h("div", {}, h("time", {}, day(t)), h("span", {}, text))))))),
     !ro && h("div", { class: "act" },
-      h("b", { class: "us" }, "אנחנו"),
+      h("b", { class: "us" }, tx("אנחנו")),
       h("div", { class: "seg st" }, Object.entries(STATUS).map(([v, t]) => h("button", { class: (a.status === v ? "on " : "") + v, onclick: () => save({ status: a.status === v ? "" : v }) }, t))),
-      h("input", { type: "text", placeholder: "הערה שלך, כולם בחיפוש רואים", value: a.note || "", dir: "rtl", onchange: (e) => save({ note: e.target.value }) }),
+      h("input", { type: "text", placeholder: tx("הערה שלך, כולם בחיפוש רואים"), value: a.note || "", dir: DIR, onchange: (e) => save({ note: e.target.value }) }),
       a.marks.filter((k) => !k.mine).map((k) => h("span", { class: "mark", title: k.name + (k.note ? ": " + k.note : "") }, h("span", { class: "bub" }, k.name[0]),
         k.status && h("span", { class: "chip " + (k.status === "rejected" ? "bad" : "good") }, STATUS[k.status]), k.note && h("span", { class: "mnote", dir: "auto" }, k.note))),
       shareBtn,
-      a.lat && h("a", { href: `https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lon}`, target: "_blank", rel: "noopener" }, "גוגל מפות ↗")));
+      a.lat && h("a", { href: `https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lon}`, target: "_blank", rel: "noopener" }, tx("גוגל מפות ↗"))));
   el.gal = gal;
   document.body.append(h("div", { id: "modal", class: ro ? "page" : "", onclick: () => !ro && select(null) }, el));
 }
@@ -747,17 +857,17 @@ function modal(a, opt = {}) {
 // What a pin says on hover: the ad in one glance.
 function tip(a) {
   const walk = WALK.slice(0, 4).filter((k) => a.near[k]).map((k) => `${GLYPH[k]} ${a.near[k].min}'`).join("  ");
-  return h("div", { class: "tip", dir: "rtl" },
+  return h("div", { class: "tip", dir: DIR },
     a.images[0] && h("img", { src: a.images[0], referrerPolicy: "no-referrer", alt: "" }),
     h("div", {}, h("div", {}, h("b", {}, nis(a.price)), " · " + factsOf(a)), h("div", { class: "muted" }, [[a.street, a.house_no].filter(Boolean).join(" "), a.hood].filter(Boolean).join(" · ")),
-      h("div", { class: "l3" }, a.fit !== "no" ? h("span", { class: "chip good" }, "התאמה " + a.score) : h("span", { class: "chip bad" }, a.no[0]),
-        a.market && Math.abs(a.market.delta_pct) >= 5 && h("span", { class: "chip " + (a.market.delta_pct < 0 ? "good" : "warn") }, Math.abs(a.market.delta_pct) + "% " + (a.market.delta_pct < 0 ? "מתחת לשוק" : "מעל השוק")),
+      h("div", { class: "l3" }, a.fit !== "no" ? h("span", { class: "chip good" }, tx("התאמה ") + a.score) : h("span", { class: "chip bad" }, a.no[0]),
+        a.market && Math.abs(a.market.delta_pct) >= 5 && h("span", { class: "chip " + (a.market.delta_pct < 0 ? "good" : "warn") }, Math.abs(a.market.delta_pct) + "% " + (a.market.delta_pct < 0 ? tx("מתחת לשוק") : tx("מעל השוק"))),
         a.boards.map((b) => h("span", { class: "chip b-" + b.board }, META.boards[b.board]))),
-      walk && h("div", { class: "muted", style: "margin-top:2px" }, "הליכה: " + walk)));
+      walk && h("div", { class: "muted", style: "margin-top:2px" }, tx("הליכה: ") + walk)));
 }
 const poiMarker = (pl, hit, label) => {
   const m = L.marker([pl.lat, pl.lon], { icon: L.divIcon({ html: h("div", { class: "poi" + (hit ? " hit" : "") }, GLYPH[pl.kind]), className: "", iconSize: [0, 0] }), zIndexOffset: hit ? 5000 : -1000 });
-  return m.bindTooltip(h("div", { dir: "rtl" }, h("b", {}, pl.name), h("div", { class: "muted" }, label || P.kinds[pl.kind])), { direction: "top", offset: [0, -12], className: "tw", opacity: 1 });
+  return m.bindTooltip(h("div", { dir: DIR }, h("b", {}, pl.name), h("div", { class: "muted" }, label || P.kinds[pl.kind])), { direction: "top", offset: [0, -12], className: "tw", opacity: 1 });
 };
 function drawPlaces() {
   poiLayer.clearLayers();
@@ -782,8 +892,8 @@ document.addEventListener("keydown", (e) => {
   if (!openId || /INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) return;
   const list = visibleAds(), at = list.findIndex((x) => x.id === openId);
   if (e.key === "Escape") select(null);
-  else if (e.key === "ArrowLeft" && list[at + 1]) select(list[at + 1].id);
-  else if (e.key === "ArrowRight" && at > 0) select(list[at - 1].id);
+  else if (e.key === (DIR === "rtl" ? "ArrowLeft" : "ArrowRight") && list[at + 1]) select(list[at + 1].id);
+  else if (e.key === (DIR === "rtl" ? "ArrowRight" : "ArrowLeft") && at > 0) select(list[at - 1].id);
 });
 
 function filterPanel() {
@@ -795,15 +905,15 @@ function filterPanel() {
   const rooms = (k, ph) => h("select", { onchange: (e) => set(k, e.target.value) }, [["", ph], ...[1, 1.5, 2, 2.5, 3, 3.5, 4, 5].map((n) => [String(n), String(n)])].map(([v, t]) => h("option", { value: v, selected: String(x[k]) === v }, t)));
   const g = (label, ...kids) => h("div", { class: "fg" }, h("label", {}, label), ...kids);
   return h("div", { class: "fpanel" },
-    g("מקור", chips("boards", Object.entries(META.boards))),
-    g("מפרסם", seg("seller", [["any", "הכל"], ["private", "👤 פרטי"], ["agent", "🏢 תיווך"]])),
-    g("מחיר עד", h("input", { type: "number", step: SALE() ? 50000 : 100, placeholder: "₪", value: x.price, style: `width:${SALE() ? 130 : 100}px`, onchange: (e) => set("price", e.target.value) })),
-    g("חדרים", h("div", { class: "row2", style: "gap:6px" }, rooms("rooms_min", "מ-"), rooms("rooms_max", "עד"))),
-    g("גישה", seg("access", [["any", "הכל"], ["nostairs", "♿ בלי מדרגות"], ["ground", "🌱 קרקע"], ["lift", "🛗 מעלית"]])),
-    g("חייב להיות בדירה", chips("feats", Object.entries(META.features).filter(([k]) => k !== "elevator").map(([k, t]) => [k, (FICON[k] ? FICON[k] + " " : "") + t]))),
-    g("עד 8 דקות הליכה", chips("walk", WALK.map((k) => [k, GLYPH[k] + " " + P.kinds[k].split(" /")[0]]))),
-    g("עוד", h("div", { class: "pick" }, flag("photos", "📷 עם תמונות"), flag("below", "↓ מתחת לשוק"), flag("multi", "🔁 ביותר מלוח אחד"), flag("noBasement", "🕳️ בלי מרתפים"), flag("noReligious", "🕯️ בלי \"לשומרי שבת\""))),
-    h("div", { class: "fg", style: "align-self:end" }, h("button", { class: "btn ghost", onclick: () => { F.x = Object.assign({}, X0); draw(); } }, "ניקוי")));
+    g(tx("מקור"), chips("boards", Object.entries(META.boards))),
+    g(tx("מפרסם"), seg("seller", [["any", tx("הכל")], ["private", tx("👤 פרטי")], ["agent", tx("🏢 תיווך")]])),
+    g(tx("מחיר עד"), h("input", { type: "number", step: SALE() ? 50000 : 100, placeholder: "₪", value: x.price, style: `width:${SALE() ? 130 : 100}px`, onchange: (e) => set("price", e.target.value) })),
+    g(tx("חדרים"), h("div", { class: "row2", style: "gap:6px" }, rooms("rooms_min", tx("מ-")), rooms("rooms_max", tx("עד")))),
+    g(tx("גישה"), seg("access", [["any", tx("הכל")], ["nostairs", tx("♿ בלי מדרגות")], ["ground", tx("🌱 קרקע")], ["lift", tx("🛗 מעלית")]])),
+    g(tx("חייב להיות בדירה"), chips("feats", Object.entries(META.features).filter(([k]) => k !== "elevator").map(([k, t]) => [k, (FICON[k] ? FICON[k] + " " : "") + t]))),
+    g(tx("עד 8 דקות הליכה"), chips("walk", WALK.map((k) => [k, GLYPH[k] + " " + P.kinds[k].split(" /")[0]]))),
+    g(tx("עוד"), h("div", { class: "pick" }, flag("photos", tx("📷 עם תמונות")), flag("below", tx("↓ מתחת לשוק")), flag("multi", tx("🔁 ביותר מלוח אחד")), flag("noBasement", tx("🕳️ בלי מרתפים")), flag("noReligious", tx("🕯️ בלי \"לשומרי שבת\"")))),
+    h("div", { class: "fg", style: "align-self:end" }, h("button", { class: "btn ghost", onclick: () => { F.x = Object.assign({}, X0); draw(); } }, tx("ניקוי"))));
 }
 
 const PICKED = ["shortlist", "contacted", "visit"];
@@ -814,7 +924,7 @@ const visibleAds = () => F.tab === "fav" ? favorites() : shown();
 function favRow(a) {
   const el = row(a);
   el.append(h("div", { class: "favnotes" }, a.marks.filter((k) => PICKED.includes(k.status) || k.note).map((k) =>
-    h("div", { class: "mark" }, h("span", { class: "bub" + (k.mine ? " me" : "") }, k.name[0]), h("div", {}, h("b", {}, k.mine ? "אני" : k.name), k.status && h("span", { class: "chip " + (k.status === "rejected" ? "bad" : "good") }, STATUS[k.status]), k.note && h("span", { dir: "auto" }, " " + k.note))))));
+    h("div", { class: "mark" }, h("span", { class: "bub" + (k.mine ? " me" : "") }, k.name[0]), h("div", {}, h("b", {}, k.mine ? tx("אני") : k.name), k.status && h("span", { class: "chip " + (k.status === "rejected" ? "bad" : "good") }, STATUS[k.status]), k.note && h("span", { dir: "auto" }, " " + k.note))))));
   return el;
 }
 
@@ -826,20 +936,20 @@ function draw() {
   const news = P.ads.filter((a) => a.is_new || a.recent.length).length;
   const seg = (key, opts) => h("div", { class: "seg" }, opts.map(([v, t]) => h("button", { class: F[key] === v && !F.news ? "on" : "", onclick: () => { F[key] = v; F.news = false; draw(); } }, t)));
   const last = P.meta.last_sync, n = activeFilters();
-  document.querySelector(".top .stat").textContent = `${live.filter((a) => a.fit !== "no").length} מתאימות מתוך ${live.length} · ${live.filter((a) => a.boards.length > 1).length} ביותר מלוח אחד · עודכן ${last ? new Date(last).toLocaleString("he-IL", { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" }) : "אף פעם"}`;
-  const tabs = h("div", { class: "seg tabs" }, h("button", { class: fav ? "" : "on", onclick: () => { F.tab = "all"; draw(); } }, "כל המודעות"),
-    h("button", { class: fav ? "on" : "", onclick: () => { F.tab = "fav"; draw(); } }, `♥ המועדפות שלנו${favN ? " · " + favN : ""}`));
-  document.querySelector(".bar").replaceChildren(tabs, ...(fav ? [h("span", { class: "muted" }, favN ? "כל מה שמישהו בחיפוש סימן, עם ההערות של כולם" : "עוד אין מועדפות. פותחים מודעה ולוחצים ♥")] : [
-    seg("fit", [["fits", "מתאימות"], ["no", "לא עוברות"], ["all", "הכל"]]),
-    P.prefs.hoods.length ? seg("area", [["in", "בשכונה"], ["near", "+ קרוב"], ["all", "כל העיר"]]) : null,
-    seg("status", [["todo", "לבדוק"], ["picked", "סימנתי"], ["rejected", "פסלתי"], ["all", "הכל"]]),
-    h("div", { class: "seg" }, h("button", { class: F.news ? "on" : "", onclick: () => { F.news = !F.news; draw(); } }, `מה חדש${news ? " · " + news : ""}`)),
-    h("div", { class: "seg" }, h("button", { class: F.panel || n ? "on" : "", onclick: () => { F.panel = !F.panel; draw(); } }, `סינון${n ? " · " + n : ""} ${F.panel ? "▴" : "▾"}`)),
-    h("select", { onchange: (e) => { F.sort = e.target.value; draw(); } }, [["score", "לפי התאמה"], ["price", "הזול קודם"], ...(SALE() ? [["sqm", "הזול למ\"ר קודם"]] : []), ["fresh", "הטרי קודם"], ["near", "הקרוב קודם"]].map(([v, t]) => h("option", { value: v, selected: F.sort === v }, t))),
-    h("input", { type: "search", placeholder: "רחוב, מילה...", value: F.q, onchange: (e) => { F.q = e.target.value.trim(); draw(); } }),
-    h("span", { class: "muted" }, ads.length + " מודעות")]).filter(Boolean));
+  document.querySelector(".top .stat").textContent = tx`${live.filter((a) => a.fit !== "no").length} מתאימות מתוך ${live.length} · ${live.filter((a) => a.boards.length > 1).length} ביותר מלוח אחד · עודכן ${last ? new Date(last).toLocaleString(LOCALE, { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" }) : tx("אף פעם")}`;
+  const tabs = h("div", { class: "seg tabs" }, h("button", { class: fav ? "" : "on", onclick: () => { F.tab = "all"; draw(); } }, tx("כל המודעות")),
+    h("button", { class: fav ? "on" : "", onclick: () => { F.tab = "fav"; draw(); } }, tx`♥ המועדפות שלנו${favN ? " · " + favN : ""}`));
+  document.querySelector(".bar").replaceChildren(tabs, ...(fav ? [h("span", { class: "muted" }, favN ? tx("כל מה שמישהו בחיפוש סימן, עם ההערות של כולם") : tx("עוד אין מועדפות. פותחים מודעה ולוחצים ♥"))] : [
+    seg("fit", [["fits", tx("מתאימות")], ["no", tx("לא עוברות")], ["all", tx("הכל")]]),
+    P.prefs.hoods.length ? seg("area", [["in", tx("בשכונה")], ["near", tx("+ קרוב")], ["all", tx("כל העיר")]]) : null,
+    seg("status", [["todo", tx("לבדוק")], ["picked", tx("סימנתי")], ["rejected", tx("פסלתי")], ["all", tx("הכל")]]),
+    h("div", { class: "seg" }, h("button", { class: F.news ? "on" : "", onclick: () => { F.news = !F.news; draw(); } }, tx`מה חדש${news ? " · " + news : ""}`)),
+    h("div", { class: "seg" }, h("button", { class: F.panel || n ? "on" : "", onclick: () => { F.panel = !F.panel; draw(); } }, tx`סינון${n ? " · " + n : ""} ${F.panel ? "▴" : "▾"}`)),
+    h("select", { onchange: (e) => { F.sort = e.target.value; draw(); } }, [["score", tx("לפי התאמה")], ["price", tx("הזול קודם")], ...(SALE() ? [["sqm", tx("הזול למ\"ר קודם")]] : []), ["fresh", tx("הטרי קודם")], ["near", tx("הקרוב קודם")]].map(([v, t]) => h("option", { value: v, selected: F.sort === v }, t))),
+    h("input", { type: "search", placeholder: tx("רחוב, מילה..."), value: F.q, onchange: (e) => { F.q = e.target.value.trim(); draw(); } }),
+    h("span", { class: "muted" }, ads.length + tx(" מודעות"))]).filter(Boolean));
   document.querySelector(".panelwrap").replaceChildren(...(F.panel && !fav ? [filterPanel()] : []));
-  document.querySelector(".list").replaceChildren(...(ads.length ? ads.map(fav ? favRow : row) : [h("div", { class: "empty" }, fav ? "המועדפות של כל מי שבחיפוש יופיעו כאן." : "אין מודעות שעוברות את הסינון הזה.")]));
+  document.querySelector(".list").replaceChildren(...(ads.length ? ads.map(fav ? favRow : row) : [h("div", { class: "empty" }, fav ? tx("המועדפות של כל מי שבחיפוש יופיעו כאן.") : tx("אין מודעות שעוברות את הסינון הזה."))]));
   layer.clearLayers(); pins = {};
   for (const a of [...ads].reverse()) {
     if (!a.lat) continue;
@@ -858,6 +968,85 @@ function dialog(title, ...kids) {
   document.body.append(h("div", { id: "dlg", onclick: close }, h("div", { class: "dcardbox", onclick: (e) => e.stopPropagation() },
     h("div", { class: "dhead" }, h("b", {}, title), h("span", { class: "grow" }), h("button", { class: "btn", onclick: close }, "✕")), ...kids)));
 }
+function pasteDialog() {
+  const text = h("textarea", { dir: "auto", placeholder: tx("מדביקים כאן את הטקסט של המודעה: פוסט מפייסבוק, הודעה מוואטסאפ, מודעה מלוח אחר...") });
+  const link = h("input", { type: "text", placeholder: tx("https://... (לא חובה: הקישור למודעה)") });
+  const add = h("button", { class: "btn pop", onclick: async () => {
+    add.disabled = true;
+    try {
+      const r = await api(`profiles/${P.id}/paste`, { text: text.value, url: link.value.trim() });
+      P = await api("profiles/" + P.id); draw();
+      document.getElementById("dlg")?.remove();
+      const v = P.ads.find((x) => x.id === r.id || x.boards.some((b) => b.id === r.id));
+      toast((v && v.boards.length > 1 ? tx("הדירה הזאת כבר על הלוח: צירפנו אליה את מה שהדבקת. ") : r.known ? tx("המודעה הזאת כבר הודבקה, עדכנו אותה. ") : tx("נוספה ללוח. "))
+        + (r.missing.length ? tx("לא מצאנו בטקסט: ") + r.missing.join(", ") + ". " : "")
+        + (r.other_city.length ? tx("שימו לב: הטקסט מזכיר את ") + r.other_city.join(", ") + "." : ""), 9000);
+      if (v) select(v.id);
+    } catch (e) { toast(e.message); add.disabled = false; }
+  } }, tx("הוספה ללוח"));
+  dialog(tx("מודעה ממקור אחר"), h("div", { class: "pastebox" },
+    h("div", { class: "muted", style: "font-size:13px" }, tx("ראיתם דירה בפייסבוק, בוואטסאפ או בלוח שאנחנו לא קוראים? מדביקים את הטקסט, והיא מקבלת ציון, מקום על המפה והשוואה לשוק כמו כל מודעה. מספרי טלפון נמחקים מהטקסט, ושום דבר לא נשלח מהמחשב.")),
+    text, link, h("div", { style: "display:flex;justify-content:flex-start" }, add)));
+  text.focus();
+}
+
+// ---- what a sync changed ----
+// Every sync is kept (the last 50), and every ad keeps its own history. So what one sync brought, took or changed
+// is worked out here from the ads themselves: nothing more is stored. An ad counts as gone only when its board's
+// list was read to the end in that sync.
+function syncDiff(at) {
+  const KEEP = ["price", "rooms", "sqm", "floor", "seller", "entrance", "back"];
+  const hit = (a) => (a.changes || []).filter((c) => c.at === at && KEEP.includes(c.field));
+  // An owner who posts the flat again gets a new ad on the board: the old one goes and a new one comes in the same
+  // sync. Same street, number, rooms and floor on both sides: it is told once, as posted again.
+  const key = (a) => a.street && a.rooms != null ? [a.street, a.house_no || "", a.rooms, a.floor ?? ""].join("|") : null;
+  let added = P.ads.filter((a) => a.first_seen === at), removed = P.ads.filter((a) => a.gone_since === at);
+  const went = new Map(removed.filter(key).map((a) => [key(a), a]));
+  const again = added.filter((a) => went.has(key(a))).map((a) => [a, went.get(key(a))]);
+  added = added.filter((a) => !again.some(([x]) => x === a));
+  removed = removed.filter((a) => !again.some(([, x]) => x === a));
+  return { added, removed, again,
+    changed: P.ads.filter((a) => a.first_seen !== at && a.gone_since !== at && hit(a).length).map((a) => [a, hit(a)]) };
+}
+function changesDialog(auto) {
+  const syncs = (P.meta.syncs || []).slice(-12).reverse(), first = ((P.meta.syncs || [])[0] || {}).at;
+  if (!syncs.length) { if (!auto) toast(tx("עוד לא היה סנכרון")); return; }
+  const mine = (list) => list.filter((x) => (x.id ? x : x[0]).fit !== "no");
+  const count = (d) => mine(d.added).length + mine(d.removed).length + mine(d.changed).length + mine(d.again).length;
+  let at = syncs[0].at, all = false;
+  if (auto && (at === first || !count(syncDiff(at)))) return;   // nothing to tell: do not get in the way
+  const when = (iso) => new Date(iso).toLocaleString(LOCALE, { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
+  const body = h("div", { class: "chg" });
+  const line = (a, chip) => h("div", { class: "chgrow" + (a.fit === "no" ? " dim" : ""), title: tx("לפתוח את המודעה"), onclick: () => { document.getElementById("dlg")?.remove(); select(a.id); } },
+    h("b", {}, nis(a.price)), h("span", {}, factsOf(a)), h("span", { class: "muted", dir: "auto" }, [a.street, a.house_no].filter(Boolean).join(" ") || a.hood || ""),
+    h("span", { class: "grow" }), chip, a.boards.map((b) => h("span", { class: "chip b-" + b.board }, META.boards[b.board])));
+  const group = (icon, title, list, make) => {
+    const shown = all ? list : mine(list);
+    return h("section", {}, h("h5", {}, icon + " " + title, h("span", { class: "chip" }, String(shown.length))),
+      shown.length ? shown.slice(0, 40).map(make) : h("div", { class: "muted" }, tx("אין")),
+      shown.length > 40 && h("div", { class: "muted" }, tx`ועוד ${shown.length - 40}`));
+  };
+  const paint = () => {
+    const d = syncDiff(at), s = syncs.find((x) => x.at === at), hidden = d.added.length + d.removed.length + d.changed.length + d.again.length - count(d);
+    const off = (s.boards || []).filter((b) => b.error || b.skipped || b.complete === false).map((b) => ts(META.boards[b.board]));
+    body.replaceChildren(...[
+      at === first ? h("div", { class: "muted" }, tx`הסנכרון הראשון של החיפוש: ${d.added.length} מודעות נמשכו. מהסנכרון הבא יופיע כאן מה נוסף, מה ירד ומה השתנה.`) : [
+        group("🆕", tx("נוספו"), d.added, (a) => line(a)),
+        group("🚫", tx("ירדו מהלוח"), d.removed, (a) => line(a)),
+        d.again.length ? group("🔁", tx("פורסמו מחדש"), d.again, ([a, old]) => line(a, h("span", { class: "chip " + (a.price && old.price && a.price !== old.price ? (a.price < old.price ? "good" : "warn") : "") },
+          a.price && old.price && a.price !== old.price ? tx`מודעה חדשה לאותה דירה: ${nis(old.price)} ${FWD} ${nis(a.price)}` : tx("מודעה חדשה לאותה דירה, אותו מחיר")))) : null,
+        group("✏️", tx("השתנו"), d.changed, ([a, cs]) => line(a, h("span", { class: "chip " + (cs[0].field === "price" ? (cs[0].to < cs[0].from ? "good" : "warn") : "") }, CHANGE(cs[0])))),
+        (hidden > 0 || all) && h("label", { class: "chgall" }, h("input", { type: "checkbox", checked: all, onchange: (e) => { all = e.target.checked; paint(); } }), all ? tx("כולל מודעות שלא מתאימות לחיפוש") : tx`להציג גם ${hidden} שלא מתאימות לחיפוש`)],
+      off.length ? h("div", { class: "muted" }, tx("לא נקראו עד הסוף בסנכרון הזה: ") + off.join(", ") + tx(". מודעה שירדה מהם תופיע רק אחרי קריאה מלאה.")) : null].flat(3).filter(Boolean));
+  };
+  const pick = h("select", { onchange: (e) => { at = e.target.value; paint(); } }, syncs.map((s) => {
+    const d = syncDiff(s.at);
+    return h("option", { value: s.at }, when(s.at) + " · " + (s.at === first ? tx("הסנכרון הראשון") : !count(d) ? tx("בלי שינוי") : tx`${mine(d.added).length} נוספו, ${mine(d.removed).length} ירדו, ${mine(d.changed).length + mine(d.again).length} השתנו`));
+  }));
+  dialog(tx("מה השתנה בסנכרון"), h("div", { class: "chghead" }, h("span", { class: "muted" }, tx("סנכרון:")), pick), body);
+  paint();
+}
+
 function shareDialog() {
   const out = h("div", {}), mine = h("div", {});
   const make = (path, target, note) => async (e) => {
@@ -865,43 +1054,45 @@ function shareDialog() {
     try { const r = await api(path, {}); target.replaceChildren(linkBox(r.url, note(r))); } catch (err) { toast(err.message, 9000); }
     e.target.disabled = false;
   };
-  dialog("מחפשים יחד: " + P.name,
-    h("div", { class: "dsec" }, h("h4", {}, "מי בחיפוש הזה"), P.people.map((x) => h("div", { class: "mark" }, h("span", { class: "bub" + (x.id === ME.person ? " me" : "") }, x.name[0]),
-      h("div", { style: "flex:1" }, h("b", {}, x.name + (x.id === ME.person ? " (אני)" : "")), h("span", { class: "muted" }, x.owner ? " · פתח את החיפוש" : x.seen ? " · נראה לאחרונה " + day(x.seen) : " · עוד לא נכנס")),
-      ME.owner && !x.owner && h("button", { class: "btn ghost", onclick: async () => { if (!confirm(`להוציא את ${x.name} מהחיפוש? המכשירים שלו ינותקו.`)) return; await api(`profiles/${P.id}/members/${x.id}/remove`, {}); P = await api("profiles/" + P.id); shareDialog(); } }, "להוציא")))),
-    ME.owner && h("div", { class: "dsec" }, h("h4", {}, "להזמין מישהו לחיפוש"),
-      h("div", { class: "muted" }, "מי שנכנס בקישור בוחר שם, רואה את כל המודעות, מסמן מועדפות וכותב הערות. לא יכול לסנכרן, לשנות את החיפוש או להזמין אחרים."),
-      h("button", { class: "btn pop", style: "margin-top:8px", onclick: make(`profiles/${P.id}/invite`, out, (r) => `קישור חד-פעמי, תקף ${r.days} ימים. עובד כשהמכשיר ברשת הביתית.`) }, "קישור הזמנה חדש"), out),
-    h("div", { class: "dsec" }, h("h4", {}, "לחבר עוד מכשיר שלי"),
-      h("div", { class: "muted" }, "הטלפון שלך נכנס בתור " + ME.name + ", עם אותם סימונים והערות."),
-      h("button", { class: "btn", style: "margin-top:8px", onclick: make("me/attach", mine, (r) => `קישור חד-פעמי, תקף ${r.minutes} דקות.`) }, "קישור למכשיר שלי"), mine),
-    h("div", { class: "dsec" }, h("h4", {}, "השם שלי"), h("div", { class: "row2", style: "gap:6px" },
-      h("input", { type: "text", value: ME.name, id: "myname" }), h("button", { class: "btn ghost", onclick: async () => { try { await api("me/name", { name: document.getElementById("myname").value }); ME = await api("me"); P = await api("profiles/" + P.id); draw(); shareDialog(); } catch (e) { toast(e.message); } } }, "שמירה"))),
-    h("div", { class: "muted", style: "font-size:12px" }, "מודעה בודדת משתפים מתוך המודעה עצמה (🔗). האפליקציה פרטית: בלי קישור אי אפשר לראות דבר."));
+  dialog(tx("מחפשים יחד: ") + P.name,
+    h("div", { class: "dsec" }, h("h4", {}, tx("מי בחיפוש הזה")), P.people.map((x) => h("div", { class: "mark" }, h("span", { class: "bub" + (x.id === ME.person ? " me" : "") }, x.name[0]),
+      h("div", { style: "flex:1" }, h("b", {}, x.name + (x.id === ME.person ? tx(" (אני)") : "")), h("span", { class: "muted" }, x.owner ? tx(" · פתח את החיפוש") : x.seen ? tx(" · נראה לאחרונה ") + day(x.seen) : tx(" · עוד לא נכנס"))),
+      ME.owner && !x.owner && h("button", { class: "btn ghost", onclick: async () => { if (!confirm(tx`להוציא את ${x.name} מהחיפוש? המכשירים שלו ינותקו.`)) return; await api(`profiles/${P.id}/members/${x.id}/remove`, {}); P = await api("profiles/" + P.id); shareDialog(); } }, tx("להוציא"))))),
+    ME.owner && h("div", { class: "dsec" }, h("h4", {}, tx("להזמין מישהו לחיפוש")),
+      h("div", { class: "muted" }, tx("מי שנכנס בקישור בוחר שם, רואה את כל המודעות, מסמן מועדפות וכותב הערות. לא יכול לסנכרן, לשנות את החיפוש או להזמין אחרים.")),
+      h("button", { class: "btn pop", style: "margin-top:8px", onclick: make(`profiles/${P.id}/invite`, out, (r) => tx`קישור חד-פעמי, תקף ${r.days} ימים. עובד כשהמכשיר ברשת הביתית.`) }, tx("קישור הזמנה חדש")), out),
+    h("div", { class: "dsec" }, h("h4", {}, tx("לחבר עוד מכשיר שלי")),
+      h("div", { class: "muted" }, tx("הטלפון שלך נכנס בתור ") + ME.name + tx(", עם אותם סימונים והערות.")),
+      h("button", { class: "btn", style: "margin-top:8px", onclick: make("me/attach", mine, (r) => tx`קישור חד-פעמי, תקף ${r.minutes} דקות.`) }, tx("קישור למכשיר שלי")), mine),
+    h("div", { class: "dsec" }, h("h4", {}, tx("השם שלי")), h("div", { class: "row2", style: "gap:6px" },
+      h("input", { type: "text", value: ME.name, id: "myname" }), h("button", { class: "btn ghost", onclick: async () => { try { await api("me/name", { name: document.getElementById("myname").value }); ME = await api("me"); P = await api("profiles/" + P.id); draw(); shareDialog(); } catch (e) { toast(e.message); } } }, tx("שמירה")))),
+    h("div", { class: "muted", style: "font-size:12px" }, tx("מודעה בודדת משתפים מתוך המודעה עצמה (🔗). האפליקציה פרטית: בלי קישור אי אפשר לראות דבר.")));
 }
 
 async function board(pid, refit) {
   P = await api("profiles/" + pid);
-  const s = ME.owner ? await api("sync") : { running: false };
-  if (s.running && s.profile === pid) return syncing(pid, P.name);
+  const s = ME.owner ? await api("sync?for=" + pid) : { running: false };
+  if (s.running && (s.profile === pid || s.profile === P.store)) return syncing(pid, P.name);
   $root.replaceChildren(h("div", { class: "app" },
     h("div", { class: "top" }, logo(),
-      h("span", { class: "who" }, P.name, h("span", { class: "deal" }, SALE() ? "🏡 קנייה" : "🔑 השכרה")),
+      h("span", { class: "who" }, P.name, h("span", { class: "deal" }, SALE() ? tx("🏡 קנייה") : tx("🔑 השכרה"))),
       h("span", { class: "stat" }),
+      h("button", { class: "btn ghost chgbtn", onclick: () => changesDialog(), title: tx("מה נוסף, מה ירד ומה השתנה בכל סנכרון") }, tx("🔄 מה השתנה")),
       h("span", { class: "grow" }),
       // A board that is not answering as it should stays here, with the way to fix it, until it works again.
       ME.owner && Object.entries(P.board_state || {}).filter(([, st]) => !st.ok).map(([b, st]) => h("span", { class: "alert", title: st.detail || "" },
-        h("a", { target: "_blank", rel: "noopener", href: P.fix_url[b] }, "⚠️ " + META.boards[b] + ": " + (st.why === "human" ? "מבקש אימות אנושי, לפתוח ולעבור"
-          : st.why === "login" ? (st.worked_before ? "ההתחברות הפסיקה לעבוד, להתחבר שוב" : "בלי התחברות רק 20 מודעות, להתחבר")
-          : "לא ענה בסנכרון האחרון") + " ↗"),
-        st.why === "human" && !st.retry && h("button", { title: "אחרי שעברת את הבדיקה באתר של הלוח",
-          onclick: async (e) => { try { await api(`boards/${b}/retry`, {}); e.target.textContent = "ננסה בסנכרון הבא"; e.target.disabled = true; } catch (err) { toast(err.message); } } }, "פתרתי"))),
-      h("button", { class: "btn ghost people", onclick: shareDialog, title: "מי בחיפוש, הזמנות, מכשירים" }, P.people.map((x) => h("span", { class: "bub" + (x.id === ME.person ? " me" : "") }, x.name[0])), " שיתוף"),
-      ME.owner && h("button", { class: "btn ghost", onclick: () => go(`#/p/${pid}/edit`) }, "עריכה"),
-      ME.owner && h("button", { class: "btn pop", onclick: async () => { try { await api(`profiles/${pid}/sync`, {}); syncing(pid, P.name); } catch (e) { toast(e.message); } } }, "סנכרון")),
+        h("a", { target: "_blank", rel: "noopener", href: P.fix_url[b] }, "⚠️ " + META.boards[b] + ": " + (st.why === "human" ? tx("מבקש אימות אנושי, לפתוח ולעבור")
+          : st.why === "login" ? (st.worked_before ? tx("ההתחברות הפסיקה לעבוד, להתחבר שוב") : tx("בלי התחברות רק 20 מודעות, להתחבר"))
+          : tx("לא ענה בסנכרון האחרון")) + " ↗"),
+        st.why === "human" && !st.retry && h("button", { title: tx("אחרי שעברת את הבדיקה באתר של הלוח"),
+          onclick: async (e) => { try { await api(`boards/${b}/retry`, {}); e.target.textContent = tx("ננסה בסנכרון הבא"); e.target.disabled = true; } catch (err) { toast(err.message); } } }, tx("פתרתי")))),
+      h("button", { class: "btn ghost people", onclick: shareDialog, title: tx("מי בחיפוש, הזמנות, מכשירים") }, P.people.map((x) => h("span", { class: "bub" + (x.id === ME.person ? " me" : "") }, x.name[0])), tx(" שיתוף")),
+      ME.owner && h("button", { class: "btn ghost", onclick: pasteDialog, title: tx("להוסיף מודעה שראיתם במקום אחר: מדביקים את הטקסט שלה") }, tx("＋ מודעה")),
+      ME.owner && h("button", { class: "btn ghost", onclick: () => go(`#/p/${pid}/edit`) }, tx("עריכה")),
+      ME.owner && h("button", { class: "btn pop", onclick: async () => { try { const q = await api(`profiles/${pid}/sync`, {}); if (q.fresh) toast(tx`המודעות של העיר נקראו לפני ${Math.max(1, Math.round(P.shared.age_hours))} שעות. נקראות שוב כל ${P.shared.fresh_hours} שעות`); else syncing(pid, P.name); } catch (e) { toast(e.message); } } }, P.shared ? tx("רענון העיר") : tx("סנכרון"))),
     extNote(),
     h("div", { class: "bar" }), h("div", { class: "panelwrap" }),
-    h("div", { class: "main" + (SALE() ? " sale" : "") }, h("div", { class: "list" }), h("div", { class: "frame" }, h("div", { class: "tape" }, "המפה של " + P.name), h("div", { id: "map" }), h("div", { class: "layers" })))));
+    h("div", { class: "main" + (SALE() ? " sale" : "") }, h("div", { class: "list" }), h("div", { class: "frame" }, h("div", { class: "tape" }, tx("המפה של ") + P.name), h("div", { id: "map" }), h("div", { class: "layers" })))));
   map = L.map("map", { zoomControl: false, attributionControl: true }).setView([P.city.lat || 32.08, P.city.lon || 34.88], 14);
   L.control.zoom({ position: "bottomleft" }).addTo(map);
   L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
@@ -924,27 +1115,27 @@ async function board(pid, refit) {
 function plain(...kids) { $root.replaceChildren(h("div", { class: "center" }, logo(), h("div", { class: "wiz" }, ...kids))); }
 async function join(token) {
   let info;
-  try { info = await api("link/" + token); } catch (e) { return plain(h("h2", {}, "הקישור לא עובד"), h("div", { class: "muted" }, "הוא חד-פעמי, ואולי כבר נעשה בו שימוש או שפג תוקפו. בקשו קישור חדש.")); }
+  try { info = await api("link/" + token); } catch (e) { return plain(h("h2", {}, tx("הקישור לא עובד")), h("div", { class: "muted" }, tx("הוא חד-פעמי, ואולי כבר נעשה בו שימוש או שפג תוקפו. בקשו קישור חדש."))); }
   const enter = async (name) => {
     try { const r = await api("join", { token, name }); ME = await api("me"); go(r.profile ? "#/p/" + r.profile : "#/"); }
     catch (e) { toast(e.message, 8000); }
   };
   if (info.kind === "attach" || ME.person) {
-    return plain(h("h2", {}, info.kind === "attach" ? `לחבר את המכשיר הזה בתור ${info.person_name}?` : `להצטרף לחיפוש "${info.profile_name}"?`),
-      h("div", { class: "muted" }, info.kind === "attach" ? "המכשיר יישאר מחובר 90 יום." : `בתור ${ME.name}.`),
-      h("div", { class: "wnav" }, h("span"), h("button", { class: "btn pop", onclick: () => enter(null) }, "כן, להיכנס")));
+    return plain(h("h2", {}, info.kind === "attach" ? tx`לחבר את המכשיר הזה בתור ${info.person_name}?` : tx`להצטרף לחיפוש "${info.profile_name}"?`),
+      h("div", { class: "muted" }, info.kind === "attach" ? tx("המכשיר יישאר מחובר 90 יום.") : tx`בתור ${ME.name}.`),
+      h("div", { class: "wnav" }, h("span"), h("button", { class: "btn pop", onclick: () => enter(null) }, tx("כן, להיכנס"))));
   }
-  const name = h("input", { type: "text", placeholder: "השם שלך", style: "width:100%;font-size:17px" });
-  plain(h("h2", {}, `${info.by} מזמין אותך לחפש דירה יחד`), h("div", { class: "muted" }, `החיפוש: ${info.profile_name}. תראו את אותן מודעות, תסמנו מועדפות ותכתבו הערות זה לזה.`),
-    h("div", { class: "q" }, h("label", {}, "איך לקרוא לך?"), name),
-    h("div", { class: "wnav" }, h("span"), h("button", { class: "btn pop", onclick: () => name.value.trim() ? enter(name.value) : name.focus() }, "להיכנס")));
+  const name = h("input", { type: "text", placeholder: tx("השם שלך"), style: "width:100%;font-size:17px" });
+  plain(h("h2", {}, tx`${info.by} מזמין אותך לחפש דירה יחד`), h("div", { class: "muted" }, tx`החיפוש: ${info.profile_name}. תראו את אותן מודעות, תסמנו מועדפות ותכתבו הערות זה לזה.`),
+    h("div", { class: "q" }, h("label", {}, tx("איך לקרוא לך?")), name),
+    h("div", { class: "wnav" }, h("span"), h("button", { class: "btn pop", onclick: () => name.value.trim() ? enter(name.value) : name.focus() }, tx("להיכנס"))));
   name.focus();
 }
 async function sharedAd(token) {
   let r;
-  try { r = await api("shared/" + token); } catch (e) { return plain(h("h2", {}, "המודעה לא זמינה"), h("div", { class: "muted" }, e.message)); }
+  try { r = await api("shared/" + token); } catch (e) { return plain(h("h2", {}, tx("המודעה לא זמינה")), h("div", { class: "muted" }, e.message)); }
   P = { id: null, prefs: { hoods: [], deal: r.deal }, ads: [r.ad], kinds: META.kinds };
-  $root.replaceChildren(h("div", { class: "center", style: "max-width:none;padding:14px 18px 0" }, logo(), h("div", { class: "muted", style: "margin-top:4px" }, `${r.by || "מישהו"} שיתף איתך מודעה אחת`)));
+  $root.replaceChildren(h("div", { class: "center", style: "max-width:none;padding:14px 18px 0" }, logo(), h("div", { class: "muted", style: "margin-top:4px" }, tx`${r.by || tx("מישהו")} שיתף איתך מודעה אחת`)));
   modal(r.ad, { readonly: true, hoods: false });
 }
 
@@ -958,7 +1149,7 @@ async function route() {
   try {
     if (a === "join" && b) return await join(b);
     if (a === "ad" && b) return await sharedAd(b);
-    if (!ME.person) return plain(h("h2", {}, "האפליקציה פרטית"), h("div", { class: "muted" }, "כדי להיכנס צריך קישור הזמנה ממי שמריץ אותה. בלי קישור אי אפשר לראות כאן דבר."));
+    if (!ME.person) return plain(h("h2", {}, tx("האפליקציה פרטית")), h("div", { class: "muted" }, tx("כדי להיכנס צריך קישור הזמנה ממי שמריץ אותה. בלי קישור אי אפשר לראות כאן דבר.")));
     if (a === "new" && ME.owner) wizard();
     else if (a === "p" && c === "edit" && ME.owner) wizard(await api("profiles/" + b));
     else if (a === "p" && b) await board(b);

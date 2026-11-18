@@ -34,6 +34,7 @@ import people
 
 ROOT = Path(__file__).resolve().parent
 PROFILES = ROOT / "data" / "profiles"
+STORES = ROOT / "data" / "cities"  # shared mode: one store of ads per city and deal, read once for everybody
 MAPS_KEY_FILE = ROOT / "data" / "maps-key.txt"  # optional: your own Google Maps Embed key, for Street View in the app
 try:
     import local_settings as LOCAL  # an optional file next to app.py, for one computer only; not part of the package
@@ -71,7 +72,7 @@ def parse_time(s):
 def profile_path(pid):
     if not re.fullmatch(r"[a-z0-9-]{1,40}", pid):
         raise KeyError("no such profile")
-    return PROFILES / f"{pid}.json"
+    return (STORES if re.fullmatch(STORE_ID, pid) else PROFILES) / f"{pid}.json"
 
 
 def load_profile(pid):
@@ -80,12 +81,25 @@ def load_profile(pid):
         raise KeyError("no such profile")
     p = json.loads(path.read_text(encoding="utf-8"))
     p["prefs"].setdefault("deal", "rent")  # profiles from before the app could search for a purchase
+    if p.get("store"):
+        # A search over a shared city store: the ads are the city's, and only this search's own marks and summaries
+        # are kept with it. Everything that reads a profile sees one whole profile.
+        spath, mine = profile_path(p["store"]), p.get("mine") or {}
+        s = json.loads(spath.read_text(encoding="utf-8")) if spath.exists() else {"ads": {}, "meta": {}}
+        p["ads"] = {i: dict(r, **mine.get(i, {})) for i, r in s["ads"].items()}
+        p["ads"].update(p.pop("own", None) or {})  # ads this person pasted in: theirs, not the city's
+        p["meta"] = dict(p["meta"], last_sync=s["meta"].get("last_sync"), syncs=s["meta"].get("syncs") or [])
     return p
 
 
 def save_profile(p):
-    PROFILES.mkdir(parents=True, exist_ok=True)
     path = profile_path(p["id"])
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if p.get("store"):  # the city's ads are not this search's to write: only its own marks go to disk
+        p = dict(p, mine={i: {k: r[k] for k in ("marks", "summary") if r.get(k)} for i, r in p["ads"].items()
+                          if r["board"] in boards.BOARDS and (r.get("marks") or r.get("summary"))},
+                 own={i: r for i, r in p["ads"].items() if r["board"] not in boards.BOARDS},
+                 ads={}, meta={k: v for k, v in p["meta"].items() if k not in ("last_sync", "syncs")})
     tmp = path.with_suffix(".tmp")
     tmp.write_text(json.dumps(p, ensure_ascii=False, indent=1), encoding="utf-8")
     tmp.replace(path)
@@ -129,6 +143,90 @@ def clean_prefs(raw):
     }
 
 
+# ---------------- shared mode: one store per city, read in turn ----------------
+# For a hosted service: nobody pulls for themselves. Each city (and deal) is read once, with a wide search and
+# without full ads, into a store that every search of that city looks through; cities wait in one line.
+STORE_ID = r"c\d{4}-(rent|sale)"
+SHARED = False          # `serve --shared`: a new search is a view over its city's store
+FRESH_HOURS = 12        # a store younger than this is not read again
+CITY_GAP = 45           # seconds of rest between two cities
+QUEUE = []              # store ids waiting to be read, in order
+QUEUE_INFO = {"times": [], "last": None}  # how long the last pulls took (seconds), for the waiting estimate
+
+
+def store_of(prefs):
+    return f"c{CITIES[prefs['city']]['code']}-{boards.deal_of(prefs)}"
+
+
+def ensure_store(prefs):
+    sid = store_of(prefs)
+    with LOCK:
+        if not profile_path(sid).exists():
+            wide = {"deal": boards.deal_of(prefs), "city": prefs["city"], "hoods": [], "radius_km": 1.2, "price_max": None,
+                    "price_min": None, "rooms_min": None, "rooms_max": None, "sqm_min": None, "private_only": False,
+                    "access": {"need": False, "max_floor": 0}, "features": {}, "hide": [], "who": "", "lists_only": True}
+            save_profile({"id": sid, "name": prefs["city"], "created": now_iso(), "prefs": wide, "meta": {"syncs": []}, "ads": {}})
+    return sid
+
+
+def store_age_hours(sid):
+    try:
+        at = parse_time(load_profile(sid)["meta"].get("last_sync"))
+    except KeyError:
+        return None
+    return None if not at else (datetime.now() - at).total_seconds() / 3600
+
+
+def enqueue(sid):
+    """Ask for a city to be read. Answers its place in the line (1 = next or being read), or 0 when it is fresh."""
+    age = store_age_hours(sid)
+    with LOCK:
+        if SYNC["running"] and SYNC["profile"] == sid:
+            return 1
+        if sid in QUEUE:
+            return QUEUE.index(sid) + 1 + (1 if SYNC["running"] else 0)
+        if age is not None and age < FRESH_HOURS:
+            return 0
+        QUEUE.append(sid)
+        return len(QUEUE) + (1 if SYNC["running"] else 0)
+
+
+def queue_state(sid=None):
+    """What a person waiting for a city sees: where it stands and about how long that is."""
+    times = QUEUE_INFO["times"][-6:]
+    each = (sum(times) / len(times) if times else 240) + CITY_GAP
+    with LOCK:
+        reading = SYNC["profile"] if SYNC["running"] and re.fullmatch(STORE_ID, SYNC["profile"] or "") else None
+        line = ([reading] if reading else []) + list(QUEUE)
+    pos = line.index(sid) + 1 if sid in line else 0
+    return {"line": len(line), "pos": pos, "wait_min": math.ceil(pos * each / 60) if pos else 0, "reading": reading,
+            "last": QUEUE_INFO["last"]}
+
+
+def queue_worker():
+    """One city at a time, in the order asked, with a rest between cities. Runs for as long as the app does."""
+    while True:
+        time.sleep(2)
+        with LOCK:
+            sid = QUEUE[0] if QUEUE and not SYNC["running"] else None
+        if not sid:
+            continue
+        if not browser_ready() and not hasattr(LOCAL, "browser"):
+            time.sleep(10)  # no browser is connected to read with: the line waits
+            continue
+        t0 = time.time()
+        if not start_sync(sid):
+            continue
+        with LOCK:
+            if sid in QUEUE:
+                QUEUE.remove(sid)
+        while SYNC["running"]:
+            time.sleep(1)
+        QUEUE_INFO["times"].append(time.time() - t0)
+        QUEUE_INFO["last"] = {"store": sid, "at": now_iso(), "seconds": round(time.time() - t0), "error": SYNC["error"]}
+        time.sleep(CITY_GAP)
+
+
 def create_profile(name, raw_prefs):
     name = str(name or "").strip()[:40]
     if not name:
@@ -141,6 +239,8 @@ def create_profile(name, raw_prefs):
             n += 1
             pid = f"p{n}"
         p = {"id": pid, "name": name, "created": now_iso(), "prefs": prefs, "meta": {"syncs": []}, "ads": {}}
+        if SHARED:
+            p["store"] = ensure_store(prefs)
         save_profile(p)
     return p
 
@@ -274,7 +374,8 @@ def _key(text):
 
 
 def _words(street):
-    return {w for w in re.split(r"[\s'\"׳״.-]+", street or "") if len(w) >= 4}
+    words = {w for w in re.split(r"[\s'\"׳״.-]+", street or "") if len(w) >= 4}
+    return words or ({_key(street)} if _key(street) else set())  # "אחד העם", "ברץ": a name of short words counts whole
 
 
 def same_flat(a, b):
@@ -309,7 +410,7 @@ def find_duplicates(ads):
     """{secondary ad id: primary ad id} for flats that appear on more than one board. The private owner's ad leads;
     between equals, the board that comes first in boards.BOARDS (it has the richer record)."""
     roots, dup = [], {}
-    for board in boards.BOARDS:
+    for board in list(boards.BOARDS) + list(boards.OTHER):
         for a in (x for x in ads if x["board"] == board):
             m = next((r for r in roots if r["board"] != board and same_flat(a, r)), None)
             if m is None:
@@ -889,6 +990,8 @@ def _normalize_item(board, raw, res, deal):
 def save_details(pid, board, items, now):
     with LOCK:
         p = load_profile(pid)
+        if p.get("store"):
+            p = load_profile(p["store"])  # the ad belongs to the city's store
         done = 0
         for native, d in items.items():
             norm = getattr(boards, board + "_detail")(d)
@@ -916,7 +1019,9 @@ def sync_board(p, board, city, now, say):
             r = merge_ad(p, norm, now)
             new += r == "new"
             changed += r == "changed"
-        complete = bool(res.get("complete")) and not errors
+        # A list that stops at its page limit is still a full read when the ads seen (the lists and the map
+        # together) are exactly as many as the board says the search holds: nothing can be missing.
+        complete = (bool(res.get("complete")) or bool(res.get("total") and len(seen) == res["total"])) and not errors
         gone = mark_gone(p, board, seen, now) if complete else 0
         save_profile(p)
     say(f"{he}: {len(seen)} מודעות" + (f" מתוך {res['total']}" if res.get("total") and res["total"] > len(seen) else "")
@@ -935,6 +1040,8 @@ def sync_board(p, board, city, now, say):
             and not (board != "yad2" and r["id"] in twins and r.get("features_known"))]
     if board == "madlan":
         want = [n for n in want if f"madlan:{n}" not in twins]
+    if prefs.get("lists_only"):
+        want = []  # a city store: full ads are read one by one, when somebody opens one
     want, detailed, size = want[:PACE[board]["details"]], 0, PACE[board].get("batch", 5)
     for i in range(0, len(want), size):
         say(f"{he}: קורא מודעות מלאות ({min(i + size, len(want))}/{len(want)})")
@@ -960,6 +1067,8 @@ def read_one(pid, ad_id):
     if not rec:
         raise KeyError("no such ad")
     board, native = rec["board"], rec["native_id"]
+    if board not in boards.BOARDS:
+        raise BridgeError("מודעה שהודבקה: כל מה שיש עליה כבר כאן")
     if board != "madlan":
         bridge("navigate", url=rec["url"])
     items, refused, errs = pull_details(board, [native])
@@ -975,7 +1084,7 @@ def read_one(pid, ad_id):
 GEO_FILE = ROOT / "data" / "geocode.json"
 
 
-def locate(pid, city, say=lambda t: None):
+def locate(pid, city, say=lambda t: None, only=None):
     """Give coordinates to ads that came with an address only. OpenStreetMap's Nominatim, one question a second (its
     rule), answers kept in data/geocode.json. No street match: the neighborhood's centre, marked as approximate."""
     import urllib.parse
@@ -987,7 +1096,7 @@ def locate(pid, city, say=lambda t: None):
     hoods = {h["name"]: h for h in city["hoods"]}
     with LOCK:
         todo = [(r["id"], r.get("street"), r.get("house_no"), r.get("hood")) for r in load_profile(pid)["ads"].values()
-                if not r.get("lat") and not r.get("gone_since")]
+                if not r.get("lat") and not r.get("gone_since") and (only is None or r["id"] in only)]
     found, asked = {}, 0
     for ad_id, street, house, hood in todo:
         hit = None
@@ -1030,6 +1139,8 @@ def sync(pid, say=print, only=None, done=None):
     only: one board's name, to pull just that board (the others keep what they have)."""
     with LOCK:
         p = load_profile(pid)
+    if p.get("store"):  # a search over a city store: it is the city that is read
+        return sync(p["store"], say, only, done)
     city, now = CITIES[p["prefs"]["city"]], now_iso()
     old_ext = tuple(int(x) for x in re.findall(r"\d+", EXT["version"] or "0")[:2]) < (1, 1)
     if boards.deal_of(p["prefs"]) == "sale" and not hasattr(LOCAL, "browser") and browser_ready() and old_ext:
@@ -1132,7 +1243,7 @@ def sync_through_app(pid, only=None):
         sys.exit("סנכרון אחר כבר רץ")
     shown = 0
     while True:
-        s = call("sync")
+        s = call(f"sync?for={pid}")
         for line in s["steps"][shown:]:
             print(line, flush=True)
         shown = len(s["steps"])
@@ -1141,6 +1252,37 @@ def sync_through_app(pid, only=None):
         time.sleep(1.5)
     if s.get("error"):
         sys.exit(f"הסנכרון לא הצליח: {s['error']}")
+
+
+def paste_ad(pid, text, url=None):
+    """An ad the person brought as text, from anywhere. Nothing is fetched for it; it is read, placed on the map by
+    its street or neighborhood, and from then on it is ranked and compared like any other ad."""
+    text = str(text or "").strip()
+    if len(text) < 15:
+        raise ValueError("צריך את הטקסט של המודעה")
+    with LOCK:
+        p = load_profile(pid)
+        city = CITIES[p["prefs"]["city"]]
+        norm, missing = boards.pasted_item(text, url, p["prefs"]["city"], [h["name"] for h in city["hoods"]], boards.deal_of(p["prefs"]))
+        ad_id, now = norm["id"], now_iso()
+        known = ad_id in p["ads"]
+        merge_ad(p, norm, now, from_detail=True)
+        p["ads"][ad_id].update(last_seen=now, listed_at=p["ads"][ad_id].get("listed_at") or now)
+        save_profile(p)
+    with GEO_LOCK:
+        locate(pid, city, only={ad_id})
+    elsewhere = sorted(n for n in CITIES if n != p["prefs"]["city"] and n != "שדרות"  # also the word for a boulevard
+                       and re.search(r"(?<![֐-׿])[בלמ]?" + re.escape(n) + r"(?![֐-׿])", text))[:3]
+    return {"id": ad_id, "known": known, "missing": missing, "other_city": elsewhere}
+
+
+def remove_pasted(pid, ad_id):
+    with LOCK:
+        p = load_profile(pid)
+        if ad_id not in p["ads"] or p["ads"][ad_id]["board"] in boards.BOARDS:
+            raise KeyError("no such ad")
+        del p["ads"][ad_id]
+        save_profile(p)
 
 
 def set_fields(pid, ad_id, person=people.OWNER, status=None, note=None, summary=None):
@@ -1294,6 +1436,16 @@ class Handler(BaseHTTPRequestHandler):
         parts = [x for x in self.path.split("?")[0].split("/") if x]
         if method == "GET" and not parts:
             return self.send((ROOT / "ui" / "index.html").read_bytes(), ctype="text/html; charset=utf-8")
+        if method == "GET" and parts == ["lang.js"]:
+            # every language file the app has, as one script the page loads before its own
+            langs = {}
+            for f in sorted((ROOT / "ui" / "lang").glob("*.json")):
+                try:
+                    langs[f.stem] = json.loads(f.read_text(encoding="utf-8"))
+                except ValueError:
+                    pass
+            return self.send(("window.LANGS = " + json.dumps(langs, ensure_ascii=False) + ";").encode("utf-8"),
+                             ctype="text/javascript; charset=utf-8")
         if method == "GET" and parts == ["icon.svg"]:
             return self.send(ICON.encode(), ctype="image/svg+xml")
         if method == "GET" and parts == ["manifest.webmanifest"]:
@@ -1313,7 +1465,7 @@ class Handler(BaseHTTPRequestHandler):
         # ---- open to any device that can reach the app: nothing private here ----
         if method == "GET" and parts == ["meta"]:
             return self.send({"cities": [{"name": c["name"], "lat": c["lat"], "lon": c["lon"], "hoods": c["hoods"]} for c in CITIES.values()],
-                              "features": boards.FEATURES, "types": boards.TYPES, "boards": boards.BOARDS, "kinds": KINDS,
+                              "features": boards.FEATURES, "types": boards.TYPES, "boards": dict(boards.BOARDS, **boards.OTHER), "sync_boards": list(boards.BOARDS), "kinds": KINDS,
                               "deals": boards.DEALS,
                               # the Street View key works only from this PC's own address (set at Google)
                               "maps_key": maps_key() if self.is_local else None, "local": self.is_local})
@@ -1383,7 +1535,25 @@ class Handler(BaseHTTPRequestHandler):
         if method == "GET" and parts == ["profiles"]:
             return self.send(list_profiles(me))
         if method == "GET" and parts == ["sync"]:
-            return self.send(SYNC)
+            sid = None
+            m = re.search(r"[?&]for=([a-z0-9-]{1,40})", self.path)
+            if m:
+                try:
+                    sid = self.profile(m.group(1)).get("store")
+                except KeyError:
+                    sid = None
+            if not sid:
+                return self.send(SYNC)
+            # a search over a city store: its own city's reading, or its place in the line
+            q = queue_state(sid)
+            if SYNC["profile"] == sid and (SYNC["running"] or not q["pos"]):
+                return self.send(dict(SYNC, queue=q))
+            ahead = (q["pos"] or 1) - 1
+            line = (f"העיר שלך הבאה בתור, עוד כ-{q['wait_min']} דקות" if not ahead
+                    else f"בתור: עיר אחת לפנייך, עוד כ-{q['wait_min']} דקות" if ahead == 1
+                    else f"בתור: {ahead} ערים לפנייך, עוד כ-{q['wait_min']} דקות")
+            steps = [line] if q["pos"] else []
+            return self.send({"running": bool(q["pos"]), "profile": sid, "steps": steps, "done": [], "error": None, "finished": None, "queue": q})
         if method == "POST" and len(parts) == 3 and parts[0] == "boards" and parts[2] == "retry" and parts[1] in boards.BOARDS:
             self.owner_only()
             with LOCK:  # the person says the human check is solved: the next sync may try that board again
@@ -1400,11 +1570,13 @@ class Handler(BaseHTTPRequestHandler):
             p = self.profile(pid)
             if method == "GET" and len(parts) == 2:
                 city, names, seen = CITIES[p["prefs"]["city"]], people.names(), people.last_seen()
-                return self.send({"id": p["id"], "name": p["name"], "prefs": p["prefs"], "meta": p["meta"],
+                return self.send({"id": p["id"], "name": p["name"], "prefs": p["prefs"], "meta": p["meta"], "store": p.get("store"),
                                   "city": {"name": city["name"], "lat": city["lat"], "lon": city["lon"]},
                                   "centers": [h for h in city["hoods"] if h["name"] in p["prefs"]["hoods"]],
                                   "places": load_places(city), "kinds": KINDS, "board_state": load_state()["boards"],
                                   "fix_url": FIX_URL, "rest_hours": REST_HOURS,
+                                  "shared": bool(p.get("store")) and dict(queue_state(p["store"]), fresh_hours=FRESH_HOURS,
+                                                                              age_hours=store_age_hours(p["store"])),
                                   "people": [{"id": x, "name": names.get(x, "?"), "owner": x == people.OWNER, "seen": seen.get(x)}
                                              for x in [people.OWNER] + p.get("members", [])],
                                   "ads": build_views(p, me)})
@@ -1440,12 +1612,27 @@ class Handler(BaseHTTPRequestHandler):
                     p["prefs"] = clean_prefs(dict(body.get("prefs") or {}, deal=old.get("deal")))
                     if body.get("name"):
                         p["name"] = str(body["name"]).strip()[:40]
+                    if p.get("store"):
+                        p["store"] = ensure_store(p["prefs"])  # another city: another store
                     save_profile(p)
                 wider = any(old.get(k) != p["prefs"].get(k) for k in ("city", "price_max", "price_min", "rooms_min", "rooms_max"))
                 return self.send({"ok": True, "needs_sync": wider})
             if method == "POST" and parts[2:] == ["sync"]:
+                if p.get("store"):  # a search over a city store does not pull: its city takes a place in the line
+                    pos = enqueue(p["store"])
+                    return self.send({"ok": True, "queued": pos, "fresh": pos == 0, "queue": queue_state(p["store"])})
                 only = body.get("board") if body.get("board") in boards.BOARDS else None
                 return self.send({"ok": True} if start_sync(pid, only) else {"error": "סנכרון אחר כבר רץ"}, 200 if not SYNC["running"] or SYNC["profile"] == pid else 409)
+            if method == "POST" and parts[2:] == ["paste"]:
+                self.owner_only()
+                try:
+                    return self.send(paste_ad(pid, body.get("text"), body.get("url")))
+                except ValueError as e:
+                    return self.send({"error": str(e)}, 400)
+            if method == "POST" and len(parts) == 5 and parts[2] == "ads" and parts[4] == "remove":
+                self.owner_only()
+                remove_pasted(pid, parts[3])
+                return self.send({"ok": True})
             if method == "POST" and len(parts) == 5 and parts[2] == "ads" and parts[4] == "detail":
                 try:
                     read_one(pid, parts[3])
@@ -1493,6 +1680,7 @@ def main():
     s = sub.add_parser("serve")
     s.add_argument("--lan", action="store_true", help="also answer other devices on the home network")
     s.add_argument("--open", action="store_true", help="open the app in Chrome once it is up")
+    s.add_argument("--shared", action="store_true", help="a new search looks through its city's shared store; cities are read in turn")
     s = sub.add_parser("sync")
     s.add_argument("profile")
     s.add_argument("board", nargs="?", choices=list(boards.BOARDS), help="only this board")
@@ -1526,8 +1714,10 @@ def main():
         set_fields(args.profile, args.ad, people.OWNER, args.status, args.note, args.summary)
         print("נשמר.")
     else:
-        global LAN
+        global LAN, SHARED
         LAN = bool(getattr(args, "lan", False))
+        SHARED = bool(getattr(args, "shared", False))
+        threading.Thread(target=queue_worker, daemon=True).start()
         server = ThreadingHTTPServer(("0.0.0.0" if LAN else "127.0.0.1", PORT), Handler)
         print(f"http://127.0.0.1:{PORT}  (Ctrl+C עוצר)")
         if getattr(args, "open", False):

@@ -139,8 +139,14 @@ MADLAN_EN = {"Limited park access": "מעט פארקים בסביבה"}  # the i
 MADLAN_IMG ="https://images2.madlan.co.il/t:nonce:v=5;resize:height=640,width=640,fit=outside,withoutEnlargement=true;convert:type=webp/"
 
 
+# Madlan's own names where they differ from ours, as its published sitemap spells them (read 18.11.2026; the
+# file is dated 2022, and these six were not opened on Madlan itself). The other 112 are spelled the same.
+MADLAN_CITY = {"טירת כרמל": "טירת הכרמל", "יקנעם עילית": "יוקנעם עילית", "נוף הגליל": "נצרת עילית",
+               "כוכב יאיר / צור יגאל": "כוכב יאיר צור יגאל", "עספיא": "עיספיא", "בני עי\"ש": "בני עיש"}
+
+
 def madlan_slug(city):
-    return plain_name(city).replace(" ", "-") + "-ישראל"
+    return MADLAN_CITY.get(city["name"], plain_name(city)).replace(" ", "-") + "-ישראל"
 
 
 def madlan_url(city, prefs, margin):
@@ -206,8 +212,18 @@ KOMO_ON = {"mamad": "mamad", "maalit": "elevator", "soragim": "bars", "mizug": "
            "renovated": "renovated", "gisha": "accessible", "mahsan": "storage", "pets": "pets", "riut": "furnished"}
 
 
+# Komo writes its own spelling of some names; a name it does not know answers with no ads and no error.
+# Checked on 18.11.2026 with one wide rental search per city: every "קרית" is "קריית" there.
+KOMO_CITY = {"דאלית אל כרמל": "דלית אל כרמל", "עספיא": "עוספיא"}
+
+
+def komo_city(city):
+    name = plain_name(city)
+    return KOMO_CITY.get(name) or re.sub(r"^קרית ", "קריית ", name)
+
+
 def komo_url(city, prefs, margin):
-    q = {"cityName": plain_name(city)}
+    q = {"cityName": komo_city(city)}
     if prefs.get("price_min"):
         q["fromPrice"] = int(prefs["price_min"])
     if prefs.get("price_max"):
@@ -294,7 +310,8 @@ def komo_detail(d):
 # Its "rent" board is the owners' board (agents have their own section), it gives a street without a house number
 # and no pin, and its room filter takes the position in its own list (1 room = 1, 1.5 = 2, 2 = 3 ...).
 
-HOMELESS_CITY = {"תל אביב יפו": "תל אביב"}
+# Homeless: the names as its own city list spells them (asked 18.11.2026), where they differ from ours.
+HOMELESS_CITY = {"תל אביב יפו": "תל אביב", "אפרת": "אפרתה", "מעלות תרשיחא": "מעלות-תרשיחא", "בנימינה גבעת עדה": "בנימינה"}
 HOMELESS_ON = {"furnished": "furnished", "Elevators": "elevator", "Airconditioner": "ac", "parking": "parking",
                "Terrace": "balcony", "bars": "bars", "safeRoom": "mamad", "Storage": "storage", "Renovated": "renovated",
                "WaterHeater": "boiler", "pets": "pets"}
@@ -352,6 +369,97 @@ def homeless_detail(d):
 
 BILLS = {"ארנונה": "arnona", "מים": "water", "חשמל": "electricity", "ועד": "vaad", "אינטרנט": "internet", "גז": "gas"}
 BILLS_HE = {"arnona": "ארנונה", "water": "מים", "electricity": "חשמל", "vaad": "ועד בית", "internet": "אינטרנט", "gas": "גז"}
+
+
+# ---------------- an ad the person pasted in ----------------
+# Text from anywhere: a Facebook or WhatsApp post, a board we do not read, a friend's message. Nothing is fetched:
+# the person brings the text (and, if they like, the link they took it from) and it becomes one more ad on the board.
+OTHER = {"paste": "הודבקה"}
+HE = "֐-׿"
+NUM_WORDS = {"חדר": 1, "שני": 2, "שניים": 2, "שתי": 2, "שלושה": 3, "שלוש": 3, "ארבעה": 4, "ארבע": 4, "חמישה": 5, "חמש": 5, "שישה": 6, "שש": 6}
+FLOOR_WORDS = {"קרקע": 0, "ראשונה": 1, "שנייה": 2, "שניה": 2, "שלישית": 3, "רביעית": 4, "חמישית": 5, "שישית": 6,
+               "א": 1, "ב": 2, "ג": 3, "ד": 4, "ה": 5, "ו": 6}
+PASTE_FEATURES = {"elevator": "מעלית", "mamad": r"ממ[\"״']?ד", "shelter": "מקלט", "parking": "חניה|חנייה", "balcony": "מרפסת",
+                  "ac": "מזגן|מזגנים|מיזוג", "furnished": "מרוהטת|ריהוט מלא|מרוהט", "renovated": "משופצת|שופצה|משופץ",
+                  "pets": "חיות מחמד|בעלי חיים", "bars": "סורגים", "storage": "מחסן", "boiler": "דוד שמש", "accessible": "נגישה|נגיש לנכים"}
+PHONE = re.compile(r"(?:\+?972[\s-]?|0)(?:[23489]|5\d|7\d)[\s-]?\d{3}[\s-]?\d{4}|\[hidden information\]")
+
+
+def pasted_item(text, url, city_name, hoods, deal="rent"):
+    """Our ad from free text. Only what the text says is filled in; phone numbers are taken out before it is kept.
+    Returns (ad, missing): missing names the basics the text did not give."""
+    import hashlib
+    text = PHONE.sub("[טלפון הוסר]", re.sub(r"[ \t ‎‏]+", " ", str(text or "")).strip())[:6000]
+    flat = text.replace("\n", " ")
+    out = {"board": "paste", "seller": None, "agency": None, "city": city_name, "description": text, "images": None}
+    out["native_id"] = hashlib.sha1(re.sub(r"\W+", "", flat).encode()).hexdigest()[:12]
+    out["id"] = "paste:" + out["native_id"]
+    out["url"] = url if re.match(r"https?://[^\s\"'<>]{4,600}$", url or "") else None
+
+    money = r"(\d{1,3}(?:[,.]\d{3})+|\d{3,8})"
+    m = re.search(r"(\d(?:[.,]\d{1,3})?)\s*(?:מיליון|מליון|מ')(?![" + HE + "])", flat) if deal == "sale" else None
+    if m:
+        out["price"] = int(float(m.group(1).replace(",", ".")) * 1_000_000)
+    else:
+        found = (re.findall(money + r"\s*(?:₪|ש[\"״']?ח|שקל|nis|ils)", flat, re.I) + re.findall(r"(?:₪|ILS|NIS)\s*" + money, flat, re.I)
+                 + re.findall(r"(?:מחיר|שכירות|שכ\"ד|שכר דירה|price)\s*:?\s*" + money, flat, re.I))
+        prices = [p for p in (_price(x.replace(",", "").replace(".", "")) for x in found) if p]
+        out["price"] = prices[0] if prices else None
+
+    m = re.search(r"(\d(?:[.,]5)?)\s*(?:חד(?:רים|ר|')?(?![" + HE + r"])|rooms?)", flat, re.I)
+    words = re.search(r"(" + "|".join(NUM_WORDS) + r")\s+(?:וחצי\s+)?חדרים(\s+וחצי)?", flat)
+    beds = re.search(r"(\d)\s*(?:beds?|bedrooms?|חדרי שינה)", flat, re.I)
+    if m:
+        out["rooms"] = _num(m.group(1).replace(",", "."))
+        if re.match(r"\s*(?:חד(?:רים|ר|')?)\s+וחצי", flat[m.start(0) + len(m.group(1)):]):
+            out["rooms"] += 0.5
+    elif words:
+        out["rooms"] = NUM_WORDS[words.group(1)] + (0.5 if "וחצי" in words.group(0) else 0)
+    elif re.search(r"חדר וחצי", flat):
+        out["rooms"] = 1.5
+    elif beds:
+        out["rooms"] = int(beds.group(1)) + 1  # bedrooms, plus the living room
+    elif re.search(r"סטודיו|studio", flat, re.I):
+        out["rooms"] = 1
+    else:
+        out["rooms"] = None
+
+    m = re.search(r"(\d{2,3})\s*(?:מ[\"״']?ר|מטר(?:ים)?(?: רבוע)?|sqm|m2|מ²)(?![" + HE + "])", flat, re.I)
+    out["sqm"] = int(m.group(1)) if m else None
+
+    m = re.search(r"קומ[הת]\s*:?\s*(-?\d{1,2}|" + "|".join(sorted(FLOOR_WORDS, key=len, reverse=True)) + r")['׳]?(?![" + HE + r"])"
+                  r"(?:\s*(?:מתוך|מ-|/)\s*(\d{1,2}))?", flat)
+    out["floor"] = None if not m else FLOOR_WORDS[m.group(1)] if m.group(1) in FLOOR_WORDS else int(m.group(1))
+    out["top_floor"] = int(m.group(2)) if m and m.group(2) else None
+
+    lead, name = r"(?:ב?רחוב|ב?רח['׳]|ב?שד(?:רות|['׳]))\s+", "([" + HE + r"\"'׳ -]{2,28}?)"
+    stop = r"(?:קומה|קומת|ליד|פינת|דירה|דירת|להשכרה|למכירה|קרוב|מול|כניסה|במחיר|מחיר|ב[" + HE + r"]{3,})"
+    m = (re.search(lead + name + r"\s+(\d{1,3})(?!\d)", flat)  # a name of several words ends at its house number
+         or re.search(lead + name + r"(?=\s*(?:[,.!?:;)(]|$)|\s+" + stop + r"(?![" + HE + "]))", flat))
+    out["street"] = m.group(1).strip(" -") if m else None
+    out["house_no"] = _int(m.group(2)) if m and m.lastindex == 2 else None
+    out["hood"] = next((h for h in sorted(hoods, key=len, reverse=True) if len(h) > 3 and h in flat), None)
+
+    out["type"] = next((t for word, t in KOMO_TYPES if word in flat and t not in NOT_A_HOME), "apartment")
+    out["type_raw"] = TYPES[out["type"]]
+    no = r"(?:ללא|בלי|אין|לא כולל)\s+(?:[" + HE + r"]+\s+ו?)?"
+    out["features"] = sorted(f for f, pat in PASTE_FEATURES.items()
+                             if re.search(r"(?:" + pat + ")", flat) and not re.search(no + r"(?:" + pat + ")", flat))
+    out["features_known"] = False  # a text says what it has, never the whole list
+    if re.search(r"ללא תיווך|בלי תיווך|לא למתווכים|ללא מתווכים|ישירות מבעל|מבעלים|no agent", flat, re.I):
+        out["seller"] = "private"
+    elif re.search(r"דמי תיווך|בתיווך|מתווך|משרד תיווך|נדל[\"״]?ן בע|רי/?מקס|אנגלו סכסון|בלעדיות", flat):
+        out["seller"] = "agent"
+    out["immediate"] = True if re.search(r"כניסה מי[י]?דית|פנויה עכשיו|זמינה מי[י]?ד", flat) else None
+    m = re.search(r"(?:כניסה|פינוי|מתפנה|available)\s*(?:ב-?|:|מה-?|from)?\s*(\d{1,2})[./](\d{1,2})(?:[./](\d{2,4}))?", flat, re.I)
+    if m:
+        year = int(m.group(3) or datetime.now().year)
+        day, month = int(m.group(1)), int(m.group(2))
+        if 1 <= day <= 31 and 1 <= month <= 12:
+            out["entrance"] = f"{year + 2000 if year < 100 else year}-{month:02d}-{day:02d}T00:00:00"
+    missing = [he for key, he in (("price", "מחיר"), ("rooms", "חדרים"), ("street", "רחוב"), ("floor", "קומה"), ("sqm", "גודל"))
+               if out.get(key) is None]
+    return out, missing
 
 
 def read_text(ad):
