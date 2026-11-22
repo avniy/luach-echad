@@ -11,5 +11,9 @@ if errorlevel 1 (
   pause
   exit /b 1
 )
-python app.py serve --lan --open
-if errorlevel 1 pause
+rem One block: it is read whole before it runs, so an update may replace this file while the app is running.
+(
+  python app.py serve --lan --open
+  if errorlevel 1 pause
+  exit /b
+)

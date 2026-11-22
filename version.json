@@ -1,0 +1,52 @@
+{
+  "version": "1.2.0",
+  "date": "2026-11-22",
+  "releases": [
+    {
+      "version": "1.2.0",
+      "date": "2026-11-22",
+      "he": [
+        "כל הארץ: 1,201 ערים, יישובים, מושבים וקיבוצים (היו 118), עם השמות כפי שיד2 כותבת אותם.",
+        "עד 3 מקומות בחיפוש אחד: עיר והיישובים שלידה, ולכל מקום השכונות שלו. ככה שומרים על שימוש סביר בשרתים של הלוחות.",
+        "בדיקה אוטומטית: החיפושים נבדקים לבד כל 6 או 12 שעות או פעם ביום, והתראה קופצת כשיש דירה חדשה שמתאימה או ירידת מחיר. כבוי עד שמדליקים.",
+        "עיר גדולה נקראת עד הסוף: חיפוש גדול ביד2 נקרא בחלקים (פתח תקווה: 785 מתוך 786), והומלס נקרא עד העמוד האחרון (עד עכשיו רק הראשון).",
+        "לקונים: מס רכישה, כמה כסף צריך ביד והחזר חודשי משוער בכל מודעה, לפי הריבית הממוצעת שבנק ישראל מפרסם.",
+        "\"מצב המערכת\" בתחתית המסך: מתי כל דבר התעדכן לאחרונה (הריבית של בנק ישראל, כל לוח, התוסף, החיפושים ועוד), עם ⚠️ כשמשהו ישן או נכשל. גם בחשבון לקונים כתוב כשהריבית ישנה.",
+        "הקראת המודעה בקול: כל המודעה, בקצרה, או רק מה שכתב בעל הדירה, במהירות ובקול שבוחרים. הקול של הדפדפן, במחשב שלכם.",
+        "נגישות: כל המסכים עובדים במקלדת ועם קורא מסך.",
+        "מראה כהה: לפי המחשב, או בבחירה בתחתית המסך. גם המפה מתכהה, והמסגרות רכות.",
+        "תנועה: מסכים, חלונות ומודעות נכנסים ויוצאים בתנועה רכה, ומודעה הבאה מחליקה פנימה מהצד הנכון.",
+        "באנגלית: גם שמות כל הערים, היישובים והשכונות, מפה עם שמות באנגלית, וחיפוש מקום באותיות לטיניות.",
+        "מחיקת חיפוש מהמסך הראשי (עם אישור).",
+        "עדכון בלחיצה: כשיש גרסה חדשה האפליקציה מודיעה, מראה מה חדש ומתעדכנת לבד. החיפושים, הסימונים וההגדרות שלכם נשארים. גם התוסף בדפדפן מתעדכן לבד.",
+        "שקט יותר: הלשונית של כל לוח נסגרת ברגע שהקריאה שלו מסתיימת.",
+        "מדלן: שש ערים שמדלן מאיית אחרת (יקנעם עילית, טירת כרמל, נוף הגליל, כוכב יאיר, עספיא, בני עי\"ש) מחזירות עכשיו מודעות, ומקום שמדלן לא מכיר כבר לא נחשב תקלה.",
+        "ניסוח: \"מחיר לא צוין\" במקום ריק, \"קומה 3 מתוך 4\", \"קומה אחרונה\", \"קומת קרקע\", \"דירה אחת נוספה\" ולא \"1 נוספו\", ובכרטיס החיפוש מה ביקשתם במילים.",
+        "פרטים קטנים: דגל ליד השם, פסי גלילה דקים ושקופים, \"מה השתנה\" בלי אפסים, השכונות של כל עיר ליד העיר שלה, הערה על מודעה שכתוב בה בבירור מי רואה אותה, וחלון \"מה השתנה\" שחוזר אחרי שסוגרים מודעה שנפתחה ממנו.",
+        "\"על לוח אחד\" בתחתית המסך: הגרסה, תנאי השימוש ודרכי יצירת קשר, וכפתור \"סייעתי לך? מוזמנים לזרוק חטיף :)\".",
+        "תנאי שימוש קצרים, בתוך האפליקציה ובמדריך: מה מותר, מה האחריות שלכם, ומה רץ לבד."
+      ],
+      "en": [
+        "The whole country: 1,201 cities, towns, moshavim and kibbutzim (was 118), named as yad2 names them.",
+        "Up to 3 places in one search: a city and the towns next to it, each with its own neighbourhoods. That keeps the use of the boards' servers reasonable.",
+        "Automatic check: the searches check themselves every 6 or 12 hours or once a day, and a notice pops up when a new flat fits or a price drops. Off until you switch it on.",
+        "A big city is read to its end: a big yad2 search is read in parts (Petah Tikva: 785 of 786), and Homeless is read to its last page (until now only the first).",
+        "For buyers: purchase tax, the cash you need and an estimated monthly payment on every ad, at the average interest the Bank of Israel publishes.",
+        "\"System status\" at the bottom of the screen: when each thing was last updated (the Bank of Israel interest, each board, the extension, the searches and more), with ⚠️ when something is old or failed. A buyer's card also says when the interest is old.",
+        "Read the ad aloud: the whole ad, a short version or only the owner's text, at the speed and in the voice you choose. The browser's own voice, on your computer.",
+        "Accessibility: every screen works with a keyboard and a screen reader.",
+        "A dark look: as the computer is, or chosen at the bottom of the screen. The map turns dark too, with soft borders.",
+        "Motion: screens, windows and ads come and go with soft movement, and the next ad slides in from the right side.",
+        "In English: the names of every city, town and neighbourhood, a map with English names, and finding a place by typing in Latin letters.",
+        "Delete a search from the first screen (with a confirmation).",
+        "One-click updates: when a new version is out the app tells you, shows what is new and updates itself. Your searches, marks and settings stay. The browser extension updates itself too.",
+        "Quieter: each board's tab closes the moment its reading ends.",
+        "Madlan: six towns that Madlan spells its own way (Yokneam Illit, Tirat Carmel, Nof HaGalil, Kochav Yair, Isfiya, Bnei Ayish) now return ads, and a place Madlan does not list is no longer counted as a failure.",
+        "Wording: \"Price not given\" instead of a blank, \"floor 3 of 4\", \"top floor\", \"ground floor\", \"1 flat added\" instead of \"1 added\", and the search card says what you asked for in words.",
+        "Small things: a flag next to the name, thin see-through scrollbars, \"what changed\" without zeros, each city's neighbourhoods next to it, a note field that says plainly who sees it, and a \"what changed\" window that comes back after you close an ad opened from it.",
+        "\"About\" at the bottom of the screen: the version, the terms of use and how to get in touch, and a \"Did it help? Toss me a snack :)\" button.",
+        "Short terms of use, in the app and in the guide: what is allowed, what is your responsibility, and what runs by itself."
+      ]
+    }
+  ]
+}

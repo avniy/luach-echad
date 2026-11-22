@@ -1,13 +1,17 @@
 // The whole extension. It serves one program: the "לוח אחד" app on this computer (127.0.0.1:7461).
-// The app asks for one of three things, and nothing else is possible:
+// The app asks for one of four things, and nothing else is possible:
 //   navigate {url}          open a page of one of the four boards in the extension's own background tab for that board
 //   collect  {board, job}   read that page with the script in collectors/<board>.js (shipped with the extension)
+//   close    {board}        close that board's work tab: its reading is done
 //   notify   {title, text, url}   a desktop note ("Komo asks to sign in again")
 // It never types, clicks, signs in or sends anything to a board, and it cannot touch any other site or tab.
+// Its work tabs are always opened in the background and never take the screen or the keyboard.
+// After the app was updated, the app says which version of the extension its folder holds; when that is not the
+// one running, the extension reloads itself from the folder (what the reload arrow in chrome://extensions does).
 
 const APP = "http://127.0.0.1:7461";
 const BOARDS = { yad2: "yad2.co.il", madlan: "madlan.co.il", komo: "komo.co.il", homeless: "homeless.co.il" };
-const IDLE_CLOSE_MS = 120000;   // the work tabs close two minutes after the last request
+const IDLE_CLOSE_MS = 120000;   // a work tab the app did not close (the app was stopped) closes after two idle minutes
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const boardOf = (url) => {
@@ -83,18 +87,28 @@ async function collect({ board, job }) {
   return out.value;
 }
 
+async function close({ board }) {
+  if (!BOARDS[board]) throw new Error("לוח לא מוכר");
+  const tab = await workTab(board);
+  await chrome.storage.session.remove(key(board));
+  if (tab) await chrome.tabs.remove(tab.id).catch(() => {});
+  return !!tab;
+}
+
+// A note may open one of the four boards, or the app itself on this computer (a search with new flats).
+const opens = (url) => !!boardOf(url) || String(url || "").startsWith("http://127.0.0.1:7461/");
 async function notify({ title, text, url }) {
-  const id = boardOf(url) ? url : "luach-" + Date.now();
+  const id = opens(url) ? url : "luach-" + Date.now();
   await chrome.notifications.create(id, { type: "basic", iconUrl: "icon-128.png", title: String(title || "לוח אחד").slice(0, 80),
     message: String(text || "").slice(0, 300) });
   return true;
 }
 chrome.notifications.onClicked.addListener((id) => {
-  if (boardOf(id)) chrome.tabs.create({ url: id });
+  if (opens(id)) chrome.tabs.create({ url: id });
   chrome.notifications.clear(id);
 });
 
-const COMMANDS = { navigate, collect, notify };
+const COMMANDS = { navigate, collect, close, notify };
 
 // ---- talking to the app: ask for the next request; each request is done on its own and answered when ready ----
 let running = false;
@@ -106,7 +120,13 @@ async function call(body) {
     body: JSON.stringify(Object.assign({ version: chrome.runtime.getManifest().version }, body)),
   });
   if (!r.ok) throw new Error("app " + r.status);
-  return (await r.json()).job;
+  const out = await r.json();
+  if (out.reload && out.reload !== chrome.runtime.getManifest().version) {
+    // The app's folder holds a newer extension than the one running: load it. The app asks once per version.
+    setTimeout(() => chrome.runtime.reload(), 300);
+    throw new Error("reloading");
+  }
+  return out.job;
 }
 
 async function run(job) {

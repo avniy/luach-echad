@@ -8,6 +8,23 @@
 <link rel="icon" href="/icon.svg">
 <link rel="apple-touch-icon" href="/icon.svg">
 <meta name="theme-color" content="#fbf6ec">
+<script>
+// The look is set before anything is drawn, so a dark screen never flashes light first.
+// "auto" follows the computer's own setting; the person's choice is kept in this browser only.
+(function () {
+  let pick = "auto";
+  try { pick = localStorage.getItem("theme") || "auto"; } catch (e) {}
+  const q = window.matchMedia ? matchMedia("(prefers-color-scheme: dark)") : null;
+  const apply = () => {
+    const dark = pick === "dark" || (pick === "auto" && q && q.matches);
+    document.documentElement.dataset.theme = dark ? "dark" : "light";
+    const m = document.querySelector('meta[name="theme-color"]'); if (m) m.content = dark ? "#17140f" : "#fbf6ec";
+  };
+  window.THEME = { get: () => pick, set: (v) => { pick = v; try { localStorage.setItem("theme", v); } catch (e) {} apply(); } };
+  if (q && q.addEventListener) q.addEventListener("change", () => pick === "auto" && apply());
+  apply();
+})();
+</script>
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,7 +34,38 @@
 <style>
   :root { --paper: #fbf6ec; --card: #fffdf8; --ink: #24201a; --soft: #7b7466; --line: #e9e0cf; --coral: #ff6542;
           --mint: #149e74; --mint-soft: #dcf3ea; --sun: #b97a06; --sun-soft: #fdeecb; --red: #b23a2e; --red-soft: #f9e2de;
-          --sky: #2f6fe0; --sky-soft: #e2ecfd; --pop: 3px 3px 0 var(--ink); }
+          --sky: #2f6fe0; --sky-soft: #e2ecfd; --shade: var(--ink); --edge: var(--ink); --edge-hi: var(--ink); --pop: 3px 3px 0 var(--shade);
+          --on-ink: #fff; --sel: var(--ink); --on-sel: #fff; --chip: #f1eadb; --chip-ink: #564f42; --tint: #efe8d8; --track: #eee6d6; --veil: rgba(36, 32, 26, .45);
+          color-scheme: light; }
+  /* The dark look: the same app at night. Chosen in the footer (as the computer is / light / dark), kept in this browser. */
+  :root[data-theme=dark] { --paper: #17140f; --card: #221e18; --ink: #efe7d8; --soft: #a59d8d; --line: #3a342a; --coral: #ff7656;
+          --mint: #3cc79a; --mint-soft: #173a2f; --sun: #f0b440; --sun-soft: #3d3016; --red: #ff8a7a; --red-soft: #45221d;
+          --sky: #7aa7ff; --sky-soft: #1d2b47; --shade: rgba(0, 0, 0, .55);
+          --edge: #4a4337; --edge-hi: #8a7f6c; --on-ink: #17140f; --sel: #5b4c38; --on-sel: #fff4e2; --chip: #2e2920; --chip-ink: #d8cfbf;
+          --tint: #2a251d; --track: #3a342a; --veil: rgba(0, 0, 0, .6); color-scheme: dark; }
+  :root[data-theme=dark] .chip.b-yad2 { background: #3d2614; color: #ffa463; }
+  :root[data-theme=dark] .chip.b-komo { background: #2e2342; color: #c4a5f5; }
+  :root[data-theme=dark] .chip.b-homeless { background: #143536; color: #6fd3dc; }
+  :root[data-theme=dark] .chip.b-paste { background: #3a3014; color: #f0cf6e; }
+  :root[data-theme=dark] .src.b-yad2 b, :root[data-theme=dark] .spill.b-yad2 b { color: #ffa463; }
+  :root[data-theme=dark] .src.b-komo b, :root[data-theme=dark] .spill.b-komo b { color: #c4a5f5; }
+  :root[data-theme=dark] .src.b-homeless b, :root[data-theme=dark] .spill.b-homeless b { color: #6fd3dc; }
+  :root[data-theme=dark] .spill.b-paste b, :root[data-theme=dark] .src.b-paste b { color: #f0cf6e; }
+  :root[data-theme=dark] .foot a.treat, :root[data-theme=dark] .foot a.upd, :root[data-theme=dark] .frame .tape, :root[data-theme=dark] .bub { color: #24201a; }
+  :root[data-theme=dark] .extnote { background: #3a3014; }
+  :root[data-theme=dark] .hero em { background: linear-gradient(transparent 62%, #6b2c1f 62%); }
+  :root[data-theme=dark] .pin.maybe { color: #24201a; }
+  :root[data-theme=dark] .pin.no { background: #3a342a; color: #a59d8d; border-color: #5b5446; }
+  :root[data-theme=dark] .poi { border-color: #a59d8d; }
+  :root[data-theme=dark] .places .pl button { background: rgba(255, 255, 255, .16); color: var(--on-sel); }
+  /* the map's pictures come light from OpenStreetMap: turned dark here; the pins and lines on them stay as they are */
+  :root[data-theme=dark] .leaflet-tile-pane, :root[data-theme=dark] #map .leaflet-tile-pane { filter: invert(1) hue-rotate(180deg) brightness(.9) contrast(.85) saturate(.45) sepia(.12); }
+  :root[data-theme=dark] .leaflet-container { background: #1b1813; }
+  :root[data-theme=dark] .leaflet-control-zoom a, :root[data-theme=dark] .leaflet-control-attribution { background: var(--card); color: var(--ink); }
+  :root[data-theme=dark] .leaflet-control-attribution a { color: var(--sky); }
+  :root[data-theme=dark] .leaflet-bar, :root[data-theme=dark] .leaflet-bar a { border-color: var(--edge); }
+  :root[data-theme=dark] img { filter: brightness(.92); }
+  .foot a.theme { font-weight: 500; text-decoration: underline; cursor: pointer; }
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; }
   body { background: var(--paper); color: var(--ink); font: 14.5px/1.45 Rubik, "Segoe UI", system-ui, sans-serif; display: flex; flex-direction: column; }
@@ -25,19 +73,19 @@
   #root { flex: 1 0 auto; display: flex; flex-direction: column; } body:has(.app) #root { flex: 1 1 0; min-height: 0; }
   .foot { order: 99; flex: none; display: flex; gap: 14px; justify-content: center; align-items: center; padding: 5px 18px 9px; font-size: 12.5px; color: var(--soft); }
   .foot a { color: inherit; font-weight: 600; text-decoration: none; } .foot a:hover { color: var(--ink); }
-  .foot a.treat { color: var(--ink); background: #ffe08a; border: 1.5px solid var(--ink); border-radius: 999px; padding: 1px 12px; box-shadow: 2px 2px 0 var(--ink); }
-  .foot a.treat:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--ink); }
+  .foot a.treat { color: var(--ink); background: #ffe08a; border: 1.5px solid var(--edge); border-radius: 999px; padding: 1px 12px; box-shadow: 2px 2px 0 var(--shade); }
+  .foot a.treat:active { transform: translate(1px, 1px); box-shadow: 1px 1px 0 var(--shade); }
   button, input, select, textarea { font: inherit; color: inherit; }
   button { cursor: pointer; }
-  .btn { border: 1.5px solid var(--ink); background: var(--card); border-radius: 999px; padding: 7px 16px; font-weight: 600; }
+  .btn { border: 1.5px solid var(--edge); background: var(--card); border-radius: 999px; padding: 7px 16px; font-weight: 600; }
   .btn.pop { background: var(--coral); color: #fff; box-shadow: var(--pop); transition: transform .08s, box-shadow .08s; }
-  .btn.pop:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--ink); }
+  .btn.pop:active { transform: translate(2px, 2px); box-shadow: 1px 1px 0 var(--shade); }
   .btn.ghost { border-color: var(--line); font-weight: 500; }
   .btn:disabled { opacity: .5; cursor: default; }
   .logo { font-weight: 800; font-size: 21px; letter-spacing: -.02em; display: flex; align-items: center; gap: 8px; cursor: pointer; }
-  .logo i { width: 22px; height: 22px; border-radius: 7px; background: var(--coral); border: 1.5px solid var(--ink); box-shadow: 2px 2px 0 var(--ink); display: block; transform: rotate(-8deg); }
+  .logo i { width: 22px; height: 22px; border-radius: 7px; background: var(--coral); border: 1.5px solid var(--edge); box-shadow: 2px 2px 0 var(--shade); display: block; transform: rotate(-8deg); }
   .muted { color: var(--soft); }
-  .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: #f1eadb; color: #564f42; white-space: nowrap; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; padding: 1px 8px; border-radius: 999px; background: var(--chip); color: var(--chip-ink); white-space: nowrap; }
   .chip.good { background: var(--mint-soft); color: var(--mint); font-weight: 600; }
   .chip.warn { background: var(--sun-soft); color: var(--sun); font-weight: 600; }
   .chip.bad { background: var(--red-soft); color: var(--red); font-weight: 600; }
@@ -50,29 +98,77 @@
   .spill.b-paste b, .src.b-paste b { color: #7a5a00; }
   .pastebox { display: grid; gap: 10px; } .pastebox textarea { width: 100%; min-height: 170px; resize: vertical; line-height: 1.5; }
   .pastebox input { width: 100%; direction: ltr; text-align: right; } html[dir=ltr] .pastebox input { text-align: left; }
+  .foot { flex-wrap: wrap; row-gap: 5px; }
+  .foot a.about { font-weight: 500; text-decoration: underline; cursor: pointer; }
+  .foot a.upd { color: var(--ink); background: #c9f2d0; border: 1.5px solid var(--edge); border-radius: 999px; padding: 1px 12px; box-shadow: 2px 2px 0 var(--shade); cursor: pointer; }
+  .about { display: grid; gap: 9px; font-size: 14.5px; line-height: 1.6; } .about p { margin: 0; } .about h4 { margin: 4px 0 0; font-size: 15px; }
+  .about ul { margin: 0; padding-inline-start: 20px; } .about li { margin: 3px 0; }
+  .about .contact { display: flex; flex-wrap: wrap; gap: 8px 10px; }
+  .about .contact a { direction: ltr; unicode-bidi: isolate; font-weight: 600; color: var(--ink); text-decoration: none; background: var(--card); border: 1.5px solid var(--edge); border-radius: 999px; padding: 2px 12px; }
+  .about .drow { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin-top: 4px; }
   .foot .langs { display: flex; gap: 8px; } .foot .langs a { font-weight: 500; text-decoration: underline; cursor: pointer; }
   .chip i { font-style: normal; font-size: 11px; line-height: 1; }
   .chip.time { background: none; box-shadow: inset 0 0 0 1px var(--line); color: var(--soft); }
-  .chip.deal { background: var(--ink); color: #fff; font-weight: 600; vertical-align: middle; }
+  .chip.deal { background: var(--sel); color: var(--on-sel); font-weight: 600; vertical-align: middle; }
   .chips-end { display: inline-flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; margin-inline-start: auto; }
   .top a.chip { text-decoration: none; cursor: pointer; }
   .seg { display: inline-flex; border: 1.5px solid var(--line); border-radius: 999px; background: var(--card); padding: 2px; gap: 2px; }
   .seg button { border: 0; background: none; border-radius: 999px; padding: 4px 12px; font-size: 13px; }
-  .seg button.on { background: var(--ink); color: #fff; font-weight: 600; }
+  .seg button.on { background: var(--sel); color: var(--on-sel); font-weight: 600; }
   input[type=text], input[type=number], input[type=search], select, textarea { border: 1.5px solid var(--line); border-radius: 10px; background: var(--card); padding: 7px 10px; outline: none; }
-  input:focus, select:focus, textarea:focus { border-color: var(--ink); }
+  input:focus, select:focus, textarea:focus { border-color: var(--edge-hi); }
 
   /* home + wizard */
   .center { max-width: 880px; margin: 0 auto; padding: 34px 20px 60px; }
   .hero { font-size: 34px; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; margin: 26px 0 6px; }
   .hero em { font-style: normal; background: linear-gradient(transparent 62%, #ffd2c6 62%); }
   .pgrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; margin-top: 26px; }
-  .pcard { background: var(--card); border: 1.5px solid var(--ink); border-radius: 18px; padding: 16px; box-shadow: var(--pop); cursor: pointer; transition: transform .1s; }
+  .pcard { background: var(--card); border: 1.5px solid var(--edge); border-radius: 18px; padding: 16px; box-shadow: var(--pop); cursor: pointer; transition: transform .1s; }
   .pcard:hover { transform: translate(-1px, -2px); }
   .pcard h3 { margin: 0 0 4px; font-size: 19px; }
   .pcard .big { font-size: 26px; font-weight: 800; color: var(--coral); }
+  /* The first screen: a big welcome with what is behind it */
+  .homepage { max-width: 1120px; }
+  .herobox { position: relative; isolation: isolate; padding: 34px 32px 28px; margin-top: 18px; border-radius: 28px; overflow: hidden;
+    background: linear-gradient(135deg, color-mix(in srgb, var(--coral) 10%, var(--card)), var(--card) 55%, color-mix(in srgb, var(--sky) 9%, var(--card)));
+    border: 1.5px solid var(--edge); box-shadow: var(--pop); }
+  .herobox .blob { position: absolute; z-index: -1; border-radius: 50%; filter: blur(46px); opacity: .5; animation: drift 14s ease-in-out infinite alternate; }
+  .herobox .b1 { width: 320px; height: 320px; background: var(--coral); top: -150px; inset-inline-start: -90px; opacity: .28; }
+  .herobox .b2 { width: 260px; height: 260px; background: var(--mint); bottom: -140px; inset-inline-end: 12%; opacity: .2; animation-delay: -5s; }
+  .herobox .b3 { width: 200px; height: 200px; background: var(--sun); top: -60px; inset-inline-end: -40px; opacity: .2; animation-delay: -9s; }
+  @keyframes drift { to { transform: translate(40px, 24px) scale(1.12); } }
+  .homepage .hero { font-size: clamp(34px, 5.4vw, 60px); line-height: 1.04; margin: 0 0 12px; letter-spacing: -.03em; }
+  .homepage .hero em { background: none; color: var(--coral); position: relative; white-space: nowrap; }
+  .homepage .hero em::after { content: ""; position: absolute; inset-inline: -2px; bottom: .04em; height: .2em; border-radius: 6px; background: color-mix(in srgb, var(--coral) 30%, transparent); z-index: -1; transform-origin: right; animation: sweep .9s var(--ease) .35s both; }
+  :root[dir=ltr] .homepage .hero em::after { transform-origin: left; }
+  @keyframes sweep { from { transform: scaleX(0); } }
+  .hsub { font-size: 17px; color: var(--soft); max-width: 640px; }
+  .hboards { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 22px; align-items: center; }
+  .hboards .chip { font-size: 14px; padding: 5px 13px; animation: pop .45s var(--spring) both; animation-delay: calc(var(--i) * 70ms + 300ms); }
+  .hplus { font-size: 13.5px; color: var(--soft); border: 1.5px dashed var(--line); border-radius: 99px; padding: 4px 12px; }
+  .hstats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+  .hstat { background: color-mix(in srgb, var(--card) 80%, transparent); backdrop-filter: blur(6px); border: 1px solid var(--line); border-radius: 16px; padding: 12px 16px; display: grid; gap: 2px; }
+  .hstat .num { font-size: 30px; font-weight: 800; letter-spacing: -.02em; font-variant-numeric: tabular-nums; }
+  .hstat span { color: var(--soft); font-size: 13.5px; } .hstat.good .num { color: var(--mint); } .hstat.love .num { color: var(--coral); }
+  @media (max-width: 720px) { .herobox { padding: 24px 18px 20px; } .hstats { grid-template-columns: repeat(2, 1fr); } .hstat .num { font-size: 24px; } }
+  .pcard { display: grid; gap: 4px; align-content: start; overflow: hidden; }
+  .pcard::before { content: ""; position: absolute; inset: 0 0 auto; height: 5px; background: var(--coral); }
+  .pcard.deal-sale::before { background: var(--mint); }
+  .pcount { margin-top: 10px; } .pcard .big .num, .pcard .big { font-size: 30px; font-weight: 800; color: var(--coral); }
+  .pcard.deal-sale .big, .pcard.deal-sale .big .num { color: var(--mint); }
+  .pbar { height: 6px; border-radius: 6px; background: var(--track); overflow: hidden; margin: 2px 0 6px; }
+  .pbar i { display: block; height: 100%; width: var(--w); border-radius: 6px; background: var(--coral); animation: grow 1s var(--ease) .3s both; }
+  .pcard.deal-sale .pbar i { background: var(--mint); }
+  @keyframes grow { from { width: 0; } }
+  .pfoot { display: flex; justify-content: space-between; gap: 8px; color: var(--soft); font-size: 13.5px; flex-wrap: wrap; }
+  .pfoot .when { opacity: .8; }
+  .pcard.add { gap: 6px; text-align: center; padding: 22px; }
+  .pcard.add::before { display: none; }
+  .plusbig { width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center; font-size: 28px; font-weight: 700; background: var(--coral); color: #fff; box-shadow: var(--pop); transition: transform .25s var(--spring); }
+  .pcard.add:hover .plusbig { transform: rotate(90deg) scale(1.08); }
+  .pcard.add b { color: var(--ink); font-size: 17px; } .pcard.add .muted { font-size: 13px; max-width: 220px; }
   .pcard.add { border-style: dashed; box-shadow: none; display: grid; place-items: center; color: var(--soft); min-height: 130px; font-weight: 600; }
-  .wiz { background: var(--card); border: 1.5px solid var(--ink); border-radius: 22px; box-shadow: var(--pop); padding: 24px 26px; margin-top: 22px; }
+  .wiz { background: var(--card); border: 1.5px solid var(--edge); border-radius: 22px; box-shadow: var(--pop); padding: 24px 26px; margin-top: 22px; }
   .dots { display: flex; gap: 6px; margin-bottom: 14px; }
   .dots i { height: 6px; flex: 1; border-radius: 6px; background: var(--line); }
   .dots i.on { background: var(--coral); }
@@ -82,30 +178,39 @@
   .q small { color: var(--soft); font-weight: 400; }
   .pick { display: flex; flex-wrap: wrap; gap: 6px; max-height: 168px; overflow: auto; padding: 2px; }
   .pick button { border: 1.5px solid var(--line); background: var(--card); border-radius: 999px; padding: 4px 12px; font-size: 13.5px; }
-  .pick button.on { background: var(--ink); border-color: var(--ink); color: #fff; }
-  .pick button.must { background: var(--coral); border-color: var(--ink); color: #fff; }
+  .pick button.on { background: var(--sel); border-color: var(--edge-hi); color: var(--on-sel); }
+  .pick button.must { background: var(--coral); border-color: var(--edge-hi); color: #fff; }
   .pick button.nice { background: var(--mint-soft); border-color: var(--mint); color: var(--mint); }
   .row2 { display: flex; gap: 14px; flex-wrap: wrap; align-items: end; }
   .tiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(112px, 1fr)); gap: 8px; } .tiles.big { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
   .tile { border: 1.5px solid var(--line); background: var(--card); border-radius: 14px; padding: 10px 8px 8px; display: grid; justify-items: center; align-content: start; gap: 2px; font-size: 13.5px; text-align: center; }
-  .tile:hover { border-color: var(--ink); } .tile .ti { font-size: 24px; line-height: 1.2; } .tile b { font-weight: 600; } .tile small { font-size: 11.5px; color: var(--soft); min-height: 15px; }
-  .tile.on { background: var(--ink); border-color: var(--ink); color: #fff; } .tile.on small { color: #d9d2c4; }
+  .tile:hover { border-color: var(--edge-hi); } .tile .ti { font-size: 24px; line-height: 1.2; } .tile b { font-weight: 600; } .tile small { font-size: 11.5px; color: var(--soft); min-height: 15px; }
+  .tile.on { background: var(--sel); border-color: var(--edge-hi); color: var(--on-sel); } .tile.on small { color: color-mix(in srgb, var(--on-sel) 78%, transparent); }
   .tile.nice { background: var(--mint-soft); border-color: var(--mint); } .tile.nice small { color: var(--mint); font-weight: 700; }
-  .tile.must { background: var(--coral); border-color: var(--ink); color: #fff; } .tile.must small { color: #fff; font-weight: 700; }
-  .citysel { min-width: 240px; padding: 8px 10px; font-size: 15px; }
+  .tile.must { background: var(--coral); border-color: var(--edge-hi); color: #fff; } .tile.must small { color: #fff; font-weight: 700; }
+  .places { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 8px; }
+  .places .pl { display: inline-flex; align-items: center; gap: 6px; background: var(--sel); color: var(--on-sel); border-radius: 999px; padding-block: 4px; padding-inline: 12px 6px; font-weight: 600; font-size: 14px; }
+  .places .pl button { border: 0; background: rgba(255, 255, 255, .22); color: #fff; border-radius: 50%; width: 20px; height: 20px; line-height: 1; padding: 0; font-size: 11px; }
+  .find { position: relative; max-width: 360px; } .find input { width: 100%; padding: 8px 12px; font-size: 15px; }
+  .find .hits { position: absolute; inset-inline: 0; top: 100%; z-index: 30; background: var(--card); border: 1.5px solid var(--edge); border-radius: 12px; margin-top: 4px; max-height: 264px; overflow: auto; box-shadow: var(--pop); }
+  .find .hits button { display: flex; justify-content: space-between; gap: 10px; width: 100%; border: 0; background: none; padding: 7px 12px; text-align: start; font-size: 14.5px; }
+  .find .hits button:hover, .find .hits button:first-child { background: var(--sun-soft); } .find .hits small { color: var(--soft); }
+  .plc { border: 1.5px solid var(--line); border-radius: 14px; padding: 10px 12px; margin-top: 8px; } .plc > b { display: block; font-size: 14.5px; margin-bottom: 6px; } .plc > b small { font-weight: 400; color: var(--soft); }
+  .pcard { position: relative; } .pcard .del { position: absolute; top: 10px; inset-inline-end: 10px; border: 0; background: none; opacity: .3; font-size: 15px; padding: 2px 5px; border-radius: 8px; } .pcard .del:hover { opacity: 1; background: var(--red-soft); }
+  .autobar { margin-top: 24px; display: flex; flex-wrap: wrap; gap: 8px 12px; align-items: center; justify-content: center; font-size: 13.5px; color: var(--soft); } .autobar b { color: var(--ink); }
   .wnav { display: flex; justify-content: space-between; margin-top: 22px; } .wgo { display: flex; gap: 12px; align-items: center; } .whint { color: var(--soft); font-size: 13px; }
   .sboards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-top: 18px; }
   .sb { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 12px 14px; display: grid; gap: 7px; align-content: start; min-height: 112px; transition: border-color .3s, opacity .3s; }
-  .sb.work { border-color: var(--ink); } .sb.idle, .sb.skip { opacity: .6; } .sb.bad { border-color: var(--red); }
+  .sb.work { border-color: var(--edge-hi); } .sb.idle, .sb.skip { opacity: .6; } .sb.bad { border-color: var(--red); }
   .sbh { display: flex; align-items: center; gap: 8px; } .sbh .chip { font-size: 13.5px; padding: 2px 11px; } .sbs { margin-inline-start: auto; font-size: 12.5px; color: var(--soft); display: flex; gap: 6px; align-items: center; }
   .sb.done .sbs { color: var(--mint); font-weight: 600; } .sb.bad .sbs { color: var(--red); font-weight: 600; } .sbs .spin { width: 13px; height: 13px; border-width: 2px; }
   .sbm { font-size: 13.5px; min-height: 20px; } .sbc { font-size: 12.5px; color: var(--soft); min-height: 17px; }
-  .sbar { height: 6px; border-radius: 6px; background: #efe8d8; overflow: hidden; } .sbar i { display: block; height: 100%; width: 0; background: var(--coral); border-radius: 6px; transition: width .6s; }
+  .sbar { height: 6px; border-radius: 6px; background: var(--tint); overflow: hidden; } .sbar i { display: block; height: 100%; width: 0; background: var(--coral); border-radius: 6px; transition: width .6s; }
   .sb.done .sbar i { background: var(--mint); }
   @media (max-width: 700px) { .sboards { grid-template-columns: 1fr; } }
   .steps { margin-top: 18px; display: grid; gap: 8px; }
   .steps div { background: var(--card); border: 1.5px solid var(--line); border-radius: 12px; padding: 9px 14px; animation: in .25s; }
-  .steps div:last-child { border-color: var(--ink); }
+  .steps div:last-child { border-color: var(--edge-hi); }
   @keyframes in { from { opacity: 0; transform: translateY(6px); } }
   .spin { width: 18px; height: 18px; border: 3px solid var(--line); border-top-color: var(--coral); border-radius: 50%; animation: sp 0.8s linear infinite; display: inline-block; vertical-align: -3px; }
   @keyframes sp { to { transform: rotate(360deg); } }
@@ -113,12 +218,12 @@
   /* board */
   .app { display: flex; flex-direction: column; flex: 1; min-height: 0; } .app > * { flex: none; } .app > .main { flex: 1; }
   .top { display: flex; align-items: center; gap: 14px; padding: 10px 18px; }
-  .top .who { font-weight: 600; background: var(--card); border: 1.5px solid var(--ink); border-radius: 999px; padding: 4px 14px; white-space: nowrap; }
+  .top .who { font-weight: 600; background: var(--card); border: 1.5px solid var(--edge); border-radius: 999px; padding: 4px 14px; white-space: nowrap; }
   .top .who .deal { font-weight: 500; color: var(--soft); margin-inline-start: 9px; padding-inline-start: 9px; border-inline-start: 1.5px solid var(--line); }
   .top .btn { padding: 5px 16px; }
   .alert { display: inline-flex; align-items: center; gap: 8px; background: var(--sun-soft); color: var(--sun); border-radius: 999px; padding: 3px 12px; font-size: 12.5px; font-weight: 600; }
   .alert a { color: inherit; text-decoration: none; } .alert a:hover { text-decoration: underline; }
-  .alert button { border: 1.5px solid var(--ink); background: var(--card); color: var(--ink); border-radius: 999px; padding: 0 10px; font-size: 12px; font-weight: 600; margin-inline-end: -8px; }
+  .alert button { border: 1.5px solid var(--edge); background: var(--card); color: var(--ink); border-radius: 999px; padding: 0 10px; font-size: 12px; font-weight: 600; margin-inline-end: -8px; }
   .top .stat { color: var(--soft); font-size: 13px; }
   .grow { flex: 1; }
   .bar { display: flex; gap: 8px 12px; flex-wrap: wrap; align-items: center; padding: 0 18px 10px; }
@@ -126,30 +231,30 @@
   .bar select { padding: 5px 8px; border-radius: 999px; font-size: 13px; }
   .main { display: grid; grid-template-columns: minmax(0, 1fr) minmax(50%, 1.15fr); gap: 16px; padding: 0 18px 16px; min-height: 0; }
   .list { overflow: auto; padding: 2px 2px 40px; display: flex; flex-direction: column; gap: 7px; }
-  .frame { position: relative; background: var(--card); border: 1.5px solid var(--ink); border-radius: 20px; box-shadow: var(--pop); padding: 9px; min-height: 0; margin: 0 0 6px 4px; }
-  .frame .tape { position: absolute; top: -11px; inset-inline-start: 26px; z-index: 500; background: #ffe08a; border: 1.5px solid var(--ink); padding: 1px 12px; font-weight: 600; font-size: 12.5px; transform: rotate(2deg); border-radius: 3px; }
-  #map { height: 100%; border-radius: 13px; direction: ltr; background: #efe9dc; }
-  .extnote { margin: 10px auto; max-width: 760px; padding: 10px 14px; border: 1.5px solid var(--ink); border-radius: 12px; background: #fff3cf; font-size: 14px; line-height: 1.6; }
-  .extnote code { direction: ltr; unicode-bidi: embed; background: #fff; border: 1px solid #d9cfbb; border-radius: 6px; padding: 0 5px; }
+  .frame { position: relative; background: var(--card); border: 1.5px solid var(--edge); border-radius: 20px; box-shadow: var(--pop); padding: 9px; min-height: 0; margin: 0 0 6px 4px; }
+  .frame .tape { position: absolute; top: -11px; inset-inline-start: 26px; z-index: 500; background: #ffe08a; border: 1.5px solid var(--edge); padding: 1px 12px; font-weight: 600; font-size: 12.5px; transform: rotate(2deg); border-radius: 3px; }
+  #map { height: 100%; border-radius: 13px; direction: ltr; background: var(--tint); }
+  .extnote { margin: 10px auto; max-width: 760px; padding: 10px 14px; border: 1.5px solid var(--edge); border-radius: 12px; background: #fff3cf; font-size: 14px; line-height: 1.6; }
+  .extnote code { direction: ltr; unicode-bidi: embed; background: var(--card); border: 1px solid var(--line); border-radius: 6px; padding: 0 5px; }
   #map .leaflet-tile-pane { filter: saturate(.55) sepia(.18) brightness(1.03); }
-  .pin { transform: translate(-50%, -50%); background: var(--card); border: 1.5px solid var(--ink); border-radius: 999px; padding: 0 7px; font: 600 12px Rubik, sans-serif; white-space: nowrap; box-shadow: 1.5px 1.5px 0 var(--ink); width: max-content; }
+  .pin { transform: translate(-50%, -50%); background: var(--card); border: 1.5px solid var(--edge); border-radius: 999px; padding: 0 7px; font: 600 12px Rubik, sans-serif; white-space: nowrap; box-shadow: 1.5px 1.5px 0 var(--shade); width: max-content; }
   .pin.yes { background: var(--mint); color: #fff; } .pin.maybe { background: #ffd66b; } .pin.no { background: #e6dfd0; color: #7b7466; box-shadow: none; border-color: #b9b09d; }
   .pin.hot { background: var(--coral); color: #fff; transform: translate(-50%, -50%) scale(1.25); z-index: 999; }
-  .leaflet-tooltip.tw { background: var(--card); border: 1.5px solid var(--ink); border-radius: 12px; box-shadow: var(--pop); padding: 7px 9px; font: 13px Rubik, sans-serif; color: var(--ink); white-space: normal; }
+  .leaflet-tooltip.tw { background: var(--card); border: 1.5px solid var(--edge); border-radius: 12px; box-shadow: var(--pop); padding: 7px 9px; font: 13px Rubik, sans-serif; color: var(--ink); white-space: normal; }
   .leaflet-tooltip.tw::before { display: none; }
   .tip { display: flex; gap: 9px; align-items: center; width: max-content; max-width: 290px; }
   .tip img { width: 54px; height: 54px; border-radius: 8px; object-fit: cover; flex: none; }
   .tip b { font-size: 15px; } .tip .l3 { margin-top: 2px; }
   .poi { transform: translate(-50%, -50%); width: 22px; height: 22px; border-radius: 50%; background: var(--card); border: 1.5px solid #8b8474; display: grid; place-items: center; font-size: 12px; line-height: 1; }
-  .poi.hit { border-color: var(--ink); box-shadow: 1.5px 1.5px 0 var(--ink); width: 26px; height: 26px; font-size: 14px; }
+  .poi.hit { border-color: var(--edge-hi); box-shadow: 1.5px 1.5px 0 var(--shade); width: 26px; height: 26px; font-size: 14px; }
   .layers { position: absolute; top: 18px; inset-inline-end: 18px; z-index: 500; display: flex; gap: 4px; flex-wrap: wrap; justify-content: flex-end; max-width: 62%; }
   .layers button { border: 1.5px solid var(--line); background: var(--card); border-radius: 999px; padding: 2px 10px; font-size: 12.5px; opacity: .8; }
-  .layers button.on { border-color: var(--ink); opacity: 1; font-weight: 600; box-shadow: 1.5px 1.5px 0 var(--ink); }
+  .layers button.on { border-color: var(--edge-hi); opacity: 1; font-weight: 600; box-shadow: 1.5px 1.5px 0 var(--shade); }
   .ad { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; flex: none; }
-  .ad.open { border-color: var(--ink); box-shadow: var(--pop); }
+  .ad.open { border-color: var(--edge-hi); box-shadow: var(--pop); }
   .ad.gone, .ad.rejected { opacity: .62; }
   .head { display: grid; grid-template-columns: 62px minmax(0, 1fr) auto; gap: 12px; align-items: center; padding: 8px 10px; cursor: pointer; }
-  .thumb { width: 62px; height: 62px; border-radius: 10px; object-fit: cover; background: #eee7d8; display: grid; place-items: center; color: var(--soft); font-size: 11px; }
+  .thumb { width: 62px; height: 62px; border-radius: 10px; object-fit: cover; background: var(--tint); display: grid; place-items: center; color: var(--soft); font-size: 11px; }
   .l1 { display: flex; gap: 10px; align-items: baseline; flex-wrap: wrap; } .list .l1 .price { min-width: 66px; } .sale .list .l1 .price { min-width: 104px; }
   .price { font-weight: 800; font-size: 17px; letter-spacing: -.01em; }
   .l2 { color: var(--soft); font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -161,7 +266,7 @@
   .gal { display: flex; gap: 6px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; }
   .gal img { height: 170px; border-radius: 10px; scroll-snap-align: start; flex: none; }
   .sv { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; font-size: 13px; }
-  .sv iframe { width: 100%; height: 300px; border: 1.5px solid var(--ink); border-radius: 13px; box-shadow: var(--pop); }
+  .sv iframe { width: 100%; height: 300px; border: 1.5px solid var(--edge); border-radius: 13px; box-shadow: var(--pop); }
   .sv .btn { padding: 4px 13px; font-size: 13px; text-decoration: none; color: var(--ink); }
   .svbar { display: flex; gap: 12px; align-items: center; width: 100%; }
   .svbar a { color: var(--sky); font-weight: 600; text-decoration: none; }
@@ -173,9 +278,9 @@
   .box + .box { margin-top: 8px; }
   .kv { display: flex; justify-content: space-between; gap: 8px; }
   .kv.total { border-top: 1.5px solid var(--line); margin-top: 4px; padding-top: 4px; font-weight: 800; }
-  .mbar { height: 8px; border-radius: 8px; background: #efe8d8; position: relative; margin: 9px 0 5px; }
+  .mbar { height: 8px; border-radius: 8px; background: var(--tint); position: relative; margin: 9px 0 5px; }
   .mbar i { position: absolute; top: -4px; width: 3px; height: 16px; background: var(--soft); border-radius: 2px; left: 50%; }
-  .mbar b { position: absolute; top: -5px; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--ink); transform: translateX(-50%); }
+  .mbar b { position: absolute; top: -5px; width: 18px; height: 18px; border-radius: 50%; border: 1.5px solid var(--edge); transform: translateX(-50%); }
   .why { display: flex; flex-wrap: wrap; gap: 4px; }
   .tl div { display: flex; gap: 8px; } .tl time { color: var(--soft); width: 62px; flex: none; }
   .act { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
@@ -184,29 +289,29 @@
   .seg.st button.on.rejected { background: var(--red); } .seg.st button.on { background: var(--mint); }
   .ring.big { width: 58px; height: 58px; font-size: 19px; flex: none; }
   .ring.big::before { inset: 5px; }
-  .fpanel { flex-basis: 100%; background: var(--card); border: 1.5px solid var(--ink); border-radius: 16px; box-shadow: var(--pop); padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 12px 22px; animation: in .18s; margin: 2px 4px 4px 0; }
+  .fpanel { flex-basis: 100%; background: var(--card); border: 1.5px solid var(--edge); border-radius: 16px; box-shadow: var(--pop); padding: 12px 16px; display: flex; flex-wrap: wrap; gap: 12px 22px; animation: in .18s; margin: 2px 4px 4px 0; }
   .fg label { display: block; font-size: 12px; color: var(--soft); font-weight: 600; margin-bottom: 5px; }
   .fpanel .pick { max-height: none; } .fpanel .pick button, .fpanel .seg button { font-size: 12.5px; padding: 3px 10px; }
   .fpanel select, .fpanel input { padding: 4px 8px; font-size: 13px; }
-  #modal { position: fixed; inset: 0; z-index: 1500; background: rgba(36, 32, 26, .45); display: grid; place-items: center; padding: 22px; animation: fade .15s; }
+  #modal { position: fixed; inset: 0; z-index: 1500; background: var(--veil); display: grid; place-items: center; padding: 22px; animation: fade .15s; }
   @keyframes fade { from { opacity: 0; } }
-  .mcard { background: var(--paper); border: 1.5px solid var(--ink); border-radius: 22px; box-shadow: 6px 6px 0 var(--ink); width: min(1120px, 100%); max-height: 100%; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; animation: in .2s; }
+  .mcard { background: var(--paper); border: 1.5px solid var(--edge); border-radius: 22px; box-shadow: 6px 6px 0 var(--shade); width: min(1120px, 100%); max-height: 100%; display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; animation: in .2s; }
   .mhead { display: flex; gap: 14px; align-items: center; padding: 14px 18px; border-bottom: 1.5px solid var(--line); background: var(--card); }
   .mprice { font-size: 27px; font-weight: 800; letter-spacing: -.02em; } .mfacts { font-size: 16px; font-weight: 500; }
   .mnav { display: flex; gap: 6px; align-items: center; flex: none; } .mnav .btn { padding: 5px 12px; }
   .media { display: grid; gap: 8px; justify-items: center; }
-  .stage { position: relative; width: 100%; height: 400px; border: 1.5px solid var(--ink); border-radius: 16px; overflow: hidden; background: #1f1c17; display: flex; }
+  .stage { position: relative; width: 100%; height: 400px; border: 1.5px solid var(--edge); border-radius: 16px; overflow: hidden; background: #1f1c17; display: flex; }
   .stage .big { flex: 1; min-width: 0; display: grid; place-items: center; } .stage .big img { max-width: 100%; max-height: 400px; object-fit: contain; display: block; }
   .stage iframe, .stage .minimap { flex: 1; border: 0; width: 100%; height: 100%; direction: ltr; }
-  .stage .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--card); font-size: 20px; line-height: 1; z-index: 2; }
+  .stage .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--edge); background: var(--card); font-size: 20px; line-height: 1; z-index: 2; }
   .stage .nav.next { left: 12px; } .stage .nav.prev { right: 12px; }
   .stage .thumbs { position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%); display: flex; gap: 5px; max-width: 92%; overflow-x: auto; background: rgba(31, 28, 23, .6); padding: 5px; border-radius: 11px; }
   .stage .thumbs img { width: 46px; height: 46px; object-fit: cover; border-radius: 7px; opacity: .6; cursor: pointer; flex: none; } .stage .thumbs img.on { opacity: 1; outline: 2px solid #fff; }
-  .stage .note { position: absolute; bottom: 8px; inset-inline-start: 10px; z-index: 600; background: var(--card); border: 1.5px solid var(--ink); border-radius: 999px; padding: 1px 11px; font-size: 12px; }
-  .leaflet-tooltip.tw.small { padding: 2px 7px; font-size: 12px; border-radius: 9px; box-shadow: 1.5px 1.5px 0 var(--ink); }
+  .stage .note { position: absolute; bottom: 8px; inset-inline-start: 10px; z-index: 600; background: var(--card); border: 1.5px solid var(--edge); border-radius: 999px; padding: 1px 11px; font-size: 12px; }
+  .leaflet-tooltip.tw.small { padding: 2px 7px; font-size: 12px; border-radius: 9px; box-shadow: 1.5px 1.5px 0 var(--shade); }
   .srcwrap h4 { margin: 0 0 7px; font-size: 13px; }
   .srcs { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 9px; }
-  .src { display: grid; gap: 1px; padding: 9px 12px; border-radius: 13px; border: 1.5px solid var(--ink); text-decoration: none; color: var(--ink); font-size: 12.5px; background: var(--card); transition: transform .1s; }
+  .src { display: grid; gap: 1px; padding: 9px 12px; border-radius: 13px; border: 1.5px solid var(--edge); text-decoration: none; color: var(--ink); font-size: 12.5px; background: var(--card); transition: transform .1s; }
   .src:hover { transform: translateY(-2px); box-shadow: var(--pop); }
   .src b { font-size: 14px; } .src.b-yad2 b { color: #b3530a; } .src.b-madlan b { color: var(--sky); } .src.b-komo b { color: #6b3fb5; } .src.b-homeless b { color: #0c7c86; }
   .src .sprice { font-size: 18px; font-weight: 800; } .src .sprice.low { color: var(--mint); }
@@ -221,30 +326,30 @@
   .mbody { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; padding: 14px 18px; min-height: 0; overflow: hidden; }
   .mmedia { display: grid; grid-template-rows: minmax(0, 1.55fr) minmax(0, 1fr); gap: 12px; min-height: 0; }
   .mmedia.solo { grid-template-rows: minmax(0, 1fr); }
-  .mdetail { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: auto; padding-inline-end: 4px; scrollbar-width: thin; }
+  .mdetail { display: flex; flex-direction: column; gap: 10px; min-height: 0; overflow: auto; padding-inline-end: 4px; }
   .mdetail > * { flex: none; }
   .us { font-size: 12px; color: var(--soft); letter-spacing: .04em; }
   .act .mark { flex: none; gap: 5px; } .mnote { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; }
   .act .seg.st button { padding: 5px 13px; }
   .gallery { display: grid; grid-template-rows: minmax(0, 1fr) auto; gap: 6px; min-height: 0; }
   .gallery.none { place-items: center; color: var(--soft); border: 1.5px dashed var(--line); border-radius: 16px; }
-  .gbig { position: relative; background: #1f1c17; border: 1.5px solid var(--ink); border-radius: 16px; overflow: hidden; display: grid; place-items: center; min-height: 0; }
+  .gbig { position: relative; background: #1f1c17; border: 1.5px solid var(--edge); border-radius: 16px; overflow: hidden; display: grid; place-items: center; min-height: 0; }
   .gbig a { display: grid; place-items: center; width: 100%; height: 100%; min-height: 0; } .gbig img { max-width: 100%; max-height: 100%; object-fit: contain; }
-  .gbig .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--ink); background: var(--card); font-size: 20px; line-height: 1; }
+  .gbig .nav { position: absolute; top: 50%; transform: translateY(-50%); width: 38px; height: 38px; border-radius: 50%; border: 1.5px solid var(--edge); background: var(--card); font-size: 20px; line-height: 1; }
   .gbig .nav.next { left: 10px; } .gbig .nav.prev { right: 10px; }
   .gcount { position: absolute; bottom: 8px; inset-inline-end: 10px; background: rgba(31, 28, 23, .7); color: #fff; font-size: 12px; padding: 1px 9px; border-radius: 999px; }
   .thumbs { display: flex; gap: 5px; overflow-x: auto; padding-bottom: 2px; }
-  .thumbs img { width: 62px; height: 48px; object-fit: cover; border-radius: 8px; opacity: .55; cursor: pointer; flex: none; border: 1.5px solid transparent; } .thumbs img.on { opacity: 1; border-color: var(--ink); }
+  .thumbs img { width: 62px; height: 48px; object-fit: cover; border-radius: 8px; opacity: .55; cursor: pointer; flex: none; border: 1.5px solid transparent; } .thumbs img.on { opacity: 1; border-color: var(--edge-hi); }
   .side { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 12px; min-height: 0; }
-  .pane { position: relative; border: 1.5px solid var(--ink); border-radius: 16px; overflow: hidden; min-height: 0; background: #efe9dc; display: grid; }
+  .pane { position: relative; border: 1.5px solid var(--edge); border-radius: 16px; overflow: hidden; min-height: 0; background: var(--tint); display: grid; }
   .pane iframe, .pane .minimap { width: 100%; height: 100%; border: 0; direction: ltr; }
-  .ptitle { position: absolute; top: 8px; inset-inline-start: 8px; z-index: 600; background: var(--card); border: 1.5px solid var(--ink); border-radius: 999px; padding: 1px 11px; font-size: 12.5px; font-weight: 600; display: flex; gap: 7px; align-items: center; }
+  .ptitle { position: absolute; top: 8px; inset-inline-start: 8px; z-index: 600; background: var(--card); border: 1.5px solid var(--edge); border-radius: 999px; padding: 1px 11px; font-size: 12.5px; font-weight: 600; display: flex; gap: 7px; align-items: center; }
   .ptitle .muted { font-weight: 400; font-size: 11.5px; } .ptitle a { color: var(--sky); text-decoration: none; }
   .panelink { place-self: center; color: var(--sky); font-weight: 600; text-decoration: none; }
   .srcrow { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 12.5px; }
   .slabel { color: var(--soft); font-weight: 600; margin-inline-end: 2px; }
   .spill { display: inline-flex; gap: 6px; align-items: center; padding: 2px 10px; border-radius: 999px; border: 1.5px solid var(--line); background: var(--card); color: var(--ink); text-decoration: none; }
-  .spill:hover { border-color: var(--ink); } .spill .low { color: var(--mint); font-weight: 700; }
+  .spill:hover { border-color: var(--edge-hi); } .spill .low { color: var(--mint); font-weight: 700; }
   .spill.b-yad2 b { color: #b3530a; } .spill.b-madlan b { color: var(--sky); } .spill.b-komo b { color: #6b3fb5; } .spill.b-homeless b { color: #0c7c86; }
   .spill button { border: 1.5px solid var(--line); background: none; border-radius: 999px; padding: 0 7px; font-size: 12px; }
   .pv { cursor: help; opacity: .75; font-size: 14px; }
@@ -264,8 +369,17 @@
   .chghead { display: flex; gap: 8px; align-items: center; } .chghead select { flex: 1; min-width: 0; }
   .chg { display: grid; gap: 12px; max-height: 62vh; overflow: auto; padding-inline-end: 2px; } .chg section { display: grid; gap: 5px; }
   .chg h5 { margin: 0; font-size: 14px; display: flex; gap: 7px; align-items: center; }
+  .stlist { display: flex; flex-direction: column; gap: 6px; margin: 8px 0; }
+  .strow { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; padding: 7px 10px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--card); }
+  .strow.s-warn { border-color: color-mix(in srgb, var(--sun, #c08000) 60%, transparent); } .strow.s-bad { border-color: color-mix(in srgb, var(--coral) 60%, transparent); }
+  .strow .sti { font-size: 16px; text-align: center; } .strow .stwhen { text-align: end; font-size: 12.5px; display: flex; flex-direction: column; }
+  .warnlink { color: var(--coral) !important; font-weight: 600; }
+  .rateold { margin-top: 6px; padding: 6px 9px; border-radius: 8px; background: color-mix(in srgb, var(--coral) 12%, transparent); font-size: 13px; }
+  .phones { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+  .phones a.btn { font-weight: 600; text-decoration: none; }
+  .chgrow.seen { box-shadow: inset 3px 0 0 var(--coral); }
   .chgrow { display: flex; gap: 4px 9px; align-items: center; flex-wrap: wrap; padding: 6px 10px; border: 1.5px solid var(--line); border-radius: 10px; background: var(--card); cursor: pointer; font-size: 13px; }
-  .chgrow:hover { border-color: var(--ink); } .chgrow.dim { opacity: .62; } .chgrow b { min-width: 60px; }
+  .chgrow:hover { border-color: var(--edge-hi); } .chgrow.dim { opacity: .62; } .chgrow b { min-width: 60px; }
   .chgall { display: flex; gap: 7px; align-items: center; font-size: 13px; color: var(--soft); cursor: pointer; }
   .top .chgbtn { padding: 3px 12px; font-size: 13px; }
   .dcard { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 11px 13px; font-size: 13.5px; display: grid; gap: 6px; }
@@ -276,15 +390,15 @@
   .kv b.plus { color: var(--mint); } .kv b.minus { color: var(--red); }
   .msep { border-top: 1.5px dashed var(--line); padding-top: 6px; margin-top: 2px; }
   .mark { display: flex; gap: 8px; align-items: center; } .favnotes { padding: 0 12px 9px 12px; display: grid; gap: 5px; font-size: 13px; margin-inline-start: 73px; }
-  .bub { width: 24px; height: 24px; border-radius: 50%; background: #ffe08a; border: 1.5px solid var(--ink); display: inline-grid; place-items: center; font-weight: 700; font-size: 12px; flex: none; }
+  .bub { width: 24px; height: 24px; border-radius: 50%; background: #ffe08a; border: 1.5px solid var(--edge); display: inline-grid; place-items: center; font-weight: 700; font-size: 12px; flex: none; }
   .bub.me { background: var(--coral); color: #fff; }
   .btn.people { display: inline-flex; gap: 4px; align-items: center; padding: 4px 12px; } .btn.people .bub + .bub { margin-inline-start: -9px; }
   .chip.fav { background: var(--coral); color: #fff; font-weight: 600; } .pin.fav { border-width: 2px; }
-  .seg.tabs { border-color: var(--ink); } .seg.tabs button { font-weight: 600; padding: 5px 14px; }
+  .seg.tabs { border-color: var(--edge-hi); } .seg.tabs button { font-weight: 600; padding: 5px 14px; }
   .linkbox { margin-top: 8px; display: grid; gap: 5px; } .linkbox input { flex: 1; min-width: 0; font-size: 12.5px; } .linkbox .btn { padding: 5px 12px; font-size: 13px; text-decoration: none; color: var(--ink); white-space: nowrap; }
   .act .linkbox { flex: 1; margin: 0; }
-  #dlg { position: fixed; inset: 0; z-index: 1600; background: rgba(36, 32, 26, .45); display: grid; place-items: center; padding: 18px; }
-  .dcardbox { background: var(--paper); border: 1.5px solid var(--ink); border-radius: 20px; box-shadow: 6px 6px 0 var(--ink); width: min(560px, 100%); max-height: 100%; overflow: auto; padding: 16px 18px; display: grid; gap: 14px; }
+  #dlg { position: fixed; inset: 0; z-index: 1600; background: var(--veil); display: grid; place-items: center; padding: 18px; }
+  .dcardbox { background: var(--paper); border: 1.5px solid var(--edge); border-radius: 20px; box-shadow: 6px 6px 0 var(--shade); width: min(560px, 100%); max-height: 100%; overflow: auto; padding: 16px 18px; display: grid; gap: 14px; }
   .dhead { display: flex; align-items: center; font-size: 17px; } .dhead .btn { padding: 3px 11px; }
   .dsec { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 11px 13px; display: grid; gap: 6px; } .dsec h4 { margin: 0; font-size: 13px; }
   #modal.page { position: static; background: none; padding: 10px 18px 24px; display: block; } #modal.page .mcard { margin: 0 auto; max-height: none; height: auto; box-shadow: var(--pop); } #modal.page .mbody { height: min(78vh, 780px); }
@@ -301,14 +415,75 @@
     .mcard .act { padding: 8px 12px; gap: 6px; } .us { display: none; } .act .seg.st { flex: 1; } .act .seg.st button { flex: 1; padding: 6px 4px; } .act input { flex-basis: 100%; }
   }
   .empty { color: var(--soft); text-align: center; padding: 50px 0; }
-  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ink); color: #fff; padding: 9px 18px; border-radius: 999px; display: none; z-index: 2000; }
+  #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--sel); color: var(--on-sel); padding: 9px 18px; border-radius: 999px; display: none; z-index: 2000; }
   @media (max-width: 980px) { .main { grid-template-columns: 1fr; overflow: auto; } .frame { height: 320px; order: -1; } .list { overflow: visible; } .cols { grid-template-columns: 1fr; } }
+  /* Without a mouse: where the keyboard is shows clearly, on every control. */
+  :focus-visible { outline: 3px solid var(--sky); outline-offset: 2px; }
+  input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--sky); outline-offset: 1px; }
+  .mcard:focus, .dcardbox:focus { outline: none; }
+  .skip { position: fixed; top: -60px; inset-inline-start: 12px; z-index: 3000; background: var(--sel); color: var(--on-sel); padding: 8px 16px; border-radius: 999px; font-weight: 600; text-decoration: none; }
+  .skip:focus { top: 10px; }
+  .speakbar { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; padding: 6px 10px; border: 1px solid var(--line); border-radius: 12px; background: var(--card); }
+  .speakbar .speak { padding: 4px 12px; font-size: 13px; } .speak.on { background: var(--sel); color: var(--on-sel); }
+  .speakbar .sp { display: inline-flex; gap: 5px; align-items: center; font-size: 12.5px; color: var(--soft); }
+  .speakbar select { font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 2px 6px; max-width: 190px; }
+  /* Scrollbars: thin, no track, a quiet handle that turns solid under the pointer (Chrome, Edge, Safari) */
+  ::-webkit-scrollbar { width: 9px; height: 9px; background: transparent; }
+  ::-webkit-scrollbar-track, ::-webkit-scrollbar-corner { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--soft) 35%, transparent); border-radius: 9px; border: 2px solid transparent; background-clip: padding-box; transition: background-color .2s; }
+  :hover::-webkit-scrollbar-thumb { background-color: color-mix(in srgb, var(--soft) 55%, transparent); }
+  ::-webkit-scrollbar-thumb:hover { background-color: var(--soft); border-width: 1px; }
+  ::-webkit-scrollbar-thumb:active { background-color: var(--ink); }
+  ::-webkit-scrollbar-button { display: none; }
+  @supports not selector(::-webkit-scrollbar) { * { scrollbar-width: thin; scrollbar-color: color-mix(in srgb, var(--soft) 45%, transparent) transparent; } *:hover { scrollbar-color: var(--soft) transparent; } }
+  .logo .flag { display: inline-flex; } .logo .flag svg { border-radius: 3px; box-shadow: 0 0 0 1px var(--line), 1.5px 1.5px 0 var(--shade); }
+
+  /* ---------- motion: every screen, card, window and button moves into place (all off with reduced motion) ---------- */
+  :root { --ease: cubic-bezier(.2, .8, .2, 1); --spring: cubic-bezier(.34, 1.4, .64, 1); }
+  @keyframes rise { from { opacity: 0; transform: translateY(14px) scale(.985); } }
+  @keyframes pop { from { opacity: 0; transform: translateY(18px) scale(.95); } }
+  @keyframes popout { to { opacity: 0; transform: translateY(12px) scale(.97); } }
+  @keyframes fadeout { to { opacity: 0; } }
+  @keyframes slidein { from { opacity: 0; transform: translateX(calc(var(--dir, 1) * 36px)); } }
+  @keyframes toastin { from { opacity: 0; transform: translate(-50%, 18px) scale(.94); } }
+  #root > * { animation: rise .42s var(--ease) both; }
+  #root > .still { animation: none; }
+  .pgrid > * { animation: rise .5s var(--ease) both; animation-delay: calc(var(--i, 0) * 60ms + 80ms); }
+  .list.enter > * { animation: rise .45s var(--ease) both; }
+  .list.enter > :nth-child(2) { animation-delay: 40ms; } .list.enter > :nth-child(3) { animation-delay: 80ms; }
+  .list.enter > :nth-child(4) { animation-delay: 120ms; } .list.enter > :nth-child(5) { animation-delay: 160ms; }
+  .list.enter > :nth-child(6) { animation-delay: 200ms; } .list.enter > :nth-child(7) { animation-delay: 240ms; }
+  .list.enter > :nth-child(n+8) { animation-delay: 280ms; }
+  .wstep { animation: slidein .32s var(--ease) both; }
+  #modal { animation: fade .22s var(--ease); } #modal .mcard { animation: pop .38s var(--spring) both; }
+  #modal.swap { animation: none; } #modal.swap .mcard { animation: slidein .28s var(--ease) both; }
+  #modal.page .mcard { animation: rise .42s var(--ease) both; }
+  #dlg { animation: fade .2s var(--ease); } #dlg .dcardbox { animation: pop .34s var(--spring) both; }
+  .out { animation: fadeout .19s ease both !important; pointer-events: none; }
+  .out .mcard, .out .dcardbox { animation: popout .19s ease both !important; }
+  #toast.on { animation: toastin .34s var(--spring) both; }
+  .btn, .seg > button, .pick > button, .tile, .tiles > button, .chip, .pcard, .ad, .foot a { transition: transform .16s var(--ease), box-shadow .16s var(--ease), background-color .2s, color .2s, border-color .2s, opacity .2s; }
+  .btn:not(:disabled):hover { transform: translate(-1px, -1px); } .btn:not(:disabled):active { transform: translate(1px, 1px); }
+  .pcard:hover { transform: translate(-2px, -3px); } .pcard:active { transform: translate(1px, 1px); }
+  .ad:hover { transform: translateY(-1px); border-color: var(--edge-hi); }
+  .dots i { transition: background-color .3s var(--ease), transform .3s var(--spring); } .dots i.on { transform: scaleY(1.15); }
+  :root.theming, :root.theming * { transition: background-color .4s ease, color .4s ease, border-color .4s ease, box-shadow .4s ease, fill .4s ease !important; }
+  /* Less motion asked for (a setting of the computer): things still fade in and out, nothing slides, grows or bounces. */
+  @media (prefers-reduced-motion: reduce) {
+    .herobox .blob { animation: none !important; } .pbar i, .homepage .hero em::after { animation: none !important; }
+    @keyframes rise { from { opacity: 0; } } @keyframes pop { from { opacity: 0; } } @keyframes popout { to { opacity: 0; } }
+    @keyframes slidein { from { opacity: 0; } } @keyframes toastin { from { opacity: 0; } }
+    *, *::before, *::after { scroll-behavior: auto !important; }
+    .btn:hover, .btn:active, .pcard:hover, .pcard:active, .ad:hover, .dots i.on { transform: none !important; }
+    .spin, [class*=spin] { animation-duration: 1.6s; }
+  }
 </style>
 </head>
 <body>
-<div id="root"></div>
-<div class="foot"><span><span id="appname">לוח אחד</span> · by <a href="https://dogware.ai/" target="_blank" rel="noopener">Dogware.ai</a></span><a class="treat" id="treatlink" href="https://treat.dogware.ai/" target="_blank" rel="noopener">🍪 קנו לי חטיף</a><span class="langs" id="langs"></span></div>
-<div id="toast"></div>
+<a class="skip" id="skip" href="#">דילוג לתוכן</a>
+<main id="root" tabindex="-1"></main>
+<div class="foot" role="contentinfo"><span><span id="appname">לוח אחד</span> · by <a href="https://dogware.ai/" target="_blank" rel="noopener">Dogware.ai</a></span><a class="treat" id="treatlink" href="https://treat.dogware.ai/" target="_blank" rel="noopener">🍪 סייעתי לך? מוזמנים לזרוק חטיף :)</a><a class="upd" id="updlink" href="#" style="display:none"></a><a class="about" id="aboutlink" href="#"></a><a class="stat" id="statuslink" href="#" style="display:none"></a><a class="theme" id="themelink" href="#"></a><span class="langs" id="langs"></span></div>
+<div id="toast" role="status" aria-live="polite"></div>
 <script src="/lang.js"></script>
 <script>
 // ---- languages ----
@@ -379,12 +554,32 @@ function tx(s, ...vals) {
   return to.replace(/\{(\d+)\}/g, (_, n) => ts(vals[n]));
 }
 // the footer is plain HTML: its two texts, and a link for every other language the app has
-for (const id of ["appname", "treatlink"]) { const el = document.getElementById(id); el.textContent = ts(el.textContent); }
+for (const id of ["appname", "treatlink", "skip"]) { const el = document.getElementById(id); el.textContent = ts(el.textContent); }
+// The look: as the computer is, light, dark; one link that moves to the next and says what it is now.
+const inkOf = () => getComputedStyle(document.documentElement).getPropertyValue("--ink").trim() || "#24201a";
+function themeLink() {
+  const a = document.getElementById("themelink"), now = THEME.get();
+  const said = { auto: tx("🌓 מראה: כמו במחשב"), light: tx("☀️ מראה: בהיר"), dark: tx("🌙 מראה: כהה") };
+  a.textContent = said[now];
+  a.title = tx("לחיצה מחליפה: כמו במחשב, בהיר, כהה");
+  a.onclick = (e) => {
+    e.preventDefault();
+    // the colours slide from one look to the other instead of jumping
+    const root = document.documentElement;
+    root.classList.add("theming"); clearTimeout(themeLink.t); themeLink.t = setTimeout(() => root.classList.remove("theming"), 450);
+    THEME.set({ auto: "light", light: "dark", dark: "auto" }[now]);
+    themeLink();
+    if (typeof map !== "undefined" && map && typeof drawPlaces === "function" && document.querySelector(".layers")) { try { draw(); } catch (_) {} }
+    document.getElementById("themelink").focus();
+  };
+}
+themeLink();
+document.getElementById("skip").onclick =(e) => { e.preventDefault(); document.getElementById("root").focus(); };   // the address is the app's route: not touched
 for (const [code, name] of [["he", "עברית"], ...Object.entries(LANGS).map(([c, l]) => [c, l.name || c])]) {
   if (code === LANG) continue;
   const a = document.createElement("a");
-  a.textContent = name; a.lang = code;
-  a.onclick = () => { localStorage.setItem("lang", code); location.reload(); };
+  a.textContent = name; a.lang = code; a.href = "#"; a.hreflang = code;
+  a.onclick = (e) => { e.preventDefault(); localStorage.setItem("lang", code); location.reload(); };
   document.getElementById("langs").append(a);
 }
 const $root = document.getElementById("root");
@@ -405,7 +600,38 @@ const h = (tag, attrs, ...kids) => {
     else el.setAttribute(k, v);
   }
   for (const kid of kids.flat(3)) if (kid != null && kid !== false) el.append(typeof kid === "string" ? ts(kid) : kid);
+  // Without a mouse and with a screen reader. Something that is not a control by itself and is given role "button"
+  // or "link" is reached with Tab and pressed with Enter (a button also with the space bar).
+  const role = attrs && attrs.role;
+  if ((role === "button" || role === "link") && !/^(BUTTON|A)$/.test(el.tagName)) {
+    el.tabIndex = 0;
+    el.addEventListener("keydown", (e) => { if (e.target === el && (e.key === "Enter" || (e.key === " " && role === "button"))) { e.preventDefault(); el.click(); } });
+  }
+  // A button that shows only a sign (✕, 🗑, an arrow) is named by its tooltip.
+  if ((tag === "button" || tag === "a") && el.title && !el.getAttribute("aria-label") && !/[\p{L}\p{N}]/u.test(el.textContent)) el.setAttribute("aria-label", el.title);
+  const cls = " " + el.className + " ";
+  // A row of choices says which of them are on.
+  if (/ (seg|pick|tiles|layers) /.test(cls)) for (const b of el.children) if (b.tagName === "BUTTON") b.setAttribute("aria-pressed", b.classList.contains("on"));
+  // A question's label names its field, or its group of choices.
+  if (cls.includes(" q ") || cls.includes(" fg ")) {
+    const lab = el.querySelector(":scope > label");
+    if (lab) {
+      lab.id = lab.id || "lab" + (h.n = (h.n || 0) + 1);
+      const ctl = el.querySelector("input, select, textarea"), grp = el.querySelector(":scope > .pick, :scope > .seg, :scope > .tiles");
+      if (ctl && !ctl.getAttribute("aria-label")) ctl.setAttribute("aria-labelledby", lab.id);
+      if (grp) { grp.setAttribute("role", "group"); grp.setAttribute("aria-labelledby", lab.id); }
+    }
+  }
   return el;
+};
+// Tab stays inside an open window (a dialog, the ad view): from its last control to its first and back.
+const keepTab = (e, box) => {
+  if (e.key !== "Tab") return;
+  const all = [...box.querySelectorAll("a[href], button, input, select, textarea, [tabindex]")].filter((x) => !x.disabled && x.tabIndex >= 0 && x.offsetParent !== null);
+  if (!all.length) return e.preventDefault();
+  const first = all[0], last = all[all.length - 1];
+  if (e.shiftKey && (document.activeElement === first || document.activeElement === box)) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
 };
 const api = async (path, body) => {
   if (body) window.dispatchEvent(new Event("luach-wake"));  // the extension, if it dozed off, starts listening again
@@ -414,8 +640,8 @@ const api = async (path, body) => {
   if (!r.ok) throw new Error(j.error || tx("שגיאה ") + r.status);
   return j;
 };
-const toast = (t, ms = 4500) => { const el = document.getElementById("toast"); el.textContent = ts(t); el.style.display = "block"; clearTimeout(toast.t); toast.t = setTimeout(() => el.style.display = "none", ms); };
-const nis = (n) => n == null ? tx("בלי מחיר") : "₪" + Math.round(n).toLocaleString("en-US");
+const toast = (t, ms = 4500) => { const el = document.getElementById("toast"); el.textContent = ts(t); el.style.display = "block"; el.classList.remove("on"); void el.offsetWidth; el.classList.add("on"); clearTimeout(toast.t); toast.t = setTimeout(() => el.style.display = "none", ms); };
+const nis = (n) => n == null ? tx("מחיר לא צוין") : "₪" + Math.round(n).toLocaleString("en-US");
 // "3 hours ago" for a time the board gave. A board that gives a date only (midnight) is told in days.
 const ago = (iso) => {
   if (!iso) return null;
@@ -437,12 +663,178 @@ const SALE = () => !!(P && P.prefs && P.prefs.deal === "sale");
 const dealChip = (deal) => h("span", { class: "chip deal" }, h("i", {}, deal === "sale" ? "🏡" : "🔑"), deal === "sale" ? tx("קנייה") : tx("השכרה"));
 const pinText = (a) => !a.price ? "?" : SALE() ? (a.price / 1e6).toFixed(2) : (a.price / 1000).toFixed(1);
 const day = (iso) => iso ? new Date(iso).toLocaleDateString(LOCALE, { day: "numeric", month: "numeric" }) : "";
-const floorHe = (a) => a.floor == null ? null : a.floor <= 0 ? (a.floor < 0 ? tx("מרתף") : tx("קרקע")) : tx("קומה ") + a.floor + (a.top_floor ? "/" + a.top_floor : "");
+// A floor in words: "קומת קרקע", "מרתף", "קומה 2 מתוך 5", "קומה 5, אחרונה". Nothing when the ad does not say.
+const floorWords = (floor, top) => floor == null ? null : floor < 0 ? tx("מרתף") : floor === 0 ? tx("קומת קרקע")
+  : top && floor >= top ? tx`קומה ${floor}, אחרונה` : top ? tx`קומה ${floor} מתוך ${top}` : tx`קומה ${floor}`;
+const floorHe = (a) => floorWords(a.floor, a.top_floor);
+// A sync in words, without zeros and with the singular: "דירה אחת נוספה · 7 ירדו מהלוח".
+const syncWords = (add, gone, chg) => [
+  add && (add === 1 ? tx("דירה אחת נוספה") : tx`${add} נוספו`),
+  gone && (gone === 1 ? tx("דירה אחת ירדה מהלוח") : tx`${gone} ירדו מהלוח`),
+  chg && (chg === 1 ? tx("דירה אחת השתנתה") : tx`${chg} השתנו`)].filter(Boolean).join(" · ");
+// What a search asks for, in words, leaving out what it does not limit: "₪3,000 עד ₪6,000 · 2 עד 3 חדרים".
+const roomsWords = (n) => n === 1 ? tx("חדר אחד") : tx`${n} חדרים`;
+function wantOf(pr) {
+  const lo = pr.price_min, hi = pr.price_max, rlo = pr.rooms_min, rhi = pr.rooms_max;
+  const price = lo && hi ? tx`${nis(lo)} עד ${nis(hi)}` : hi ? tx`עד ${nis(hi)}` : lo ? tx`מ-${nis(lo)}` : tx("כל מחיר");
+  const rooms = rlo && rhi ? (rlo === rhi ? roomsWords(rlo) : tx`${rlo} עד ${rhi} חדרים`) : rlo ? tx`${rlo} חדרים ומעלה` : rhi ? tx`עד ${rhi} חדרים` : tx("כל מספר חדרים");
+  const acc = pr.access && pr.access.need ? (pr.access.max_floor > 0 ? tx`מעלית, או עד קומה ${pr.access.max_floor}` : tx("מעלית או קומת קרקע")) : null;
+  return [price, rooms, pr.sqm_min && tx`מ-${pr.sqm_min} מ"ר`, acc, pr.private_only && tx("בלי תיווך")].filter(Boolean).join(" · ");
+}
 const go = (hash) => { location.hash = hash; };
-const logo = () => h("div", { class: "logo", onclick: () => go("#/") }, h("i"), tx("לוח אחד"));
+// Israel's flag after the name, drawn (Windows shows the flag emoji as the letters "IL")
+const FLAG = '<svg viewBox="0 0 220 160" width="24" height="17" role="img" aria-label="ישראל"><rect width="220" height="160" rx="14" fill="#fff"/>'
+  + '<rect y="16" width="220" height="24" fill="#0038b8"/><rect y="120" width="220" height="24" fill="#0038b8"/>'
+  + '<g fill="none" stroke="#0038b8" stroke-width="6" stroke-linejoin="round"><path d="M110 51 136 96H84Z"/><path d="M110 109 84 64h52Z"/></g></svg>';
+const logo = () => { const f = h("span", { class: "flag" }); f.innerHTML = FLAG; return h("div", { class: "logo", role: "link", onclick: () => go("#/") }, h("i"), tx("לוח אחד"), f); };
 
 // The boards are read by the app's extension in this Chrome. Without it nothing can be pulled: say so, with the way.
+// ---------- about the app, and a newer version ----------
+const CONTACT = { mail: "im@avniyay.in", x: "https://x.com/avniyayin", site: "https://boards.avniyay.in/" };
+const closeDialog = () => {
+  const d = document.getElementById("dlg");
+  if (!d) return;
+  leave(d);
+  if (dialog.back && document.contains(dialog.back)) dialog.back.focus();   // back to where the person was
+  dialog.back = null;
+};
+function aboutDialog() {
+  const check = h("button", { class: "btn ghost", onclick: async () => {
+    check.disabled = true;
+    try {
+      const r = await api("update", { check: true });
+      ME.update = r.update; footState();
+      if (r.update) updateDialog(); else toast(tx("הגרסה שלך היא העדכנית ביותר"));
+    } catch (e) { toast(e.message); }
+    check.disabled = false;
+  } }, tx("בדיקת עדכונים"));
+  dialog(tx("על לוח אחד"), h("div", { class: "about" },
+    h("p", { class: "muted" }, tx`גרסה ${ME.version || "?"}`),
+    h("p", {}, h("b", {}, tx("חינם לשימוש פרטי. לא לשימוש מסחרי.")), " ", tx("הרישיון: PolyForm Noncommercial 1.0.0.")),
+    h("p", {}, h("b", {}, tx("מתווכים, משרדי נדל\"ן ועסקים: ")), tx("צריכים את זה לעבודה, גרסה מותאמת לכם או פיתוח אחר? כתבו לי, אשמח לשמוע מה חסר לכם:")),
+    h("p", { class: "contact" },
+      h("a", { href: "mailto:" + CONTACT.mail + "?subject=" + encodeURIComponent("לוח אחד") }, "✉ " + CONTACT.mail),
+      h("a", { href: CONTACT.x, target: "_blank", rel: "noopener" }, "𝕏 @avniyayin"),
+      h("a", { href: CONTACT.site, target: "_blank", rel: "noopener" }, "🌐 boards.avniyay.in")),
+    h("div", { class: "drow" }, ME.owner && ME.local && check, ME.owner && ME.local && h("button", { class: "btn ghost", onclick: () => statusDialog() }, tx("מצב המערכת")), h("button", { class: "btn ghost", onclick: () => termsDialog() }, tx("תנאי שימוש")))));
+}
+// The terms, short: once on first use (kept in this browser), and from "about" at any time.
+const TERMS = "1";
+const termsSeen = () => { try { return localStorage.getItem("terms") === TERMS; } catch (e) { return true; } };
+function termsDialog(first) {
+  const ok = h("button", { class: "btn pop", onclick: () => { try { localStorage.setItem("terms", TERMS); } catch (e) { /* no storage */ } closeDialog(); } }, first ? tx("הבנתי, אפשר להתחיל") : tx("סגירה"));
+  dialog(tx("תנאי שימוש, בקצרה"), h("div", { class: "about" },
+    h("ul", {}, [
+      [tx("לשימוש פרטי ולא מסחרי."), tx(" הרישיון: PolyForm Noncommercial 1.0.0.")],
+      [tx("הלוחות שייכים לבעליהם."), tx(" לכל לוח תנאי שימוש משלו, והאחריות לעמוד בהם היא שלכם. האפליקציה קוראת בדפדפן שלכם, לאט, ועוצרת כשלוח מבקש אימות אנושי. לא לעקוף חסימות, לא לאסוף בהיקף גדול ולא להפיץ מודעות.")],
+      [tx("בלי אחריות על הנתונים."), tx(" מחירים, התאמה, השוואה לשוק, \"אותה דירה\" ודקות הליכה מחושבים אוטומטית ויכולים לטעות. מה שקובע הוא המודעה בלוח.")],
+      [tx("החשבון לקונים הוא הערכה, לא ייעוץ."), tx(" \"מצב המערכת\" בתחתית המסך מראה מתי הריבית והנתונים התעדכנו לאחרונה.")],
+      [tx("יצירת קשר עם בעל הדירה עושים בעצמכם, בלוח."), tx(" האפליקציה לא שולחת הודעות ולא שומרת טלפונים מהלוחות.")],
+      [tx("התוכנה ניתנת כמו שהיא,"), tx(" בלי אחריות מכל סוג, ככל שהחוק מתיר.")],
+    ].map(([b, s]) => h("li", {}, h("b", {}, b), s))),
+    h("p", { class: "muted" }, tx("המלא, עם מה שרץ לבד ולאן האפליקציה פונה: במדריך (README), בסעיף \"תנאי שימוש\".")),
+    h("div", { class: "drow" }, ok)));
+}
+// What the app depends on and when each was last updated: the interest, the boards, the extension, places around,
+// address lookup, the searches, the self-check and the version check. For the person at this computer.
+const STATUS_NAMES = { rate: "ריבית המשכנתא (בנק ישראל)", extension: "התוסף בכרום", searches: "החיפושים", auto: "בדיקה אוטומטית",
+  places: "מקומות בסביבה (OpenStreetMap)", geocode: "איתור כתובות (OpenStreetMap)", version: "בדיקת גרסה חדשה (GitHub)" };
+const when = (iso) => iso ? new Date(iso).toLocaleString(LOCALE, { day: "numeric", month: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "";
+function statusLine(it) {
+  const d = it.detail || {}, err = it.error;
+  if (it.key === "rate") return !it.at ? tx`עדיין לא התעדכנה מבנק ישראל. מוצג נתון שנשמר באפליקציה: ${d.rate}%, ${d.month}. היא מתעדכנת רק כשיש חיפוש לקנייה.`
+    : (tx`${d.rate}%, הנתון של ${d.month}.`) + (err ? " " + tx`הניסיון האחרון להתעדכן (${ago(it.tried) || when(it.tried)}) לא הצליח, אז מוצג הנתון האחרון שנשמר.` : it.state === "warn" ? " " + tx("לא התעדכנה יותר משבועיים.") : "");
+  if (it.key === "board") return it.state === "none" ? tx("עוד לא נקרא") : it.state === "bad" ? (err === "human" ? tx("מבקש אימות אנושי: לפתוח את הלוח ולעבור") : err === "login" ? tx("ההתחברות הפסיקה לעבוד") : tx("לא ענה בבדיקה האחרונה")) + (it.tried ? " · " + tx`נבדק ${ago(it.tried)}` : "") : tx("נקרא בהצלחה");
+  if (it.key === "extension") return it.state === "ok" ? tx`מחובר · גרסה ${d.version || "?"}` : it.state === "warn" ? tx("לא דיבר עם האפליקציה בדקה האחרונה. האם כרום פתוח?") : tx("לא מחובר מאז שהאפליקציה עלתה");
+  if (it.key === "searches") return it.state === "none" ? tx("עוד לא נבדק אף חיפוש") : tx`${d.count} חיפושים · הבדיקה הכי ישנה: ${ago(d.oldest) || when(d.oldest)}`;
+  if (it.key === "auto") return it.state === "none" ? tx("כבויה") : tx`כל ${d.hours} שעות` + (err ? " · " + tx("הבדיקה האחרונה נכשלה") : it.at ? "" : " · " + tx("עוד לא רצה מאז שהאפליקציה עלתה"));
+  if (it.key === "places") return it.state === "none" ? tx("עוד לא נשמרו") : tx`${d.cities} ערים שמורות · הכי ישנה: ${ago(d.oldest) || when(d.oldest)}` + (err ? " · " + tx("הניסיון האחרון להביא עיר חדשה לא הצליח (השרתים הציבוריים עמוסים לפעמים)") : "");
+  if (it.key === "geocode") return it.state === "none" ? tx("עוד לא נשמרו כתובות") : tx("כתובות שכבר אותרו שמורות במחשב");
+  if (it.key === "version") return d.off ? tx("כבויה") : tx`אצלכם ${d.version || "?"}` + (d.newer ? " · " + tx`גרסה ${d.newer} מוכנה` : "") + (err ? " · " + tx("הבדיקה האחרונה לא הצליחה (אין אינטרנט?)") : "");
+  return "";
+}
+const STATUS_ICON = { ok: "✅", warn: "⚠️", bad: "⛔", none: "⚪" };
+async function statusDialog() {
+  let r;
+  try { r = await api("status"); } catch (e) { return toast(e.message); }
+  const rank = { bad: 0, warn: 1, ok: 2, none: 3 };
+  const rows = r.items.map((it, i) => [it, i]).sort(([a, i], [b, j]) => (rank[a.state] - rank[b.state]) || i - j).map(([it]) => h("div", { class: "strow s-" + it.state },
+    h("span", { class: "sti" }, STATUS_ICON[it.state] || ""),
+    h("div", {}, h("b", {}, it.key === "board" ? ts(META.boards[it.board]) : tx(STATUS_NAMES[it.key])), h("div", { class: "muted" }, statusLine(it))),
+    h("div", { class: "stwhen", title: when(it.at) }, it.at ? [h("span", { class: "muted" }, tx("עודכן לאחרונה")), h("b", {}, ago(it.at) || when(it.at))] : h("span", { class: "muted" }, "—"))));
+  dialog(tx("מצב המערכת"), h("div", { class: "about" },
+    h("p", { class: "muted" }, tx("מתי כל דבר שהאפליקציה תלויה בו התעדכן לאחרונה. כשמשהו לא מתעדכן, האפליקציה ממשיכה עם העותק האחרון שנשמר, וכאן כתוב מאיזה זמן הוא.")),
+    h("div", { class: "stlist" }, rows),
+    h("div", { class: "drow" }, h("button", { class: "btn ghost", onclick: () => statusDialog() }, tx("רענון")))));
+}
+async function statusMark() {
+  const a = document.getElementById("statuslink");
+  if (!(ME && ME.owner && ME.local)) return;
+  a.style.display = ""; a.onclick = (e) => { e.preventDefault(); statusDialog(); };
+  let bad = 0;
+  try { bad = (await api("status")).items.filter((it) => it.state === "warn" || (it.state === "bad" && it.key !== "extension")).length; } catch (e) { /* the app answers later */ }
+  a.textContent = bad ? tx("⚠️ מצב המערכת") : tx("מצב המערכת");
+  a.classList.toggle("warnlink", !!bad);
+}
+function updateDialog() {
+  const u = ME.update;
+  if (!u) return;
+  const note = h("p", { class: "muted" }, tx("החיפושים, הסימונים וההגדרות שלכם נשארים. העדכון מוריד את הקבצים החדשים מ-GitHub ומפעיל את האפליקציה מחדש: כמה שניות."));
+  const later = h("button", { class: "btn ghost", onclick: () => {
+    try { localStorage.setItem("upd_later", u.version + "|" + new Date().toDateString()); } catch (e) { /* no storage */ }
+    closeDialog();
+  } }, tx("אחר כך"));
+  const now = h("button", { class: "btn pop", onclick: async () => {
+    now.disabled = later.disabled = true;
+    note.textContent = tx("מוריד את הגרסה החדשה...");
+    try {
+      const r = await api("update", {});
+      if (!r.updated) { ME.update = null; footState(); closeDialog(); return toast(tx("הגרסה שלך היא העדכנית ביותר")); }
+      if (!r.restart) { note.textContent = tx("הגרסה החדשה הותקנה. סגרו את חלון האפליקציה והפעילו אותה שוב."); return; }
+      note.textContent = tx("מפעיל את האפליקציה מחדש...");
+      for (const end = Date.now() + 120000; Date.now() < end;) {
+        await new Promise((ok) => setTimeout(ok, 900));
+        let me = null;
+        try { me = await (await fetch("/api/me", { cache: "no-store" })).json(); } catch (e) { /* it is starting */ }
+        if (!me || !me.boot || me.boot === ME.boot) continue;   // the app that answers is still the one from before
+        if (me.version !== ME.version) {
+          try { sessionStorage.setItem("updated", me.version); } catch (e) { /* no storage */ }
+          return location.reload();
+        }
+        ME = me; footState(); later.disabled = false; later.textContent = tx("סגירה");
+        note.textContent = tx("הגרסה החדשה לא עלתה, אז הגרסה הקודמת הוחזרה. שום דבר לא אבד.");
+        return;
+      }
+      note.textContent = tx("האפליקציה לא עלתה מחדש. סגרו את החלון שלה והפעילו אותה שוב.");
+    } catch (e) { note.textContent = ts(e.message); now.disabled = later.disabled = false; }
+  } }, tx("עדכנו עכשיו"));
+  const said = (r) => (LANG === "he" ? r.he : r[LANG] && r[LANG].length ? r[LANG] : r.en && r.en.length ? r.en : r.he) || [];
+  dialog(tx`גרסה חדשה מוכנה: ${u.version}`, h("div", { class: "about" },
+    h("p", { class: "muted" }, tx`אצלכם עכשיו: ${ME.version || "?"}`),
+    u.news.map((r) => [h("h4", {}, tx`מה חדש ב-${r.version}`), h("ul", {}, said(r).map((t) => h("li", { dir: "auto" }, t)))]).flat(),
+    note, h("div", { class: "drow" }, now, later)));
+}
+// The footer's two links; and the offer itself, once a day for a version the person put off.
+function footState() {
+  const about = document.getElementById("aboutlink");
+  about.textContent = tx("לשימוש פרטי, לא מסחרי · על לוח אחד");
+  about.onclick = (e) => { e.preventDefault(); aboutDialog(); };
+  statusMark();
+  const upd = document.getElementById("updlink"), has = !!(ME && ME.update);
+  upd.style.display = has ? "" : "none";
+  if (has) { upd.textContent = tx`⬆ גרסה ${ME.update.version} מוכנה`; upd.onclick = (e) => { e.preventDefault(); updateDialog(); }; }
+}
+function offerUpdate() {
+  if (!ME || !ME.update || offerUpdate.done || document.getElementById("dlg") || document.getElementById("modal")) return;
+  offerUpdate.done = true;
+  let later = "";
+  try { later = localStorage.getItem("upd_later") || ""; } catch (e) { /* no storage */ }
+  if (later !== ME.update.version + "|" + new Date().toDateString()) updateDialog();
+}
+
 const extNote = () => {
+  if (ME && ME.owner && ME.local && ME.ext_reload) return h("div", { class: "extnote" }, h("b", {}, tx("התוסף התעדכן.")),
+    tx(" כדי שיעבוד בגרסה החדשה: פותחים "), h("code", {}, "chrome://extensions"), tx(", לוחצים על חץ הרענון של \"לוח אחד: קורא הלוחות\", ומרעננים את הדף הזה."));
   if (!ME || !ME.owner || !ME.local || ME.browser !== false) return null;
   const here = document.documentElement.dataset.luachExtension;
   return h("div", { class: "extnote" }, h("b", {}, here ? tx("התוסף מתחבר...") : tx("חסר התוסף של לוח אחד בכרום הזה.")),
@@ -454,18 +846,82 @@ const extNote = () => {
 // ---------- home ----------
 async function home() {
   const profiles = await api("profiles");
-  $root.replaceChildren(h("div", { class: "center" }, logo(),
-    h("div", { class: "hero" }, tx("כל לוחות הדירות, "), h("em", {}, tx("בלוח אחד")), tx(" שמכיר אותך.")),
-    h("div", { class: "muted" }, tx("יד2, מדלן, קומו והומלס נמשכים, מנורמלים לאותו מבנה, ומדורגים לפי הפרופיל של מי שמחפש.")),
+  const sum = (k) => profiles.reduce((n, p) => n + (p[k] || 0), 0);
+  const boards = Object.entries(META.boards).filter(([b]) => META.sync_boards.includes(b));
+  // numbers that count up once when the screen opens (at once for a person who asked the computer for less motion)
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const count = (n) => { const el = h("b", { class: "num" }, still ? n.toLocaleString(LOCALE) : "0"); if (!still && n) { const t0 = performance.now(), run = (t) => { const k = Math.min(1, (t - t0) / 900), e = 1 - Math.pow(1 - k, 3); el.textContent = Math.round(n * e).toLocaleString(LOCALE); if (k < 1) requestAnimationFrame(run); }; setTimeout(() => requestAnimationFrame(run), 250); } return el; };
+  const stat = (n, label, cls) => h("div", { class: "hstat " + (cls || "") }, count(n), h("span", {}, label));
+  $root.replaceChildren(h("div", { class: "center homepage" }, logo(),
+    h("div", { class: "herobox" },
+      h("div", { class: "blob b1" }), h("div", { class: "blob b2" }), h("div", { class: "blob b3" }),
+      h("div", { class: "hero" }, tx("כל לוחות הדירות, "), h("em", {}, tx("בלוח אחד")), tx(" שמכיר אותך.")),
+      h("div", { class: "hsub" }, tx("יד2, מדלן, קומו והומלס נמשכים, מנורמלים לאותו מבנה, ומדורגים לפי הפרופיל של מי שמחפש.")),
+      h("div", { class: "hboards" }, boards.map(([b, name], i) => h("span", { class: "chip b-" + b, style: `--i: ${i}` }, name)),
+        h("span", { class: "hplus" }, tx("＋ מודעה מכל מקום אחר"))),
+      h("div", { class: "hstats" },
+        stat(META.cities.length, tx("ערים ויישובים")),
+        stat(sum("total"), tx("דירות במעקב")),
+        stat(sum("fits"), tx("מתאימות לחיפושים"), "good"),
+        sum("favorites") ? stat(sum("favorites"), tx("♥ מועדפות"), "love") : stat(profiles.length, profiles.length === 1 ? tx("חיפוש פעיל") : tx("חיפושים פעילים"), "love"))),
     extNote(),
     h("div", { class: "pgrid" },
-      profiles.map((p) => h("div", { class: "pcard", onclick: () => go("#/p/" + p.id) },
+      profiles.map((p, i) => h("div", { class: "pcard deal-" + (p.prefs.deal || "rent"), role: "link", style: `--i: ${i}`, onclick: () => go("#/p/" + p.id) },
+        ME.owner && h("button", { class: "del", title: tx("מחיקת החיפוש"), onclick: (e) => { e.stopPropagation(); deleteDialog(p); } }, "🗑"),
         h("h3", {}, p.name, " ", dealChip(p.prefs.deal)),
-        h("div", { class: "muted" }, [p.prefs.city, p.prefs.hoods.join(", ")].filter(Boolean).join(" · ")),
-        h("div", { class: "muted" }, tx("עד ") + nis(p.prefs.price_max) + " · " + (p.prefs.rooms_min ?? "") + "–" + (p.prefs.rooms_max ?? "") + tx(" חדרים")),
-        h("div", { style: "margin-top:10px" }, h("span", { class: "big" }, String(p.fits)), tx(" מתאימות מתוך ") + p.total),
-        h("div", { class: "muted" }, tx`♥ ${p.favorites} מועדפות` + (p.members ? tx` · ${p.members + 1} מחפשים יחד` : "")))),
-      ME.owner && h("div", { class: "pcard add", onclick: () => go("#/new") }, tx("+ פרופיל חדש")))));
+        // each place with its own chosen neighbourhoods: "קרית אונו (המרכז, רימון) + אפרת"
+        h("div", { class: "muted" }, p.prefs.cities
+          ? p.prefs.cities.flatMap((c, i) => { const hs = (p.prefs.hoods_in || {})[c] || []; return [i ? " + " : "", h("bdi", {}, c), ...(hs.length ? [" (", h("bdi", {}, hs.join(", ")), ")"] : [])]; })
+          : [h("bdi", {}, p.prefs.city), p.prefs.hoods.length ? " · " + p.prefs.hoods.join(", ") : ""]),
+        h("div", { class: "muted" }, wantOf(p.prefs)),
+        p.total ? [h("div", { class: "pcount" }, h("span", { class: "big" }, count(p.fits)), p.fits === 1 ? tx` מתאימה מתוך ${p.total}` : tx` מתאימות מתוך ${p.total}`),
+            h("div", { class: "pbar", title: tx`${p.fits} מתאימות מתוך ${p.total}` }, h("i", { style: `--w: ${Math.max(3, Math.round(100 * p.fits / p.total))}%` }))]
+          : h("div", { class: "pcount" }, h("span", { class: "big" }, "–"), p.last_sync ? tx(" עוד אין מודעות בחיפוש הזה") : ME.owner ? tx(" עוד לא נבדק: נכנסים ולוחצים סנכרון") : tx(" עוד לא נבדק")),
+        h("div", { class: "pfoot" },
+          h("span", {}, (p.favorites === 0 ? tx("♥ עוד אין מועדפות") : p.favorites === 1 ? tx("♥ מועדפת אחת") : tx`♥ ${p.favorites} מועדפות`) + (p.members ? tx` · ${p.members + 1} מחפשים יחד` : "")),
+          p.last_sync && h("span", { class: "when" }, tx("נבדק ") + ago(p.last_sync))))),
+      ME.owner && h("div", { class: "pcard add", role: "link", style: `--i: ${profiles.length}`, onclick: () => go("#/new") },
+        h("span", { class: "plusbig" }, "+"), h("b", {}, tx("חיפוש חדש")), h("span", { class: "muted" }, tx("עיר, תקציב, חדרים, מה חשוב לכם: ארבעה צעדים קצרים")))),
+    ME.owner && ME.auto && profiles.length ? autoBar() : null));
+}
+// The searches can check themselves while the app is open. Off until the person chooses how often.
+function autoBar() {
+  const bar = h("div", { class: "autobar" });
+  const draw = () => bar.replaceChildren(h("b", {}, tx("🔄 בדיקה אוטומטית")),
+    h("div", { class: "seg" }, [[0, tx("כבויה")], ...META.auto_hours.map((n) => [n, n === 24 ? tx("פעם ביום") : tx`כל ${n} שעות`])].map(([n, t]) =>
+      h("button", { class: ME.auto.hours === n ? "on" : "", onclick: async () => { try { ME.auto = await api("auto", { hours: n, lang: LANG }); draw(); } catch (e) { toast(e.message); } } }, t))),
+    h("span", {}, ME.auto.hours ? tx("כשהאפליקציה והדפדפן פתוחים, כל חיפוש נבדק לבד, והתראה קופצת כשיש דירה חדשה שמתאימה.")
+      : tx("האפליקציה יכולה לבדוק את החיפושים לבד ולהתריע על דירה חדשה שמתאימה.")));
+  draw();
+  return bar;
+}
+function deleteDialog(p) {
+  dialog(tx("מחיקת החיפוש"), h("div", {},
+    h("p", {}, tx`למחוק את "${p.name}"? הסימונים וההערות שבו יירדו מהמסך.`),
+    h("p", { class: "muted" }, tx("הקובץ לא נמחק מהמחשב: הוא עובר לתיקייה data/removed, למקרה של טעות.")),
+    h("div", { class: "wnav" }, h("button", { class: "btn ghost", onclick: closeDialog }, tx("ביטול")),
+      h("button", { class: "btn pop", onclick: async () => { try { await api(`profiles/${p.id}/delete`, {}); closeDialog(); home(); } catch (e) { toast(e.message); } } }, tx("מחיקה")))));
+}
+
+// The map's ground. In Hebrew: OpenStreetMap's own tiles, names as they are written here. In another language:
+// OpenFreeMap's free map (no key, no account; https://openfreemap.org), its labels in that language wherever
+// OpenStreetMap has the name, else as written here. If that map cannot load, the Hebrew tiles are used.
+const GL = "https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl", GLL = "https://unpkg.com/@maplibre/maplibre-gl-leaflet@0.0.22/leaflet-maplibre-gl.js";
+let glReady = null;
+const loadGL = () => glReady || (glReady = new Promise((ok, no) => {
+  document.head.append(h("link", { rel: "stylesheet", href: GL + ".css" }));
+  const s = (src) => new Promise((r, f) => { const e = document.createElement("script"); e.src = src; e.onload = r; e.onerror = f; document.head.append(e); });
+  s(GL + ".js").then(() => s(GLL)).then(ok, no);
+}));
+function ground(m, attribution) {
+  const osm = () => L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution }).addTo(m);
+  if (LANG === "he") return osm();
+  loadGL().then(() => {
+    if (!m._container || !m._container.isConnected) return;
+    const gl = L.maplibreGL({ style: "https://tiles.openfreemap.org/styles/liberty", attribution: attribution && "© OpenFreeMap © OpenMapTiles © OpenStreetMap" }).addTo(m);
+    const g = gl.getMaplibreMap(), name = ["coalesce", ["get", "name:" + LANG], ["get", "name_en"], ["get", "name"]];
+    g.once("styledata", () => { for (const l of g.getStyle().layers) if (l.type === "symbol" && l.layout && /name/.test(JSON.stringify(l.layout["text-field"] || ""))) g.setLayoutProperty(l.id, "text-field", name); });
+  }).catch(osm);
 }
 
 // ---------- questionnaire ----------
@@ -473,6 +929,11 @@ function wizard(existing) {
   const d = existing ? JSON.parse(JSON.stringify({ name: existing.name, ...existing.prefs })) :
     { name: "", who: "", deal: "rent", city: "", hoods: [], radius_km: 1.2, price_max: 5000, rooms_min: 2, rooms_max: 3, sqm_min: "", private_only: false,
       access: { need: false, max_floor: 1 }, features: {}, hide: ["roommates"] };
+  // One place, or a few: each with its own neighbourhoods (none chosen = the whole place).
+  d.cities = existing ? [...(existing.prefs.cities || [existing.prefs.city])] : [];
+  d.hoods_in = existing ? JSON.parse(JSON.stringify(existing.prefs.hoods_in || { [existing.prefs.city]: existing.prefs.hoods })) : {};
+  const MOST = META.most_cities || 1;
+  const plain = (s) => String(s || "").toLowerCase().replace(/["'׳״\-]/g, " ").replace(/יי/g, "י").replace(/וו/g, "ו").replace(/\s+/g, " ").trim();
   let step = 0;
   const titles = [[tx("מי מחפש, ואיפה?"), tx("הלוח נבנה סביב האדם, לא סביב הלוח.")], [tx("כמה, וכמה גדול?"), tx("נמשוך גם קצת מעל התקציב, רק כדי להשוות מחירים.")],
     [tx("מה חשוב?"), tx("לחיצה אחת: יתרון. שתיים: חובה. שלוש: לא חשוב.")], [tx("מה לא להראות?"), tx("מודעות כאלה יוסתרו, ואפשר תמיד להציץ בהן.")]];
@@ -481,10 +942,39 @@ function wizard(existing) {
     h("span", { class: "ti" }, icon), h("b", {}, text), h("small", {}, sub || ""));
   // What still has to be filled before going on. Checked on every keystroke, whatever the order of filling.
   let nextBtn = null, hint = null;
-  const missing = () => step === 0 ? [!d.name.trim() && tx("שם לפרופיל"), !d.city && tx("עיר")].filter(Boolean) : [];
+  const missing = () => step === 0 ? [!d.name.trim() && tx("שם לפרופיל"), !d.cities.length && tx("עיר")].filter(Boolean) : [];
   const check = () => { if (!nextBtn) return; const m = missing(); nextBtn.disabled = !!m.length; hint.textContent = m.length ? tx("חסר: ") + m.join(", ") : ""; };
   const draw = () => {
-    const city = META.cities.find((c) => c.name === d.city), sale = d.deal === "sale";
+    const sale = d.deal === "sale";
+    // Where: a field that finds a place as its name is typed, the chosen places as chips, and each one's neighbourhoods.
+    const places = () => {
+      const chosen = d.cities.map((n) => META.cities.find((c) => c.name === n)).filter(Boolean);
+      const hits = h("div", { class: "hits", style: "display:none" });
+      const pick = (c) => { d.cities.push(c.name); d.hoods_in[c.name] = d.hoods_in[c.name] || []; draw(); };
+      const look = () => {
+        const q = plain(inp.value);
+        const list = !q ? [] : META.cities.filter((c) => !d.cities.includes(c.name) && (plain(c.name).includes(q) || plain(c.en).includes(q)))
+          .sort((x, y) => (plain(x.name).startsWith(q) || plain(x.en).startsWith(q) ? 0 : 1) - (plain(y.name).startsWith(q) || plain(y.en).startsWith(q) ? 0 : 1)
+            || x.name.localeCompare(y.name, "he")).slice(0, 12);
+        hits.replaceChildren(...(list.length ? list.map((c) => h("button", { type: "button", onclick: () => pick(c) }, h("span", {}, c.name),
+          h("small", {}, c.hoods.length > 1 ? tx`${c.hoods.length} שכונות` : ""))) : [h("div", { class: "muted", style: "padding:8px 12px" }, tx("לא מצאנו מקום בשם הזה"))]));
+        hits.style.display = q ? "block" : "none";
+      };
+      const inp = h("input", { type: "text", autocomplete: "off", placeholder: chosen.length ? tx("עוד עיר או יישוב...") : tx("מקלידים שם של עיר או יישוב"), oninput: look,
+        onkeydown: (e) => { if (e.key === "Enter") { e.preventDefault(); hits.querySelector("button")?.click(); } else if (e.key === "Escape") { inp.value = ""; look(); } } });
+      const any = chosen.some((c) => (d.hoods_in[c.name] || []).length);
+      return [
+        h("div", { class: "q" }, h("label", {}, tx("איפה? "), h("small", {}, MOST > 1 ? tx`עד ${MOST} מקומות בחיפוש אחד, כדי לשמור על שימוש סביר בשרתים של הלוחות` : "")),
+          chosen.length ? h("div", { class: "places" }, chosen.map((c) => h("span", { class: "pl" }, h("bdi", {}, c.name),
+            h("button", { type: "button", title: tx("הסרה"), onclick: () => { d.cities = d.cities.filter((n) => n !== c.name); delete d.hoods_in[c.name]; draw(); } }, "✕")))) : null,
+          chosen.length < MOST ? h("div", { class: "find" }, inp, hits) : null),
+        chosen.filter((c) => c.hoods.length).map((c) => h("div", { class: "plc" },
+          h("b", {}, chosen.length > 1 ? h("bdi", {}, c.name) : tx("שכונות מועדפות"), " ", h("small", {}, tx("אפשר כמה, או לדלג בשביל כל העיר"))),
+          h("div", { class: "pick" }, c.hoods.map((x) => { const mine = d.hoods_in[c.name] || (d.hoods_in[c.name] = []);
+            return h("button", { class: mine.includes(x.name) ? "on" : "", onclick: () => { d.hoods_in[c.name] = mine.includes(x.name) ? mine.filter((n) => n !== x.name) : [...mine, x.name]; draw(); } }, x.name); })))),
+        any ? h("div", { class: "q" }, h("label", {}, tx("כמה רחוק מהשכונה עוד בסדר?")), h("div", { class: "seg" }, [[0.6, tx("📍 ממש שם")], [1.2, tx("🚶 הליכה קצרה")], [2.5, tx("🚲 גם קצת רחוק")]].map(([v, t]) => h("button", { class: d.radius_km === v ? "on" : "", onclick: () => { d.radius_km = v; draw(); } }, t)))) : null,
+      ];
+    };
     // Rent and purchase are different searches with different sizes of numbers: switching sets sensible starting ones.
     const setDeal = (deal) => { if (d.deal === deal) return; d.deal = deal;
       Object.assign(d, deal === "sale" ? { price_max: 2500000, rooms_min: 3, rooms_max: 4, hide: d.hide.filter((x) => x !== "roommates") }
@@ -498,12 +988,7 @@ function wizard(existing) {
         h("div", { class: "row2" },
           h("div", { class: "q" }, h("label", {}, tx("שם הפרופיל")), h("input", { type: "text", value: d.name, placeholder: tx("אבא, אני, דנה..."), oninput: (e) => { d.name = e.target.value; check(); } })),
           h("div", { class: "q", style: "flex:1" }, h("label", {}, tx("מי יגור שם? "), h("small", {}, tx("משפט אחד, לא חובה"))), h("input", { type: "text", style: "width:100%", value: d.who, placeholder: tx("מבוגר שגר לבד, קשה לו עם מדרגות"), oninput: (e) => d.who = e.target.value }))),
-        h("div", { class: "q" }, h("label", {}, tx("עיר")), h("select", { class: "citysel", onchange: (e) => { d.city = e.target.value; d.hoods = []; draw(); } },
-          h("option", { value: "", disabled: true, selected: !d.city }, tx("בחרו עיר מהרשימה")),
-          [...META.cities].sort((x, y) => x.name.localeCompare(y.name, "he")).map((c) => h("option", { value: c.name, selected: d.city === c.name }, c.name)))),
-        city && city.hoods.length ? h("div", { class: "q" }, h("label", {}, tx("שכונות מועדפות "), h("small", {}, tx("אפשר כמה, או לדלג בשביל כל העיר"))),
-          h("div", { class: "pick" }, city.hoods.map((x) => h("button", { class: d.hoods.includes(x.name) ? "on" : "", onclick: () => { d.hoods = d.hoods.includes(x.name) ? d.hoods.filter((n) => n !== x.name) : [...d.hoods, x.name]; draw(); } }, x.name)))) : null,
-        d.hoods.length ? h("div", { class: "q" }, h("label", {}, tx("כמה רחוק מהשכונה עוד בסדר?")), h("div", { class: "seg" }, [[0.6, tx("📍 ממש שם")], [1.2, tx("🚶 הליכה קצרה")], [2.5, tx("🚲 גם קצת רחוק")]].map(([v, t]) => h("button", { class: d.radius_km === v ? "on" : "", onclick: () => { d.radius_km = v; draw(); } }, t)))) : null,
+        places(),
       ],
       () => [
         h("div", { class: "q" }, h("label", {}, sale ? tx("תקציב מקסימלי") : tx("תקציב חודשי מקסימלי")), h("div", { class: "row2" },
@@ -528,16 +1013,22 @@ function wizard(existing) {
     ][step]();
     hint = h("span", { class: "whint" });
     nextBtn = h("button", { class: "btn pop", onclick: () => { if (missing().length) return check(); if (step < 3) { step++; draw(); } else finish(); } }, step < 3 ? tx("הלאה") : existing ? tx("שמירה") : tx("בנו לי את הלוח"));
-    $root.replaceChildren(h("div", { class: "center" }, logo(), h("div", { class: "wiz" },
+    // A click inside a step draws it again: only a new step moves (in from the side it lies on), and the frame
+    // comes in once.
+    const moved = step !== draw.shown, back = draw.shown != null && step < draw.shown, first = draw.shown == null;
+    draw.shown = step;
+    $root.replaceChildren(h("div", { class: "center" + (first ? "" : " still") }, logo(), h("div", { class: "wiz" },
       h("div", { class: "dots" }, titles.map((_, i) => h("i", { class: i <= step ? "on" : "" }))),
-      h("h2", {}, titles[step][0]), h("div", { class: "muted" }, titles[step][1]), body,
+      h("div", { class: moved && !first ? "wstep" : "", style: `--dir: ${(back ? -1 : 1) * (DIR === "rtl" ? -1 : 1)}` },
+        h("h2", {}, titles[step][0]), h("div", { class: "muted" }, titles[step][1]), body),
       h("div", { class: "wnav" },
         h("button", { class: "btn ghost", onclick: () => step ? (step--, draw()) : go(existing ? "#/p/" + existing.id : "#/") }, step ? tx("חזרה") : tx("ביטול")),
         h("div", { class: "wgo" }, hint, nextBtn)))));
     check();
   };
   const finish = async () => {
-    const { name, _pickMax, ...prefs } = d;
+    const { name, _pickMax, cities, hoods_in, ...prefs } = d;
+    Object.assign(prefs, { city: cities[0], hoods: hoods_in[cities[0]] || [] }, cities.length > 1 ? { cities, hoods_in } : {});
     try {
       if (existing) {
         const r = await api(`profiles/${existing.id}/prefs`, { name, prefs });
@@ -601,7 +1092,7 @@ function syncing(pid, name) {
 
 // ---------- board ----------
 // Extra filters: everything the normalized ad lets us ask. Closed, they are one button; open, a panel.
-const X0 = { boards: [], seller: "any", price: "", rooms_min: "", rooms_max: "", access: "any", feats: [], walk: [], photos: false, below: false, multi: false, noBasement: false, noReligious: false };
+const X0 = { cities: [], boards: [], seller: "any", price: "", rooms_min: "", rooms_max: "", access: "any", feats: [], walk: [], photos: false, below: false, multi: false, noBasement: false, noReligious: false };
 F.x = Object.assign({}, X0, F.x || {});
 const activeFilters = () => Object.keys(X0).filter((k) => JSON.stringify(F.x[k]) !== JSON.stringify(X0[k])).length;
 const passes = (a) => {
@@ -612,6 +1103,7 @@ const passes = (a) => {
   if (P.prefs.hoods.length && (F.area === "in" ? a.area !== "in" : F.area === "near" ? !["in", "near"].includes(a.area) : false)) return false;
   if (F.status === "todo" ? a.status : F.status === "picked" ? !picked : F.status === "rejected" ? a.status !== "rejected" : false) return false;
   if (F.q && ![a.street, a.hood, a.description, a.note, a.summary].join(" ").includes(F.q)) return false;
+  if (x.cities.length && a.in_city && x.cities.some((c) => P.cities.some((k) => k.name === c)) && !x.cities.includes(a.in_city)) return false;   // a search over several cities
   if (x.boards.length && !a.boards.some((b) => x.boards.includes(b.board))) return false;
   if (x.seller !== "any" && !a.boards.some((b) => b.seller === x.seller)) return false;
   if (x.price && (a.price == null || a.price > +x.price)) return false;
@@ -633,14 +1125,14 @@ const shown = () => { const ads = P.ads.filter(passes); if (SORT[F.sort]) ads.so
 const CHANGE = (c) => c.field === "price" ? tx`המחיר ${c.to < c.from ? tx("ירד") : tx("עלה")} מ-${nis(c.from)} ל-${nis(c.to)}` : c.field === "gone" ? tx("ירדה מהלוח") : c.field === "back" ? tx("חזרה ללוח")
   : c.field === "description" ? tx("הטקסט עודכן") : c.field === "images" ? tx`תמונות: ${c.from} ← ${c.to}` : c.field === "entrance" ? tx("תאריך הכניסה השתנה") : `${{ rooms: tx("חדרים"), sqm: tx("שטח"), floor: tx("קומה"), seller: tx("מפרסם") }[c.field] || c.field}: ${c.from} ${FWD} ${c.to}`;
 const ringColor = (a) => a.fit === "no" ? "#cfc6b3" : a.score >= 75 ? "var(--mint)" : a.score >= 60 ? "#e2a100" : "var(--coral)";
-const ring = (a, big) => h("div", { class: "ring" + (big ? " big" : ""), style: `background: conic-gradient(${ringColor(a)} ${a.fit === "no" ? 0 : a.score}%, #eee6d6 0)`, title: a.fit === "no" ? tx("לא עוברת את תנאי החובה") : tx("ציון התאמה לפרופיל") }, h("span", {}, a.fit === "no" ? "–" : String(a.score)));
+const ring = (a, big) => h("div", { class: "ring" + (big ? " big" : ""), style: `background: conic-gradient(${ringColor(a)} ${a.fit === "no" ? 0 : a.score}%, var(--track) 0)`, title: a.fit === "no" ? tx("לא עוברת את תנאי החובה") : tx("ציון התאמה לפרופיל") }, h("span", {}, a.fit === "no" ? "–" : String(a.score)));
 const factsOf = (a) => [a.rooms != null && a.rooms + tx(" חד'"), a.sqm && a.sqm + tx(" מ\"ר"), floorHe(a), META.types[a.type] !== "דירה" && META.types[a.type], a.per_sqm && nis(a.per_sqm) + tx(" למ\"ר")].filter(Boolean).join(" · ");
 const SELLER = { private: tx("פרטי"), agent: tx("תיווך") };
 
 // One tag = one icon and a few words, with one colour per meaning: green is good news, yellow asks to check, red
 // rules the ad out, coral is ours (new, favourite), plain is a fact. Always in this order: ours, what happened to
 // the ad, the fit, the money, what the owner wrote; then, at the far end, its clock and its sources.
-const tag = (cls, icon, text, title) => h("span", { class: "chip " + cls, title }, h("i", {}, icon), text);
+const tag = (cls, icon, text, title) => h("span", { class: "chip " + cls, title }, h("i", { "aria-hidden": "true" }, icon), text);
 function chipsOf(a, head) {
   const c = [];
   if (a.fav_by.length) c.push(tag("fav", "♥", a.fav_by.join(", "), tx("סימנו: ") + a.fav_by.join(", ")));
@@ -674,12 +1166,12 @@ function chipsOf(a, head) {
   return c;
 }
 
-const pieces = (list) => list.filter(Boolean).flatMap((x, i) => [i ? " · " : null, h("bdi", {}, x)]).filter(Boolean);
+const pieces = (list) => [...new Set(list.filter(Boolean).map((x) => String(x).trim()))].flatMap((x, i) => [i ? " · " : null, h("bdi", {}, x)]).filter(Boolean);
 function row(a) {
-  const where = pieces([[a.street, a.house_no].filter(Boolean).join(" "), a.hood, a.dist_km != null && P.prefs.hoods.length && a.dist_km.toFixed(1) + tx(" ק\"מ")]);
+  const where = pieces([[a.street, a.house_no].filter(Boolean).join(" "), a.hood, a.in_city, a.dist_km != null && P.prefs.hoods.length && a.dist_km.toFixed(1) + tx(" ק\"מ")]);
   return h("article", { class: "ad" + (openId === a.id ? " open" : "") + (a.gone_since ? " gone" : "") + (a.status === "rejected" ? " rejected" : ""), id: "ad-" + a.id,
     onmouseenter: () => pins[a.id]?.classList.add("hot"), onmouseleave: () => openId !== a.id && pins[a.id]?.classList.remove("hot") },
-    h("div", { class: "head", onclick: () => select(a.id) },
+    h("div", { class: "head", role: "button", onclick: () => select(a.id) },
       a.images[0] ? h("img", { class: "thumb", src: a.images[0], loading: "lazy", referrerPolicy: "no-referrer", alt: "", onerror: (e) => e.target.replaceWith(h("div", { class: "thumb" }, tx("אין תמונה"))) }) : h("div", { class: "thumb" }, tx("אין תמונה")),
       h("div", { style: "min-width:0" }, h("div", { class: "l1" }, h("span", { class: "price" }, nis(a.price)), h("span", {}, factsOf(a))), h("div", { class: "l2" }, where.length ? where : tx("כתובת לא צוינה")), h("div", { class: "l3" }, chipsOf(a))),
       ring(a)));
@@ -689,9 +1181,131 @@ function row(a) {
 let mini = null;
 const FICON = { elevator: "🛗", accessible: "♿", mamad: "🛡️", shelter: "⛑️", parking: "🅿️", balcony: "🌤️", ac: "❄️", furnished: "🛋️", renovated: "✨", pets: "🐾", bars: "🔒", storage: "📦", boiler: "☀️" };
 const STATUS = { shortlist: tx("♥ מועדפת"), contacted: tx("☎ דיברנו"), visit: tx("👣 ביקור"), rejected: tx("✕ לא") };
-function closeModal() {
+// A buyer's numbers for one flat: the purchase tax by the Tax Authority's steps, and what a loan would cost a month
+// at the average interest the Bank of Israel published. The person's three choices are kept in this browser.
+const BUY = Object.assign({ kind: "only", own: 25, years: 25 }, JSON.parse(localStorage.getItem("buy") || "{}"));
+const taxOf = (price, steps) => {
+  let tax = 0, low = 0;
+  for (const [top, rate] of steps) { if (top == null || price <= top) return Math.round(tax + (price - low) * rate); tax += (top - low) * rate; low = top; }
+};
+function buyBox(a) {
+  const B = META.buy;
+  if (!B || !SALE() || !a.price || a.flags.includes("key_money")) return null;
+  const box = h("div", { class: "buybox" });
+  const set = (k, v) => { BUY[k] = v; localStorage.setItem("buy", JSON.stringify(BUY)); draw(); box.querySelector(`[data-k=${k}]`)?.focus(); };
+  const kv = (k, v, cls) => h("div", { class: "kv " + (cls || "") }, h("span", {}, k), h("span", {}, v));
+  const pickOf = (k, label, opts, unit) => h("select", { "data-k": k, "aria-label": label, style: "padding:2px 6px", onchange: (e) => set(k, +e.target.value) },
+    opts.map((n) => h("option", { value: n, selected: BUY[k] === n }, n + unit)));
+  const draw = () => {
+    const kind = BUY.kind === "more" ? "more" : "only", least = B.rules.own_min[kind];
+    const owns = [25, 30, 40, 50, 60, 75].filter((n) => n >= least), own = owns.includes(BUY.own) ? BUY.own : least;
+    const tax = taxOf(a.price, B.tax[kind]), mine = Math.round(a.price * own / 100), loan = a.price - mine;
+    const r = B.rate.rate / 1200, n = BUY.years * 12, pay = Math.round(loan * r / (1 - Math.pow(1 + r, -n)));
+    const [most, usual] = B.rules.of_income, stale = new Date().toISOString().slice(0, 10) > B.tax.until[kind];
+    box.replaceChildren(
+      h("div", { class: "seg", role: "group", "aria-label": tx("איזו דירה זו בשבילכם") }, [["only", tx("דירה יחידה")], ["more", tx("דירה נוספת")]].map(([v, t]) => h("button", { "data-k": v === BUY.kind ? "kind" : null, class: kind === v ? "on" : "", onclick: () => set("kind", v) }, t))),
+      kv(tx("מס רכישה"), nis(tax)),
+      kv(h("span", {}, tx("הון עצמי "), pickOf("own", tx("הון עצמי, באחוזים מהמחיר"), owns, "%")), nis(mine)),
+      kv(tx("צריך ביד: הון עצמי + מס רכישה"), nis(mine + tax), "total"),
+      h("div", { class: "msep" }, tx("משכנתא")),
+      kv(h("span", {}, tx("הלוואה ל-"), pickOf("years", tx("תקופת ההלוואה, בשנים"), [15, 20, 25, 30], ""), tx(" שנים")), nis(loan)),
+      kv(tx("החזר חודשי משוער"), nis(pay), "total"),
+      kv(tx("הכנסה נטו שצריך"), tx`${nis(pay * 100 / usual)} (מקובל) · ${nis(pay * 100 / most)} (המותר)`),
+      (!B.rate.live || (B.rate.at && (Date.now() - new Date(B.rate.at)) > 14 * 864e5)) && h("div", { class: "rateold" }, "⚠️ ", B.rate.live ? tx`הריבית לא התעדכנה מבנק ישראל מאז ${ago(B.rate.at) || B.rate.at}. מוצג הנתון האחרון שנשמר.` : tx`הריבית עדיין לא התעדכנה מבנק ישראל. מוצג נתון שנשמר באפליקציה, של ${B.rate.month}.`),
+      h("div", { class: "muted", style: "margin-top:6px" }, tx`לפי ריבית ממוצעת של כל הבנקים, ${B.rate.rate}% (לא צמודה, קבועה), ${B.rate.month}. המקור: בנק ישראל. זו הערכה ולא הצעה: משכנתא אמיתית היא תמהיל של מסלולים.`),
+      h("div", { class: "muted" }, stale ? tx("ייתכן שמדרגות מס הרכישה התעדכנו מאז. ") : null, tx("בלי הקלות (עולים, נכים, מחיר למשתכן) ובלי שכר טרחה ותיווך. "),
+        h("a", { href: B.tax.official, target: "_blank", rel: "noopener" }, tx("המחשבון הרשמי של רשות המסים ↗"))));
+  };
+  draw();
+  return box;
+}
+
+// Reading an ad aloud with the browser's own voice. The app sends nothing: the browser speaks. The button is there
+// only when the browser has a voice for the language; a voice that works through the internet says so on the button.
+const voiceOf = (lang) => {
+  const all = "speechSynthesis" in window ? speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().replace(/^iw/, "he").startsWith(lang)) : [];
+  return all.find((v) => v.localService) || all[0] || null;
+};
+if ("speechSynthesis" in window) speechSynthesis.getVoices();   // some browsers fill the list only after it was asked for once
+// It reads what the ad view shows, card by card, at the moment it is pressed: the whole ad, a short version, or
+// only the owner's text; at the speed and in the voice chosen (kept in this browser).
+const SPEAK = Object.assign({ what: "all", rate: 1, voice: "" }, (() => { try { return JSON.parse(localStorage.getItem("speak") || "{}"); } catch (e) { return {}; } })());
+const voicesOf = (lang) => "speechSynthesis" in window ? speechSynthesis.getVoices().filter((v) => v.lang.toLowerCase().replace(/^iw/, "he").startsWith(lang)) : [];
+// a card's text as it is read: chosen values instead of whole lists, no signs, no controls, spoken units
+function spoken(el) {
+  const c = el.cloneNode(true);
+  c.querySelectorAll("select").forEach((s, i) => { const o = el.querySelectorAll("select")[i]; s.replaceWith(o && o.selectedOptions[0] ? o.selectedOptions[0].textContent : ""); });
+  c.querySelectorAll("button:not([aria-pressed=true]), input, .mbar, .speakbar, .leaflet-container").forEach((x) => x.remove());
+  c.querySelectorAll(".kv b.plus, .kv b.minus").forEach((x) => x.remove());   // score points are for the eye
+  if (LANG === "he") c.querySelectorAll(".sum").forEach((x) => { if (!/[א-ת]/.test(x.textContent)) x.remove(); });   // a summary in another language
+  c.querySelectorAll("div, section, h4, p, .kv, .chip, .fact, time").forEach((x) => x.append(". "));
+  const host = h("div", { style: "position:absolute;inset-inline-start:-9999px;width:600px" }, c);
+  document.body.append(host);
+  const t = host.innerText;
+  host.remove();
+  const units = LANG === "he" ? [[/₪\s?([\d,.]+)/g, "$1 שקלים"], [/ חד'/g, " חדרים"], [/סה"כ/g, "סך הכול"], [/ מ"ר/g, " מטר"], [/ ק"מ/g, " קילומטר"], [/ דק'/g, " דקות"], [/ למ"ר/g, " למטר"]]
+    : [[/₪\s?([\d,.]+)/g, "$1 shekels"], [/\bsqm\b|m²/g, "square meters"], [/\bkm\b/g, "kilometers"], [/\bmin\b/g, "minutes"]];
+  return units.reduce((s, [re, to]) => s.replace(re, to), t)
+    .replace(/[\p{Extended_Pictographic}\u{FE0F}\u{200D}✓✕↗←→↑↓·•]/gu, " ")
+    .replace(/\s*\.\s*(\.\s*)+/g, ". ").replace(/[ \t]+/g, " ").replace(/\s*\n\s*/g, ". ").replace(/(\.\s*){2,}/g, ". ").trim();
+}
+function speakBar(a) {
+  if (!voicesOf("he").length && !voicesOf(LANG).length) return null;
+  const save = () => { try { localStorage.setItem("speak", JSON.stringify(SPEAK)); } catch (e) {} };
+  const pick = (all) => all.find((v) => v.name === SPEAK.voice) || all.find((v) => v.localService) || all[0] || null;
+  const parts = () => {
+    const box = btn.closest(".mcard"), uiV = pick(voicesOf(LANG)), heV = pick(voicesOf("he"));
+    const head = box.querySelector(".mhmain"), cards = [...box.querySelectorAll(".dcard")];
+    const owner = cards.find((c) => c.classList.contains("owner"));
+    const chosen = SPEAK.what === "owner" ? [owner] : SPEAK.what === "short" ? [head, ...cards.filter((c) => c.classList.contains("brief"))] : [head, ...cards];
+    return chosen.filter(Boolean).map((el) => [el === owner ? heV || uiV : uiV || heV, spoken(el)]).filter(([v, t]) => v && t);
+  };
+  const off = () => { btn.classList.remove("on"); btn.textContent = tx("🔊 הקראת המודעה"); };
+  const btn = h("button", { class: "btn ghost speak",
+    title: voicesOf(LANG).concat(voicesOf("he")).some((v) => !v.localService) ? tx("הקראה בקול של הדפדפן. קול שאינו מסומן \"במחשב\" פועל דרך האינטרנט: הטקסט נשלח ליצרן הדפדפן") : tx("הקראה בקול של הדפדפן, במחשב שלכם"),
+    onclick: () => {
+      if (btn.classList.contains("on")) { speechSynthesis.cancel(); return off(); }
+      speechSynthesis.cancel();
+      const list = parts();
+      if (!list.length) return toast(tx("אין כאן מה להקריא"));
+      list.forEach(([v, t], i) => { const u = new SpeechSynthesisUtterance(t); u.voice = v; u.lang = v.lang; u.rate = SPEAK.rate; if (i === list.length - 1) u.onend = u.onerror = off; speechSynthesis.speak(u); });
+      btn.classList.add("on"); btn.textContent = tx("⏹ עצירה");
+    } }, tx("🔊 הקראת המודעה"));
+  const sel = (label, val, opts, set) => h("label", { class: "sp" }, h("span", {}, label),
+    h("select", { onchange: (e) => { set(e.target.value); save(); if (btn.classList.contains("on")) { speechSynthesis.cancel(); off(); } } },
+      opts.map(([v, t]) => h("option", { value: v, selected: String(v) === String(val) }, t))));
+  const vs = voicesOf(LANG === "he" ? "he" : LANG);
+  return h("div", { class: "speakbar" }, btn,
+    sel(tx("מה"), SPEAK.what, [["all", tx("את כל המודעה")], ["short", tx("בקצרה")], ["owner", tx("רק מה שכתב בעל הדירה")]], (v) => SPEAK.what = v),
+    sel(tx("מהירות"), SPEAK.rate, [[0.8, "0.8×"], [1, "1×"], [1.25, "1.25×"], [1.5, "1.5×"], [1.8, "1.8×"]], (v) => SPEAK.rate = +v),
+    vs.length > 1 ? sel(tx("קול"), (pick(vs) || {}).name, vs.map((v) => [v.name, v.name.replace(/^Microsoft |^Google /, "").replace(/ Online \(Natural\).*| - .*/, "") + (v.localService ? tx(" · במחשב") : tx(" · באינטרנט"))]), (v) => SPEAK.voice = v) : null);
+}
+// A window that closes plays its way out first: it loses its id at once (so a new one can open in its place) and
+// is removed when the motion ends. `now` = no motion (the next ad takes its place).
+function leave(el, now) {
+  el.removeAttribute("id");
+  if (now) return el.remove();
+  el.classList.add("out");
+  setTimeout(() => el.remove(), 200);
+}
+function closeModal(now) {
   if (mini) { mini.remove(); mini = null; }
-  document.getElementById("modal")?.remove();
+  if ("speechSynthesis" in window && speechSynthesis.speaking) speechSynthesis.cancel();
+  const was = document.getElementById("modal");
+  if (!was) return;
+  const inside = was.contains(document.activeElement);
+  leave(was, now);
+  // an ad opened from the "what changed" window: closing the ad brings that window back, as it was
+  const held = changesDialog.held;
+  if (!openId && held) {
+    changesDialog.held = null;
+    if (!document.getElementById("dlg") && P && P.id === held.pid && document.getElementById("map")) {
+      document.body.append(held.d);
+      (held.d.querySelector(".chgrow.seen") || held.d.querySelector(".dcardbox")).focus();
+      return;
+    }
+  }
+  if (inside && !openId && modal.back && document.contains(modal.back)) modal.back.focus();   // back to the row it was opened from
 }
 
 // A link to hand to someone: shown once, with copy and WhatsApp.
@@ -709,7 +1323,7 @@ function gallery(a) {
   if (!a.images.length) return h("div", { class: "gallery none" }, tx("אין תמונות במודעה"));
   let at = 0;
   const big = h("img", { referrerPolicy: "no-referrer", alt: "" }), count = h("span", { class: "gcount" });
-  const thumbs = h("div", { class: "thumbs" }, a.images.map((src, i) => h("img", { src, referrerPolicy: "no-referrer", loading: "lazy", alt: "", onclick: () => show(i) })));
+  const thumbs = h("div", { class: "thumbs" }, a.images.map((src, i) => h("img", { src, referrerPolicy: "no-referrer", loading: "lazy", role: "button", alt: tx`תמונה ${i + 1} מתוך ${a.images.length}`, onclick: () => show(i) })));
   const show = (i) => {
     at = (i + a.images.length) % a.images.length;
     big.src = a.images[at];
@@ -730,7 +1344,7 @@ function streetBox(a) {
   if (!a.lat) return null;
   const pano = `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${a.lat},${a.lon}`;
   const note = a.loc_approx === "hood" ? tx("מרכז השכונה בלבד") : tx("מיקום משוער");
-  return h("div", { class: "pane" }, h("div", { class: "ptitle" }, tx("📷 מבט מהרחוב"), h("span", { class: "muted" }, note), h("a", { href: pano, target: "_blank", rel: "noopener" }, "↗")),
+  return h("div", { class: "pane" }, h("div", { class: "ptitle" }, tx("📷 מבט מהרחוב"), h("span", { class: "muted" }, note), h("a", { href: pano, target: "_blank", rel: "noopener", title: tx("לפתוח מבט מהרחוב בגוגל מפות ↗") }, "↗")),
     META.maps_key ? h("iframe", { src: `https://www.google.com/maps/embed/v1/streetview?key=${encodeURIComponent(META.maps_key)}&location=${a.lat},${a.lon}&fov=85`, allowFullscreen: true, referrerPolicy: "origin", loading: "lazy" })
       : h("a", { class: "panelink", href: pano, target: "_blank", rel: "noopener" }, tx("לפתוח מבט מהרחוב בגוגל מפות ↗")));
 }
@@ -742,13 +1356,13 @@ function aroundBox(a) {
   setTimeout(() => {
     if (!el.isConnected) return;
     mini = L.map(el, { zoomControl: false, attributionControl: false }).setView([a.lat, a.lon], 16);
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19 }).addTo(mini);
+    ground(mini);
     const pts = [[a.lat, a.lon]];
     for (const k of WALK) {
       const n = a.near[k];
       if (!n) continue;
       pts.push([n.lat, n.lon]);
-      L.polyline([[a.lat, a.lon], [n.lat, n.lon]], { color: "#24201a", weight: 1.5, dashArray: "3 6" }).addTo(mini);
+      L.polyline([[a.lat, a.lon], [n.lat, n.lon]], { color: inkOf(), weight: 1.5, dashArray: "3 6" }).addTo(mini);
       L.marker([n.lat, n.lon], { icon: L.divIcon({ html: h("div", { class: "poi hit" }, GLYPH[k]), className: "", iconSize: [0, 0] }) })
         .bindTooltip(h("div", { dir: DIR }, h("b", {}, `${n.min}'`), " " + n.name), { permanent: true, direction: "top", offset: [0, -13], className: "tw small", opacity: 1 }).addTo(mini);
     }
@@ -786,8 +1400,12 @@ function sources(a, ro) {
 }
 
 function modal(a, opt = {}) {
-  closeModal();
+  const swap = !!document.getElementById("modal");   // one ad view replaces another: only the card moves
+  closeModal(true);
   const ro = !!opt.readonly, m = a.market, c = a.cost, list = ro ? [a] : visibleAds(), at = list.findIndex((x) => x.id === a.id);
+  // the next ad comes in from the side the arrow points to (it follows the reading direction)
+  const dir = (at >= (modal.at ?? at) ? 1 : -1) * (DIR === "rtl" ? -1 : 1);
+  modal.at = at;
   const save = async (body) => { try { await api(`profiles/${P.id}/ads/${a.id}`, body); P = await api("profiles/" + P.id); draw(); modal(P.ads.find((x) => x.id === a.id) || a); } catch (e) { toast(e.message); } };
   const timeline = [[a.first_seen, tx("ראינו אותה לראשונה")],
     ...(a.board_events || []).map((e) => [e.at, e.kind === "new" ? tx("פורסמה ב-") + nis(e.price) : e.kind === "before" ? tx("המחיר הקודם בלוח: ") + nis(e.price) : tx("המחיר ירד ל-") + nis(e.price)]),
@@ -814,20 +1432,22 @@ function modal(a, opt = {}) {
       h("div", { class: "mhrow" }, chipsOf(a, true), sources(a, ro))),
     h("div", { class: "mbody" },
       h("div", { class: "mmedia" + (a.lat ? "" : " solo") }, gal, a.lat && h("div", { class: "side" }, streetBox(a), aroundBox(a))),
-      h("div", { class: "mdetail" },
+      h("div", { class: "mdetail" }, speakBar(a),
       h("div", { class: "dgrid" },
-        card(tx("בקצרה"), "wide", h("div", { class: "facts" },
+        card(tx("בקצרה"), "wide brief", h("div", { class: "facts" },
           fact("🚪", tx("חדרים"), a.rooms), fact("📏", tx("גודל"), a.sqm && a.sqm + tx(" מ\"ר")),
-          fact("🏢", tx("קומה"), a.floor == null ? null : a.floor < 0 ? tx("מרתף") : a.floor === 0 ? tx("קרקע") : a.top_floor ? tx`${a.floor} מתוך ${a.top_floor}` : a.floor),
+          fact("🏢", tx("קומה"), a.floor == null ? null : a.floor < 0 ? tx("מרתף") : a.floor === 0 ? tx("קרקע") : a.top_floor && a.floor >= a.top_floor ? tx`${a.floor}, אחרונה` : a.top_floor ? tx`${a.floor} מתוך ${a.top_floor}` : a.floor),
           fact("🏠", tx("סוג"), META.types[a.type]), fact("📅", tx("כניסה"), a.immediate ? tx("מיידית") : a.entrance && new Date(a.entrance).toLocaleDateString(LOCALE, { day: "numeric", month: "numeric", year: "2-digit" }) + (a.entrance_flexible ? tx(" (גמיש)") : "")),
           fact("🧱", tx("מצב"), a.condition), fact("⏱️", tx("בלוח"), a.days_listed != null && (a.days_listed ? a.days_listed + tx(" ימים") : tx("מהיום"))),
           fact("👤", tx("מפרסם"), sellers), fact("📐", tx("מחיר למ\"ר"), a.per_sqm && nis(a.per_sqm)), fact("🕒", tx("עודכנה"), a.updated_at && ago(a.updated_at)), fact("📍", tx("מהשכונה"), a.dist_km != null && opt.hoods !== false && P.prefs.hoods.length && a.dist_km.toFixed(1) + tx(" ק\"מ")))),
-        card(tx("מה כתב בעל הדירה"), "wide", a.summary && h("div", { class: "sum", dir: "auto" }, a.summary),
+        card(tx("מה כתב בעל הדירה"), "wide owner", a.summary && h("div", { class: "sum", dir: "auto" }, a.summary),
+          (a.phones || []).length ? h("div", { class: "phones" }, h("span", { class: "muted" }, tx("מהמודעה שהדבקתם:")),
+            a.phones.map((n) => h("a", { class: "btn ghost", href: "tel:" + n.replace(/-/g, ""), dir: "ltr" }, "📞 " + n))) : null,
           h("div", { class: "txt", dir: "auto" }, a.description || (a.has_detail ? tx("לא נכתב תיאור.") : tx("המודעה המלאה עוד לא נקראה."))), a.furniture && h("div", { class: "muted", dir: "auto" }, "🛋️ " + a.furniture)),
-        card(tx("התאמה לפרופיל"), "", h("div", { class: "fitline" }, h("b", { class: a.fit }, a.fit === "yes" ? tx("מתאימה") : a.fit === "maybe" ? tx("חסר מידע במודעה") : tx("לא עוברת את תנאי החובה"))),
+        card(tx("התאמה לפרופיל"), "brief", h("div", { class: "fitline" }, h("b", { class: a.fit }, a.fit === "yes" ? tx("מתאימה") : a.fit === "maybe" ? tx("חסר מידע במודעה") : tx("לא עוברת את תנאי החובה"))),
           (a.no.length || a.unknown.length || a.warn.length) ? h("div", { class: "why" }, a.no.map((t) => h("span", { class: "chip bad" }, t)), a.unknown.map((t) => h("span", { class: "chip warn" }, t)), a.warn.map((t) => h("span", { class: "chip warn" }, t))) : null,
           a.why.map(([pts, t]) => h("div", { class: "kv" }, h("span", {}, t), h("b", { class: pts > 0 ? "plus" : "minus" }, (pts > 0 ? "+" : "") + pts)))),
-        card(tx("כסף"), "", c && c.parts.map(([k, v]) => h("div", { class: "kv" }, h("span", {}, k), h("span", {}, nis(v)))),
+        card(tx("כסף"), "brief", c && c.parts.map(([k, v]) => h("div", { class: "kv" }, h("span", {}, k), h("span", {}, nis(v)))),
           c && c.parts.length > 1 && h("div", { class: "kv total" }, h("span", {}, tx("סה\"כ לחודש")), h("span", {}, nis(c.total))),
           c && c.per_sqm && h("div", { class: "kv" }, h("span", {}, tx("מחיר למ\"ר")), h("span", {}, nis(c.per_sqm))),
           c && c.included.length ? h("div", { class: "muted" }, tx("כלול לפי המודעה: ") + c.included.join(", ")) : null, c && c.excluded.length ? h("div", { class: "muted" }, tx("לא כלול: ") + c.excluded.join(", ")) : null,
@@ -837,6 +1457,7 @@ function modal(a, opt = {}) {
           c && c.monthly && c.monthly.length ? [h("div", { class: "msep" }, tx("עלויות שוטפות לחודש, לפי המודעה")), c.monthly.map(([k, v]) => h("div", { class: "kv" }, h("span", {}, k), h("span", {}, nis(v)))),
             c.monthly.length > 1 && h("div", { class: "kv total" }, h("span", {}, tx("סה\"כ לחודש")), h("span", {}, nis(c.monthly_total)))] : null,
           a.haggle.length ? h("div", { class: "msep" }, tx("🤝 מקום למיקוח: ") + a.haggle.join(" · ")) : null),
+        card(tx("כמה זה יעלה לקנות"), "", buyBox(a)),
         card(tx("מה יש בדירה"), "", h("div", { class: "why" }, a.features.map((f) => h("span", { class: "chip" }, (FICON[f] || "") + " " + META.features[f])), a.on_pillars && h("span", { class: "chip" }, tx("🏛️ על עמודים")),
           !a.features_known && h("span", { class: "chip warn" }, tx("המאפיינים עוד לא ידועים")), a.features_known && !a.features.length && h("span", { class: "muted" }, tx("לא סומן דבר במודעה")))),
         card(tx("במרחק הליכה"), "", WALK.filter((k) => a.near[k]).map((k) => h("div", { class: "kv" }, h("span", { dir: "auto" }, `${GLYPH[k]} ${a.near[k].name}`), h("span", {}, tx`${a.near[k].min} דק'`)))),
@@ -845,13 +1466,19 @@ function modal(a, opt = {}) {
     !ro && h("div", { class: "act" },
       h("b", { class: "us" }, tx("אנחנו")),
       h("div", { class: "seg st" }, Object.entries(STATUS).map(([v, t]) => h("button", { class: (a.status === v ? "on " : "") + v, onclick: () => save({ status: a.status === v ? "" : v }) }, t))),
-      h("input", { type: "text", placeholder: tx("הערה שלך, כולם בחיפוש רואים"), value: a.note || "", dir: DIR, onchange: (e) => save({ note: e.target.value }) }),
+      h("input", { type: "text", placeholder: tx("הערה שלכם. נשמרת אצלכם, ורואים אותה רק מי ששיתפתם איתו את החיפוש"), value: a.note || "", dir: DIR, onchange: (e) => save({ note: e.target.value }) }),
       a.marks.filter((k) => !k.mine).map((k) => h("span", { class: "mark", title: k.name + (k.note ? ": " + k.note : "") }, h("span", { class: "bub" }, k.name[0]),
         k.status && h("span", { class: "chip " + (k.status === "rejected" ? "bad" : "good") }, STATUS[k.status]), k.note && h("span", { class: "mnote", dir: "auto" }, k.note))),
       shareBtn,
       a.lat && h("a", { href: `https://www.google.com/maps/search/?api=1&query=${a.lat},${a.lon}`, target: "_blank", rel: "noopener" }, tx("גוגל מפות ↗"))));
   el.gal = gal;
-  document.body.append(h("div", { id: "modal", class: ro ? "page" : "", onclick: () => !ro && select(null) }, el));
+  if (!ro) {   // a window of its own for the keyboard and a screen reader: named, focused, and Tab stays inside it
+    el.setAttribute("role", "dialog"); el.setAttribute("aria-modal", "true"); el.tabIndex = -1;
+    el.setAttribute("aria-label", [nis(a.price), el.querySelector(".mfacts")?.textContent, el.querySelector(".mhmain .muted")?.textContent].filter(Boolean).join(", "));
+    el.addEventListener("keydown", (e) => keepTab(e, el));
+  }
+  document.body.append(h("div", { id: "modal", class: (ro ? "page" : "") + (swap && !ro ? " swap" : ""), style: `--dir: ${dir}`, onclick: () => !ro && select(null) }, el));
+  if (!ro && !document.getElementById("dlg")) el.focus({ preventScroll: true });
 }
 
 // What a pin says on hover: the ad in one glance.
@@ -885,6 +1512,7 @@ function select(id) {
   const rowEl = document.getElementById("ad-" + id);
   rowEl?.classList.add("open");
   rowEl?.scrollIntoView({ block: "nearest" });
+  modal.back = rowEl?.querySelector(".head") || modal.back;
   if (a.lat && !map.getBounds().pad(-0.1).contains([a.lat, a.lon])) map.panTo([a.lat, a.lon]);
   modal(a);
 }
@@ -905,6 +1533,7 @@ function filterPanel() {
   const rooms = (k, ph) => h("select", { onchange: (e) => set(k, e.target.value) }, [["", ph], ...[1, 1.5, 2, 2.5, 3, 3.5, 4, 5].map((n) => [String(n), String(n)])].map(([v, t]) => h("option", { value: v, selected: String(x[k]) === v }, t)));
   const g = (label, ...kids) => h("div", { class: "fg" }, h("label", {}, label), ...kids);
   return h("div", { class: "fpanel" },
+    (P.cities || []).length > 1 ? g(tx("עיר"), chips("cities", P.cities.map((c) => [c.name, c.name]))) : null,
     g(tx("מקור"), chips("boards", Object.entries(META.boards))),
     g(tx("מפרסם"), seg("seller", [["any", tx("הכל")], ["private", tx("👤 פרטי")], ["agent", tx("🏢 תיווך")]])),
     g(tx("מחיר עד"), h("input", { type: "number", step: SALE() ? 50000 : 100, placeholder: "₪", value: x.price, style: `width:${SALE() ? 130 : 100}px`, onchange: (e) => set("price", e.target.value) })),
@@ -963,10 +1592,15 @@ function draw() {
 
 // ---------- sharing ----------
 function dialog(title, ...kids) {
+  const back = document.getElementById("dlg") ? dialog.back : document.activeElement;
   document.getElementById("dlg")?.remove();
-  const close = () => document.getElementById("dlg")?.remove();
-  document.body.append(h("div", { id: "dlg", onclick: close }, h("div", { class: "dcardbox", onclick: (e) => e.stopPropagation() },
-    h("div", { class: "dhead" }, h("b", {}, title), h("span", { class: "grow" }), h("button", { class: "btn", onclick: close }, "✕")), ...kids)));
+  dialog.back = back;
+  const close = () => closeDialog();
+  const box = h("div", { class: "dcardbox", role: "dialog", "aria-modal": "true", "aria-label": typeof title === "string" ? ts(title) : null, tabindex: "-1", onclick: (e) => e.stopPropagation() },
+    h("div", { class: "dhead" }, h("b", {}, title), h("span", { class: "grow" }), h("button", { class: "btn", title: tx("סגירה (Esc)"), onclick: close }, "✕")), ...kids);
+  // Esc closes it and Tab stays inside it; the keys do not reach the ad view that may be open under it.
+  document.body.append(h("div", { id: "dlg", onclick: close, onkeydown: (e) => { e.stopPropagation(); if (e.key === "Escape") close(); else keepTab(e, box); } }, box));
+  (box.querySelector("textarea, input:not([type=hidden]), select") || box).focus();
 }
 function pasteDialog() {
   const text = h("textarea", { dir: "auto", placeholder: tx("מדביקים כאן את הטקסט של המודעה: פוסט מפייסבוק, הודעה מוואטסאפ, מודעה מלוח אחר...") });
@@ -985,7 +1619,7 @@ function pasteDialog() {
     } catch (e) { toast(e.message); add.disabled = false; }
   } }, tx("הוספה ללוח"));
   dialog(tx("מודעה ממקור אחר"), h("div", { class: "pastebox" },
-    h("div", { class: "muted", style: "font-size:13px" }, tx("ראיתם דירה בפייסבוק, בוואטסאפ או בלוח שאנחנו לא קוראים? מדביקים את הטקסט, והיא מקבלת ציון, מקום על המפה והשוואה לשוק כמו כל מודעה. מספרי טלפון נמחקים מהטקסט, ושום דבר לא נשלח מהמחשב.")),
+    h("div", { class: "muted", style: "font-size:13px" }, tx("ראיתם דירה בפייסבוק, בוואטסאפ או בלוח שאנחנו לא קוראים? מדביקים את הטקסט, והיא מקבלת ציון, מקום על המפה והשוואה לשוק כמו כל מודעה. הטלפון שבמודעה נשמר אצלכם, כדי שתוכלו להתקשר, ושום דבר לא נשלח מהמחשב.")),
     text, link, h("div", { style: "display:flex;justify-content:flex-start" }, add)));
   text.focus();
 }
@@ -1017,7 +1651,7 @@ function changesDialog(auto) {
   if (auto && (at === first || !count(syncDiff(at)))) return;   // nothing to tell: do not get in the way
   const when = (iso) => new Date(iso).toLocaleString(LOCALE, { day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
   const body = h("div", { class: "chg" });
-  const line = (a, chip) => h("div", { class: "chgrow" + (a.fit === "no" ? " dim" : ""), title: tx("לפתוח את המודעה"), onclick: () => { document.getElementById("dlg")?.remove(); select(a.id); } },
+  const line = (a, chip) => h("div", { class: "chgrow" + (a.fit === "no" ? " dim" : ""), title: tx("לפתוח את המודעה"), role: "button", onclick: (e) => { const d = document.getElementById("dlg"); e.currentTarget.classList.add("seen"); if (d) { d.remove(); changesDialog.held = { d, pid: P.id }; } select(a.id); } },
     h("b", {}, nis(a.price)), h("span", {}, factsOf(a)), h("span", { class: "muted", dir: "auto" }, [a.street, a.house_no].filter(Boolean).join(" ") || a.hood || ""),
     h("span", { class: "grow" }), chip, a.boards.map((b) => h("span", { class: "chip b-" + b.board }, META.boards[b.board])));
   const group = (icon, title, list, make) => {
@@ -1028,7 +1662,7 @@ function changesDialog(auto) {
   };
   const paint = () => {
     const d = syncDiff(at), s = syncs.find((x) => x.at === at), hidden = d.added.length + d.removed.length + d.changed.length + d.again.length - count(d);
-    const off = (s.boards || []).filter((b) => b.error || b.skipped || b.complete === false).map((b) => ts(META.boards[b.board]));
+    const off = [...new Set((s.boards || []).filter((b) => b.error || b.skipped || b.complete === false).map((b) => ts(META.boards[b.board]) + (b.city ? " (" + b.city + ")" : "")))];
     body.replaceChildren(...[
       at === first ? h("div", { class: "muted" }, tx`הסנכרון הראשון של החיפוש: ${d.added.length} מודעות נמשכו. מהסנכרון הבא יופיע כאן מה נוסף, מה ירד ומה השתנה.`) : [
         group("🆕", tx("נוספו"), d.added, (a) => line(a)),
@@ -1041,7 +1675,7 @@ function changesDialog(auto) {
   };
   const pick = h("select", { onchange: (e) => { at = e.target.value; paint(); } }, syncs.map((s) => {
     const d = syncDiff(s.at);
-    return h("option", { value: s.at }, when(s.at) + " · " + (s.at === first ? tx("הסנכרון הראשון") : !count(d) ? tx("בלי שינוי") : tx`${mine(d.added).length} נוספו, ${mine(d.removed).length} ירדו, ${mine(d.changed).length + mine(d.again).length} השתנו`));
+    return h("option", { value: s.at }, when(s.at) + " · " + (s.at === first ? tx("הסנכרון הראשון") : !count(d) ? tx("בלי שינוי") : syncWords(mine(d.added).length, mine(d.removed).length, mine(d.changed).length + mine(d.again).length)));
   }));
   dialog(tx("מה השתנה בסנכרון"), h("div", { class: "chghead" }, h("span", { class: "muted" }, tx("סנכרון:")), pick), body);
   paint();
@@ -1092,10 +1726,11 @@ async function board(pid, refit) {
       ME.owner && h("button", { class: "btn pop", onclick: async () => { try { const q = await api(`profiles/${pid}/sync`, {}); if (q.fresh) toast(tx`המודעות של העיר נקראו לפני ${Math.max(1, Math.round(P.shared.age_hours))} שעות. נקראות שוב כל ${P.shared.fresh_hours} שעות`); else syncing(pid, P.name); } catch (e) { toast(e.message); } } }, P.shared ? tx("רענון העיר") : tx("סנכרון"))),
     extNote(),
     h("div", { class: "bar" }), h("div", { class: "panelwrap" }),
-    h("div", { class: "main" + (SALE() ? " sale" : "") }, h("div", { class: "list" }), h("div", { class: "frame" }, h("div", { class: "tape" }, tx("המפה של ") + P.name), h("div", { id: "map" }), h("div", { class: "layers" })))));
+    h("div", { class: "main" + (SALE() ? " sale" : "") }, h("div", { class: "list enter" }), h("div", { class: "frame" }, h("div", { class: "tape" }, tx("המפה של ") + P.name), h("div", { id: "map" }), h("div", { class: "layers" })))));
   map = L.map("map", { zoomControl: false, attributionControl: true }).setView([P.city.lat || 32.08, P.city.lon || 34.88], 14);
   L.control.zoom({ position: "bottomleft" }).addTo(map);
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "© OpenStreetMap" }).addTo(map);
+  ground(map, "© OpenStreetMap");
+  setTimeout(() => document.querySelector(".list")?.classList.remove("enter"), 1400);   // the rows come in once, not on every filter
   for (const c of P.centers) {
     L.circle([c.lat, c.lon], { radius: P.prefs.radius_km * 1000, color: "#ff6542", weight: 1.5, dashArray: "6 6", fillOpacity: 0.04 }).addTo(map);
     L.circle([c.lat, c.lon], { radius: 450, color: "#ff6542", weight: 0, fillOpacity: 0.1 }).addTo(map);
@@ -1106,7 +1741,7 @@ async function board(pid, refit) {
   openId = null;
   draw();
   drawPlaces();
-  if (P.places == null && !refit && ME.owner) api(`profiles/${pid}/places`, {}).then(() => board(pid, true)).catch((e) => toast(e.message));
+  if (P.places == null && !refit && ME.owner) api(`profiles/${pid}/places`, {}).then(() => { if (location.hash === "#/p/" + pid) board(pid, true); }).catch((e) => toast(e.message));   // only if the person is still on this board
   const pts = visibleAds().filter((a) => a.lat).map((a) => [a.lat, a.lon]);
   if (pts.length) map.fitBounds(pts, { padding: [30, 30], maxZoom: 15 });
 }
@@ -1143,7 +1778,11 @@ async function route() {
   clearInterval(pollT);
   closeModal();
   document.getElementById("dlg")?.remove();
-  META = META || await api("meta");
+  if (!META) {
+    META = await api("meta");
+    // a place's name in the language of the screen, wherever it is shown (the ads' own words stay as written)
+    if (DICT) for (const c of META.cities) { if (c.en && DICT[c.name] === undefined) DICT[c.name] = c.en; for (const n of c.hoods || []) if (n.en && DICT[n.name] === undefined) DICT[n.name] = n.en; }
+  }
   ME = await api("me");
   const [, a, b, c] = location.hash.split("/");
   try {
@@ -1154,6 +1793,17 @@ async function route() {
     else if (a === "p" && c === "edit" && ME.owner) wizard(await api("profiles/" + b));
     else if (a === "p" && b) await board(b);
     else await home();
+    footState();
+    if (ME.owner && !termsSeen() && !termsDialog.shown) { termsDialog.shown = true; termsDialog(true); }
+    else if (!a || (a === "p" && c !== "edit")) offerUpdate();
+    if (ME.owner && ME.local && !ME.update && !route.asked) {
+      // The app asks about a newer version as it starts; a page opened in that same second asks once more.
+      route.asked = true;
+      setTimeout(async () => { try { const me = await api("me"); if (me.update) { ME.update = me.update; footState(); offerUpdate(); } } catch (e) { /* later */ } }, 5000);
+    }
+    let fresh = "";
+    try { fresh = sessionStorage.getItem("updated") || ""; sessionStorage.removeItem("updated"); } catch (e) { /* no storage */ }
+    if (fresh) toast(tx`עודכן לגרסה ${fresh}`, 7000);
   } catch (e) { toast(e.message); if (a) go("#/"); }
 }
 window.addEventListener("hashchange", route);

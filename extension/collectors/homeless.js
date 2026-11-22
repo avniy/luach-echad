@@ -1,5 +1,5 @@
 // Reads a homeless.co.il tab. Loaded into the board's page by the extension, then called with a job:
-//   {mode: "page"}                 -> the ads of the search page the tab is on
+//   {mode: "page"}                 -> the ads of the search page the tab is on, and the next page's address
 //   {mode: "details", ids: [...]}   -> the full record of each ad (fetched one at a time, slowly)
 // Homeless is plain server-rendered HTML: a results table and an ad page. It stops at the first refusal.
 globalThis.__luachCollectors = globalThis.__luachCollectors || {};
@@ -47,6 +47,9 @@ globalThis.__luachCollectors.homeless = async (JOB) => {
       price: (c[8] || "").replace(/[^\d]/g, ""), entrance: c[9], updated: c[10],
       image: /uploads\.homeless/.test(img) ? img.replace(/\/300\//, "/") : null };
   }).filter((a) => a.id);
-  const hasNext = [...document.querySelectorAll("a")].some((a) => /^(הבא|לעמוד הבא|›|»)$/.test(clean(a.textContent)));
-  return { ads, hasNext };
+  // The pager's "next" link ("הבא >") carries the next page's address; on the last page it has none.
+  const nextA = [...document.querySelectorAll("#paging a, a.pagingtext")].find((a) =>
+    /הבא/.test(clean(a.textContent)) && a.getAttribute("href") && !a.hasAttribute("disabled"));
+  const hasNext = !!nextA || [...document.querySelectorAll("a")].some((a) => /^(הבא|לעמוד הבא|›|»)$/.test(clean(a.textContent)));
+  return { ads, hasNext, next: nextA ? new URL(nextA.getAttribute("href"), location.href).href : null };
 };

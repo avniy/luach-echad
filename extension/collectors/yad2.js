@@ -1,5 +1,7 @@
 // Reads a yad2.co.il search tab. Loaded into the board's page by the extension, then called with a job:
 //   {mode: "feed", features: [...], maxPages: N}  -> every ad of the search, plus which ads have each feature
+//      whole: true -> a search with more than N pages answers its first page and "tooBig" (the app splits it);
+//      noMap: true -> the lists only
 //   {mode: "details", ids: [...]}                 -> the full record of each ad
 // One request at a time with a pause, the way a person paging the site loads them.
 globalThis.__luachCollectors = globalThis.__luachCollectors || {};
@@ -72,7 +74,9 @@ globalThis.__luachCollectors.yad2 = async (JOB) => {
   takeFeed(first);
   const totalPages = first.pagination?.totalPages || 1;
   const total = first.pagination?.total ?? null;
-  const lastPage = Math.min(totalPages, JOB.maxPages || 10);
+  // "whole": a search with more pages than the lists show is not paged here; the app reads it again in parts.
+  const tooBig = !!JOB.whole && totalPages > (JOB.maxPages || 10);
+  const lastPage = tooBig ? 1 : Math.min(totalPages, JOB.maxPages || 10);
   const slug = (nd.query?.slug || [])[0];
   const dataUrl = (pathAndQuery) => {
     const u = new URL(pathAndQuery, location.origin);
@@ -94,15 +98,18 @@ globalThis.__luachCollectors.yad2 = async (JOB) => {
 
   // The map answers with up to 200 located ads per request; with a feature filter it tells which ads have it.
   const mapUrl = (extra) => `https://gw.yad2.co.il/realestate-feed/${DEAL}/map?` + new URLSearchParams({ ...params, ...extra });
-  const base = await getJson(mapUrl({}), { credentials: "include" });
-  const mapOk = !!base?.data?.markers;
-  take(base?.data?.markers, true);
-  await sleep(PAUSE);
   const features = {};
-  for (const f of JOB.features || []) {
-    const j = await getJson(mapUrl({ [f]: "1" }), { credentials: "include" });
-    if (j?.data?.markers) { features[f] = j.data.markers.map((m) => m.token); take(j.data.markers, true); }
+  let mapOk = false;
+  if (!JOB.noMap) {   // one part of a larger search: the lists only, the map was asked for the whole search
+    const base = await getJson(mapUrl({}), { credentials: "include" });
+    mapOk = !!base?.data?.markers;
+    take(base?.data?.markers, true);
     await sleep(PAUSE);
+    for (const f of JOB.features || []) {
+      const j = await getJson(mapUrl({ [f]: "1" }), { credentials: "include" });
+      if (j?.data?.markers) { features[f] = j.data.markers.map((m) => m.token); take(j.data.markers, true); }
+      await sleep(PAUSE);
+    }
   }
-  return { total, totalPages, pagesRead, complete: pagesRead === totalPages, mapOk, ads: Object.values(ads), features, errors };
+  return { total, totalPages, pagesRead, complete: pagesRead === totalPages, tooBig, mapOk, ads: Object.values(ads), features, errors };
 };

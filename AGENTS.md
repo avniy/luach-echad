@@ -67,7 +67,8 @@ application/json` on every POST, and no `Origin` header.
 | Request | What it does |
 |---|---|
 | `GET meta` | cities with their neighbourhoods, feature names, board names |
-| `GET me` | `browser: true` when the extension is connected and a pull can run |
+| `GET me` | `browser: true` when the extension is connected and a pull can run; `version`; `update` = a newer published version with what is new in it, or null |
+| `POST update` | `{"check": true}` asks now whether a newer version is published; `{}` installs it and restarts the app (the person's data is kept). Only with the person's yes |
 | `GET profiles` | the profiles with their counts |
 | `POST profiles` `{name, prefs}` | a new profile; answers `{id}` |
 | `GET profiles/<id>` | the profile, every ad already merged across boards, scored and explained, and each board's state |
@@ -75,8 +76,11 @@ application/json` on every POST, and no `Origin` header.
 | `POST profiles/<id>/sync` `{board?}` | start a pull; follow it with `GET sync` (`running`, `steps`, `error`) |
 | `POST profiles/<id>/ads/<ad id>/detail` | read one ad's full page now (one page view) |
 | `POST profiles/<id>/ads/<ad id>` `{status?, note?}` | mark an ad (a summary is set from the shell: `set ... --summary`) |
-| `POST profiles/<id>/paste` `{text, url?}` | add an ad the person saw elsewhere, from its text (nothing is fetched; phone numbers are removed); answers `{id, known, missing}` |
+| `POST profiles/<id>/paste` `{text, url?}` | add an ad the person saw elsewhere, from its text (nothing is fetched; a phone number in the text is kept as `phones`, for the person to call: never copy it elsewhere); answers `{id, known, missing}` |
 | `POST profiles/<id>/ads/<ad id>/remove` | remove a pasted ad (ids that start with `paste:` only) |
+| `POST profiles/<id>/delete` | delete a search: its file moves to `data/removed/`, nothing is erased. Ask the person first |
+| `GET status` | when each thing the app depends on was last updated (the Bank of Israel interest, each board, the extension, the searches, the automatic check, places around, address lookup, the version check), with `state` ok / warn / bad / none and the last error. Read it before telling the person a number is current |
+| `POST auto` `{hours}` | the searches check themselves every `hours` (6, 12 or 24; 0 = off) while the app runs, and a desktop notice tells of a new flat that fits. `GET me` shows it under `auto`. The person's choice: do not switch it on for them |
 
 `prefs` (what the questionnaire asks):
 
@@ -97,6 +101,12 @@ application/json` on every POST, and no `Origin` header.
 }
 ```
 
+Several places in one search: add `"cities": ["קרית אונו", "גבעת שמואל"]` (at most `meta.most_cities`, which is 3:
+every place is one more search on every board, with 45 seconds of rest between two) and, if wanted,
+`"hoods_in": {"קרית אונו": ["המרכז"]}` (a place without an entry is wanted whole). `city` is then the first of
+them, each ad carries `in_city`, and a sync's result has one entry per board and place. Madlan reads one of the
+places per sync, in turn. Place names are those of `meta.cities[].name` (Hebrew); `en` there is the English name.
+
 `deal` is `rent` (the default) or `sale`. It is set when the profile is made and never changes: open another profile
 for the other kind. Prices are per month for rent and the asking price for sale. For sale, `market` compares the
 price per square metre (`market.per` is `sqm`, `market.km` the radius used), each ad has `per_sqm`, and `flags` may
@@ -111,6 +121,14 @@ A purchase search needs extension 1.1 or newer; the app says so when it meets an
   the local server.
 - `boards.py`: per board, the search address, and the two normalizers into the one ad shape described at its top.
 - `extension/`: the Chrome extension; `extension/collectors/<board>.js` read the board's page.
+- `update.py` (`update.cmd`, `update.sh`): brings the folder to the newest published version; `data/` is kept,
+  replaced files go to `data/backup/<time>/`; `--check` writes nothing. The app does the same from its window
+  (`POST update`) and then starts itself again: `serve` runs the app under a small loop that restarts it when it
+  ends with code 75 and puts the previous files back if the new version does not come up. The extension reloads
+  itself after an update; only when `GET me` says `"ext_reload": true` does the person have to click its reload
+  arrow in `chrome://extensions`.
+- `version.json`: the version of this folder and, per release, what is new (`he`, `en`). The app compares it with
+  the published one (one small request to GitHub at start and twice a day; `serve --no-update-check` stops it).
 - `ui/index.html`: the whole interface. Its texts are Hebrew in the code; `ui/lang/<code>.json` holds one
   translation each (`en.json` today), and a text without a line there simply shows in Hebrew.
 - `data/`: the person's searches, ads, people and settings. Not part of the repository.

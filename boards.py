@@ -145,8 +145,12 @@ MADLAN_CITY = {"טירת כרמל": "טירת הכרמל", "יקנעם עילי�
                "כוכב יאיר / צור יגאל": "כוכב יאיר צור יגאל", "עספיא": "עיספיא", "בני עי\"ש": "בני עיש"}
 
 
+def madlan_city(city):
+    return MADLAN_CITY.get(city["name"], plain_name(city))
+
+
 def madlan_slug(city):
-    return MADLAN_CITY.get(city["name"], plain_name(city)).replace(" ", "-") + "-ישראל"
+    return madlan_city(city).replace(" ", "-") + "-ישראל"
 
 
 def madlan_url(city, prefs, margin):
@@ -385,13 +389,25 @@ PASTE_FEATURES = {"elevator": "מעלית", "mamad": r"ממ[\"״']?ד", "shelter
 PHONE = re.compile(r"(?:\+?972[\s-]?|0)(?:[23489]|5\d|7\d)[\s-]?\d{3}[\s-]?\d{4}|\[hidden information\]")
 
 
+def phone_of(s):
+    """An Israeli phone number as written in an ad, in the shape 052-1234567 (None when it is not one)."""
+    d = re.sub(r"\D", "", s)
+    if d.startswith("972"):
+        d = "0" + d[3:]
+    if not re.fullmatch(r"0\d{8,9}", d):
+        return None
+    return f"{d[:3]}-{d[3:]}" if len(d) == 10 else f"{d[:2]}-{d[2:]}"
+
+
 def pasted_item(text, url, city_name, hoods, deal="rent"):
-    """Our ad from free text. Only what the text says is filled in; phone numbers are taken out before it is kept.
+    """Our ad from free text. Only what the text says is filled in. The person pasted it to call about the flat, so
+    its phone numbers stay (`phones`): only in an ad a person pastes, never from a board.
     Returns (ad, missing): missing names the basics the text did not give."""
     import hashlib
-    text = PHONE.sub("[טלפון הוסר]", re.sub(r"[ \t ‎‏]+", " ", str(text or "")).strip())[:6000]
-    flat = text.replace("\n", " ")
+    text = re.sub(r"[ \t ‎‏]+", " ", str(text or "")).strip()[:6000]
+    flat = PHONE.sub(" ", text).replace("\n", " ")   # read without the phone numbers: a number is never a price
     out = {"board": "paste", "seller": None, "agency": None, "city": city_name, "description": text, "images": None}
+    out["phones"] = list(dict.fromkeys(n for n in (phone_of(m.group(0)) for m in PHONE.finditer(text)) if n))[:3]
     out["native_id"] = hashlib.sha1(re.sub(r"\W+", "", flat).encode()).hexdigest()[:12]
     out["id"] = "paste:" + out["native_id"]
     out["url"] = url if re.match(r"https?://[^\s\"'<>]{4,600}$", url or "") else None

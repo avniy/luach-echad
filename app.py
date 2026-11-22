@@ -15,9 +15,11 @@ import argparse
 import ipaddress
 import json
 import math
+import os
 import queue
 import re
 import secrets
+import shutil
 import socket
 import statistics
 import subprocess
@@ -28,9 +30,15 @@ import webbrowser
 from datetime import datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import boards
 import people
+
+try:
+    import update  # update.py next to this file: the published version, and bringing this folder to it
+except ImportError:
+    update = None
 
 ROOT = Path(__file__).resolve().parent
 PROFILES = ROOT / "data" / "profiles"
@@ -43,6 +51,10 @@ except ImportError:
 if getattr(LOCAL, "MAPS_KEY_FILE", None):
     MAPS_KEY_FILE = Path(LOCAL.MAPS_KEY_FILE)
 PORT = 7461
+VERSION = (update.local_version().get("version") if update else None) or ""  # of the code that is running
+BOOT = secrets.token_hex(4)   # another one every time the app starts: how its page sees that it started again
+RESTART = 75   # the app ends with this code to be started again (after an update). Never change the number:
+               # the small loop that starts the app (`supervise`) is the one part an update cannot replace.
 # Pull a little over the budget: the market comparison needs the ads just above it. Less for a purchase, where a
 # search already returns far more ads than one pull reads.
 MARGIN = {"rent": 1.25, "sale": 1.1}
@@ -120,13 +132,37 @@ def list_profiles(person=people.OWNER):
     return out
 
 
+MANY_CITIES = 8   # at most, in one search: every city is one more search on every board
+FREE_CITIES = 3   # what everybody gets: a town and its neighbours, and a reasonable load on the boards' servers
+
+
+def most_cities():
+    return MANY_CITIES if getattr(LOCAL, "many_cities", False) else FREE_CITIES
+
+
+def cities_of(prefs):
+    """The cities a search covers: one, or several where a search was opened over several."""
+    return [CITIES[n] for n in (prefs.get("cities") or [prefs["city"]]) if n in CITIES]
+
+
+def city_of_ad(ad, prefs):
+    """Which of the search's cities an ad belongs to: the one it was read under, otherwise the first."""
+    return ad["in_city"] if ad.get("in_city") in (prefs.get("cities") or ()) else prefs["city"]
+
+
 def clean_prefs(raw):
     """Only what the questionnaire asks, with the types we rely on."""
     num = lambda v: float(v) if v not in (None, "") else None
+    # Several places in one search (up to most_cities()): "city" is then the first of them, "hoods_in" holds each
+    # one's chosen neighbourhoods, and "hoods" all of them together.
+    towns = [n for n in dict.fromkeys(raw.get("cities") or []) if n in CITIES][:most_cities()]
+    chosen = raw.get("hoods_in") if isinstance(raw.get("hoods_in"), dict) else {}
+    if towns:
+        raw = dict(raw, city=towns[0], hoods=chosen[towns[0]] if towns[0] in chosen else raw.get("hoods"))
     if raw.get("city") not in CITIES:
         raise ValueError("city")
     hoods = {h["name"] for h in CITIES[raw["city"]]["hoods"]}
-    return {
+    out = {
         "who": str(raw.get("who") or "")[:200],
         "deal": boards.deal_of(raw),
         "city": raw["city"],
@@ -141,6 +177,11 @@ def clean_prefs(raw):
         "features": {k: v for k, v in (raw.get("features") or {}).items() if k in boards.FEATURES and v in ("must", "nice")},
         "hide": [h for h in raw.get("hide") or [] if h in ("roommates", "religious", "basement")],
     }
+    if len(towns) > 1:
+        out["cities"] = towns
+        out["hoods_in"] = {n: [h for h in chosen.get(n) or [] if h in {x["name"] for x in CITIES[n]["hoods"]}] for n in towns}
+        out["hoods"] = sorted({h for hs in out["hoods_in"].values() for h in hs})
+    return out
 
 
 # ---------------- shared mode: one store per city, read in turn ----------------
@@ -235,14 +276,36 @@ def create_profile(name, raw_prefs):
     with LOCK:
         n = len(list(PROFILES.glob("*.json"))) + 1 if PROFILES.exists() else 1
         pid = f"p{n}"
-        while profile_path(pid).exists():
+        # a deleted search's name is never given again: an old invitation to it must not open a new search
+        gone = {f.stem.split("-", 2)[-1] for f in REMOVED.glob("*.json")} if REMOVED.exists() else set()
+        while profile_path(pid).exists() or pid in gone:
             n += 1
             pid = f"p{n}"
         p = {"id": pid, "name": name, "created": now_iso(), "prefs": prefs, "meta": {"syncs": []}, "ads": {}}
-        if SHARED:
+        if SHARED and not prefs.get("cities"):  # a search over several cities reads for itself
             p["store"] = ensure_store(prefs)
         save_profile(p)
     return p
+
+
+REMOVED = ROOT / "data" / "removed"   # a search the person deleted is kept here, in case it was a mistake
+
+
+def delete_profile(pid):
+    """Take a search off the app. Its file is moved, not erased. People who were invited only to it are signed out."""
+    with LOCK:
+        path = profile_path(pid)
+        if re.fullmatch(STORE_ID, pid) or not path.exists():
+            raise KeyError("no such profile")
+        if SYNC["running"] and SYNC["profile"] == pid:
+            raise ValueError("הסנכרון של החיפוש הזה עדיין רץ. אפשר למחוק כשיסתיים")
+        members = json.loads(path.read_text(encoding="utf-8")).get("members", [])
+        REMOVED.mkdir(parents=True, exist_ok=True)
+        path.replace(REMOVED / f"{datetime.now():%Y%m%d-%H%M%S}-{pid}.json")
+        left = [json.loads(f.read_text(encoding="utf-8")).get("members", []) for f in PROFILES.glob("*.json")]
+    for m in members:
+        if not any(m in x for x in left):
+            people.end_sessions(m)  # no search left for them: their devices are signed out
 
 
 # ---------------- one ad through time ----------------
@@ -284,9 +347,12 @@ def merge_ad(p, norm, now, from_detail=False):
     return result
 
 
-def mark_gone(p, board, seen, now):
+def mark_gone(p, board, seen, now, town=None):
+    """town: in a search over several cities, the city that was just read. Only its ads can have left."""
     gone = 0
     for ad_id, rec in p["ads"].items():
+        if town and city_of_ad(rec, p["prefs"]) != town:
+            continue
         if rec.get("board") == board and ad_id not in seen and not rec.get("gone_since"):
             rec["gone_since"] = now
             rec["changes"].append({"at": now, "field": "gone", "from": None, "to": None})
@@ -518,7 +584,9 @@ def fetch_places(city):
         except (OSError, ValueError, KeyError) as e:
             last = e
     if elements is None:
+        tried("places", error=last)
         raise OSError(str(last))
+    tried("places", ok=True)
     out, seen = [], set()
     for el in elements:
         t = el.get("tags") or {}
@@ -632,8 +700,10 @@ def build_views(p, me=people.OWNER):
     prefs, now = p["prefs"], datetime.now()
     deal = boards.deal_of(prefs)
     who = people.names()
-    city = CITIES.get(prefs["city"], {})
-    centers = [h for h in city.get("hoods", []) if h["name"] in prefs["hoods"]]
+    towns, chosen = cities_of(prefs), prefs.get("hoods_in") or {}
+    # The centres of the chosen neighbourhoods, per city: a city with none chosen is wanted whole.
+    centers = {c["name"]: [h for h in c["hoods"] if h["name"] in (chosen[c["name"]] if c["name"] in chosen else prefs["hoods"])]
+               for c in towns}
     ads = list(p["ads"].values())
     texts = {a["id"]: boards.read_text(a) for a in ads}
     live = [a for a in ads if not a.get("gone_since")]
@@ -647,13 +717,15 @@ def build_views(p, me=people.OWNER):
         for b in s.get("boards") or []:
             if "error" in b or "skipped" in b:
                 continue
-            if b["board"] not in last_url or b.get("url") != last_url[b["board"]]:
-                widened.add((b["board"], s["at"]))
-            last_url[b["board"]] = b.get("url")
+            key = (b["board"], b.get("city"))  # in a search over several cities, each city's pull on its own
+            if key not in last_url or b.get("url") != last_url[key]:
+                widened.add(key + (s["at"],))
+            last_url[key] = b.get("url")
     recent_from = now - timedelta(days=3)
     by_kind = {}
-    for pl in load_places(city) or []:
-        by_kind.setdefault(pl["kind"], []).append(pl)
+    for c in towns:
+        for pl in load_places(c) or []:
+            by_kind.setdefault(pl["kind"], []).append(pl)
     out = []
     for ad in ads:
         if ad["id"] in dup:
@@ -670,7 +742,9 @@ def build_views(p, me=people.OWNER):
             if not merged.get("images"):
                 merged["images"] = t.get("images") or []
         fit, no, unknown, warn = fit_of(merged, prefs, text)
-        area, dist = area_of(merged, prefs, centers)
+        town = city_of_ad(merged, prefs)
+        # several cities: a neighbourhood's name counts only in its own city ("מרכז העיר" is in many)
+        area, dist = area_of(merged, dict(prefs, hoods=chosen.get(town) or []) if prefs.get("cities") else prefs, centers.get(town, []))
         insights, insights_from = merged.get("insights") or [], None
         if not insights and with_insights:
             near = min(((km_between(merged, o), o) for o in with_insights if km_between(merged, o) is not None),
@@ -683,7 +757,7 @@ def build_views(p, me=people.OWNER):
         recent = [c for c in merged.get("changes") or [] if (parse_time(c["at"]) or now) >= recent_from]
         # New = we first saw it lately, and it is not just our own search getting wider (a board's first pull, or an
         # old ad that entered because the budget or rooms changed).
-        is_new = ((ad["board"], merged["first_seen"]) not in widened
+        is_new = ((ad["board"], ad.get("in_city") if prefs.get("cities") else None, merged["first_seen"]) not in widened
                   and (parse_time(merged["first_seen"]) or now) >= recent_from
                   and (listed is None or (now - listed).days <= 7))
         v = {k: merged.get(k) for k in (
@@ -691,6 +765,8 @@ def build_views(p, me=people.OWNER):
             "hood", "street", "house_no", "lat", "lon", "description", "furniture", "entrance", "immediate",
             "on_pillars", "vaad", "arnona", "board_events", "park_walk_min", "rail", "first_seen", "last_seen",
             "gone_since", "status", "note", "summary", "changes")}
+        if prefs.get("cities"):
+            v["in_city"] = town  # a search over several cities: which of them this flat belongs to
         v.update(
             images=merged.get("images") or [], features=sorted(feats_of(merged)),
             features_known=bool(merged.get("features_known")),
@@ -698,6 +774,8 @@ def build_views(p, me=people.OWNER):
                      "last_seen": x.get("last_seen"), "has_detail": bool(x.get("detail_at")), "images": len(x.get("images") or [])}
                     for x in [ad] + twins],
             loc_approx=merged.get("loc_approx"),
+            # numbers from an ad the person pasted (the boards' own ads never carry one)
+            phones=list(dict.fromkeys(n for x in [ad] + twins if x["board"] not in boards.BOARDS for n in x.get("phones") or []))[:3],
             # Which source each part of the merged ad came from.
             prov={"description": next((x["board"] for x in [ad] + twins if x.get("description")), None),
                   "features": [x["board"] for x in [ad] + twins if x.get("features_known")],
@@ -738,11 +816,29 @@ class BridgeError(RuntimeError):
 
 # The extension (extension/) keeps asking the app "anything for me?" (POST /api/ext/poll). A request waits in JOBS
 # until it asks; its answer comes back in a call of its own. Three requests exist: navigate, collect, notify.
-EXT = {"seen": 0.0, "version": None}
+EXT = {"seen": 0.0, "version": None, "asked": None, "asked_at": 0.0}
 JOBS = queue.Queue()
 ANSWERS = {}  # job id -> {"event", "result"}
 NO_BROWSER = ("התוסף של לוח אחד לא מחובר. צריך כרום פתוח במחשב הזה, עם התוסף מותקן ומופעל, "
               "והדף הזה פתוח בו. הוראות ההתקנה ב-README")
+
+
+def ext_here():
+    """The version of the extension's files in this folder."""
+    try:
+        return str(json.loads((ROOT / "extension" / "manifest.json").read_text(encoding="utf-8")).get("version") or "")
+    except (OSError, ValueError):
+        return ""
+
+
+def ext_stale():
+    """The extension in the browser is not the one in this folder and did not reload itself when asked (one from
+    before 1.2 cannot, and one that was loaded from another folder has nothing new to load): the person has to
+    click its reload arrow in chrome://extensions."""
+    if hasattr(LOCAL, "browser") or not EXT["version"] or time.time() - EXT["seen"] > 50:
+        return False
+    here = ext_here()
+    return bool(here) and here != EXT["version"] and EXT["asked"] == (EXT["version"], here) and time.time() - EXT["asked_at"] > 12
 
 
 def browser_ready():
@@ -784,6 +880,12 @@ def ext_poll(body):
             slot["result"] = done
             slot["event"].set()
         return {"job": None}
+    here = ext_here()
+    if here and EXT["version"] and EXT["version"] != here and EXT["asked"] != (EXT["version"], here) and not ANSWERS:
+        # After an update the browser still runs the extension's old files. Asked once, it reloads itself from
+        # the folder (what the reload arrow in chrome://extensions does).
+        EXT.update(asked=(EXT["version"], here), asked_at=time.time())
+        return {"job": None, "reload": here}
     end = time.time() + 20
     while time.time() < end:
         try:
@@ -798,10 +900,22 @@ def ext_poll(body):
 
 
 def bridge(cmd, timeout=60, **args):
-    """Ask the browser for one thing: navigate (url), collect (board, job) or notify (title, text, url)."""
+    """Ask the browser for one thing: navigate (url), collect (board, job), close (board) or notify (title, text,
+    url)."""
     if hasattr(LOCAL, "browser"):
         return LOCAL.browser(cmd, args, timeout, BridgeError)
     return ext_call(cmd, args, timeout)
+
+
+def done_with(board):
+    """Close the board's work tab the moment its reading ends, however it ended. (An extension from before 1.2
+    does not know the request and closes its tabs two minutes after the last one.)"""
+    if not browser_ready():
+        return
+    try:
+        bridge("close", board=board, timeout=15)
+    except Exception:  # noqa: BLE001  a tab that stays open is closed by the extension itself a little later
+        pass
 
 
 def run_job(board, job):
@@ -839,6 +953,76 @@ TROUBLE = {"human": "מבקש אימות אנושי: לפתוח ולעבור א�
            "error": "הפסיק לענות"}
 
 
+# ---------------- what was updated when: the app's own status page ----------------
+# Every outside source the app keeps a copy of (the interest, places around, the published version) notes its last
+# try here, and whether it failed; `status()` adds what is kept on disk, so the page can say "last updated ... ago"
+# and warn when a copy is old or its last try failed. In memory only: after a restart the times on disk remain.
+TRIED = {}
+
+
+def tried(what, ok=False, error=None):
+    now = now_iso()
+    t = TRIED.setdefault(what, {})
+    t["tried"] = now
+    if ok:
+        t.update(ok=now, error=None)
+    elif error is not None:
+        t["error"] = (type(error).__name__ + ": " + str(error))[:160]
+
+
+def status():
+    """One line per thing the app depends on: when it was last updated and whether something is wrong."""
+    def ago_days(iso):
+        at = parse_time(iso)
+        return (datetime.now() - at).total_seconds() / 86400 if at else None
+
+    out = []
+    r, rt = mortgage_rate(), TRIED.get("rate", {})
+    age = ago_days(r.get("at"))
+    out.append({"key": "rate", "at": r.get("at"), "detail": {"rate": r.get("rate"), "month": r.get("month")},
+                "tried": rt.get("tried"), "error": rt.get("error"),
+                "state": "bad" if not r.get("live") else "warn" if rt.get("error") or (age or 0) > RATE_DAYS * 2 else "ok"})
+    st = load_state().get("boards") or {}
+    for b in boards.BOARDS:
+        s = st.get(b) or {}
+        out.append({"key": "board", "board": b, "at": s.get("last_ok"), "tried": s.get("checked"),
+                    "error": s.get("why") if s.get("ok") is False else None,
+                    "state": "none" if not s else "ok" if s.get("ok") is not False else "bad"})
+    seen = EXT.get("seen") or 0
+    out.append({"key": "extension", "at": datetime.fromtimestamp(seen).isoformat(timespec="seconds") if seen else None,
+                "detail": {"version": EXT.get("version")}, "state": "ok" if seen and time.time() - seen < 60 else "warn" if seen else "bad"})
+    syncs = []
+    for f in PROFILES.glob("*.json"):   # only the time of each search's last check: building the searches takes seconds
+        try:
+            q = json.loads(f.read_text(encoding="utf-8"))
+            if q.get("store"):
+                q = json.loads(profile_path(q["store"]).read_text(encoding="utf-8"))
+            at = parse_time((q.get("meta") or {}).get("last_sync"))
+        except (OSError, ValueError):
+            continue
+        if at:
+            syncs.append(at)
+    out.append({"key": "searches", "at": max(syncs).isoformat(timespec="seconds") if syncs else None,
+                "detail": {"count": len(syncs), "oldest": min(syncs).isoformat(timespec="seconds") if syncs else None},
+                "state": "ok" if syncs else "none"})
+    a = auto_state()
+    out.append({"key": "auto", "at": (a.get("last") or {}).get("at"), "detail": {"hours": a.get("hours")},
+                "error": (a.get("last") or {}).get("error"), "state": "none" if not a.get("hours") else "warn" if (a.get("last") or {}).get("error") else "ok"})
+    files = sorted(PLACES.glob("*.json"), key=lambda f: f.stat().st_mtime) if PLACES.exists() else []
+    pt = TRIED.get("places", {})
+    out.append({"key": "places", "at": datetime.fromtimestamp(files[-1].stat().st_mtime).isoformat(timespec="seconds") if files else None,
+                "detail": {"cities": len(files), "oldest": datetime.fromtimestamp(files[0].stat().st_mtime).isoformat(timespec="seconds") if files else None},
+                "tried": pt.get("tried"), "error": pt.get("error"), "state": "warn" if pt.get("error") else "ok" if files else "none"})
+    out.append({"key": "geocode", "at": datetime.fromtimestamp(GEO_FILE.stat().st_mtime).isoformat(timespec="seconds") if GEO_FILE.exists() else None,
+                "state": "ok" if GEO_FILE.exists() else "none"})
+    vt = TRIED.get("version", {})
+    out.append({"key": "version", "at": datetime.fromtimestamp(UPDATE["checked"]).isoformat(timespec="seconds") if UPDATE["checked"] else None,
+                "detail": {"version": VERSION, "newer": (UPDATE.get("found") or {}).get("version"), "off": UPDATE["off"] or update is None},
+                "tried": vt.get("tried"), "error": vt.get("error"),
+                "state": "none" if UPDATE["off"] or update is None else "warn" if vt.get("error") else "ok"})
+    return out
+
+
 def load_state():
     try:
         return json.loads(STATE_FILE.read_text(encoding="utf-8"))
@@ -868,8 +1052,8 @@ def note_board(board, ok, why=None, detail=None):
 HUMAN_CHECK = "הלוח מבקש אימות אנושי. פתחו אותו בכרום, עברו את הבדיקה בעצמכם, ואז סנכרנו שוב"
 # How each board is read. "pages": the tab itself goes from page to page, the way a person browses (Madlan checks
 # the pace and the kind of request). "fetch": one page is opened and the script inside it reads the rest.
-PACE = {"yad2": {"details": 60, "batch": 12}, "madlan": {"details": 5, "page_gap": 4, "ad_gap": 7}, "komo": {"details": 25, "batch": 8, "page_gap": 2.5},
-        "homeless": {"details": 20, "batch": 8}}
+PACE = {"yad2": {"details": 60, "batch": 12, "part_gap": 2.5},"madlan": {"details": 5, "page_gap": 4, "ad_gap": 7}, "komo": {"details": 25, "batch": 8, "page_gap": 2.5},
+        "homeless": {"details": 20, "batch": 8, "pages": 8, "page_gap": 2.5}}
 
 
 def komo_feed(url, say):
@@ -910,35 +1094,122 @@ def komo_feed(url, say):
             "errors": [] if why in (None, "login") else [why]}
 
 
+YAD2_PAGES = 8    # yad2's lists show this many pages of a search (40 ads each) and no more
+YAD2_PARTS = 30   # at most this many parts in one read of a search that is larger than that
+
+
+def yad2_whole(url, first, say):
+    """A search that holds more ads than yad2's lists show. It is read again in parts that each fit: one per number
+    of rooms, and a part that is still too large in price bands cut at the prices its first page shows. Each part
+    is one more page of the same search, opened in the same tab with a pause, and read like any search.
+    first: what the search's own first page gave (with the map and the features), kept as it is."""
+    at = urlsplit(url)
+    q = dict(parse_qsl(at.query))
+    link = lambda extra: urlunsplit(at._replace(query=urlencode({k: v for k, v in {**q, **extra}.items() if v not in (None, "")})))
+    lo, hi = float(q.get("minRooms") or 1), float(q["maxRooms"]) if q.get("maxRooms") else None
+    rooms = [(v / 2, v / 2) for v in range(int(lo * 2), int((hi if hi is not None else 6) * 2) + 1)]
+    if hi is None:
+        rooms.append((6.5, None))
+    ads = {a["token"]: a for a in first["ads"]}
+    errors, state = list(first.get("errors") or []), {"asked": 0, "whole": True}
+
+    def read(extra, whole):
+        if state["asked"] >= YAD2_PARTS:
+            state["whole"] = False
+            return None
+        state["asked"] += 1
+        time.sleep(PACE["yad2"]["part_gap"])
+        bridge("navigate", url=link(extra))
+        res = run_job("yad2", {"mode": "feed", "features": [], "maxPages": YAD2_PAGES, "noMap": True, "whole": whole})
+        if "ads" not in res:
+            errors.extend(res.get("errors") or ["יד2 לא החזיר חלק מהחיפוש"])
+            state["whole"] = False
+            return {"stop": True} if res.get("blocked") else None
+        for a in res["ads"]:
+            ads.setdefault(a["token"], a)
+        errors.extend(res.get("errors") or [])
+        return res
+
+    say(f"יד2: {first.get('total')} מודעות בחיפוש, יותר ממה שהרשימות של יד2 מציגות. נקרא בחלקים")
+    for n, (r_lo, r_hi) in enumerate(rooms, 1):
+        say(f"יד2: קורא בחלקים, לפי מספר חדרים ({n}/{len(rooms)})")
+        part = {"minRooms": f"{r_lo:g}", "maxRooms": f"{r_hi:g}" if r_hi else None}
+        res = read(part, True)
+        if res is None:
+            continue
+        if res.get("stop"):
+            break
+        if not res.get("tooBig"):
+            state["whole"] = state["whole"] and bool(res.get("complete"))
+            continue
+        # Still more than the lists show: price bands, cut where this part's first page says the prices lie. A flat
+        # with no price may be in no band, so such a read is whole only when the count says so.
+        state["whole"] = False
+        prices = sorted(a["price"] for a in res["ads"] if a.get("price"))
+        k = min(6, math.ceil(res.get("totalPages", YAD2_PAGES + 1) / (YAD2_PAGES - 1)))
+        cuts = sorted({prices[len(prices) * i // k] for i in range(1, k)}) if len(prices) >= k else []
+        for b_lo, b_hi in zip([q.get("minPrice")] + [c + 1 for c in cuts], cuts + [q.get("maxPrice")]):
+            got = read(dict(part, minPrice=b_lo, maxPrice=b_hi), False)
+            if got and got.get("stop"):
+                break
+    total = first.get("total")
+    if state["asked"] >= YAD2_PARTS:
+        say(f"יד2: החיפוש גדול מאוד. נקראו {len(ads)} מתוך {total}; חיפוש צר יותר (מחיר, חדרים) ייקרא עד הסוף")
+    return dict(first, ads=list(ads.values()), errors=errors[:8],
+                complete=(state["whole"] or bool(total and len(ads) >= total)) and not errors)
+
+
 def pull_feed(board, url, city, say):
     if board == "komo":
         return komo_feed(url, say)
     if board == "homeless":
-        bridge("navigate", url=url)
-        res = run_job(board, {"mode": "page"})
-        if "ads" not in res:
-            raise BridgeError("; ".join(res.get("errors") or []) or "הלוח לא החזיר מודעות")
-        if res.get("hasNext"):
-            say("הומלס: נקרא העמוד הראשון בלבד")
-        return {"ads": res["ads"], "total": None, "complete": not res.get("hasNext"), "errors": []}
+        # The tab goes from page to page by the pager's own "next" link, the way a person does.
+        ads, page, at = {}, 1, url
+        while True:
+            bridge("navigate", url=at)
+            res = run_job(board, {"mode": "page"})
+            if "ads" not in res:
+                if page == 1:
+                    raise BridgeError("; ".join(res.get("errors") or []) or "הלוח לא החזיר מודעות")
+                return {"ads": list(ads.values()), "total": None, "complete": False, "errors": res.get("errors") or ["הומלס לא החזיר את העמוד הבא"]}
+            had = len(ads)
+            ads.update({a["id"]: a for a in res["ads"]})
+            if not res.get("hasNext"):
+                return {"ads": list(ads.values()), "total": None, "complete": True, "errors": []}
+            # An older extension does not give the next address; a page that added nothing means the list goes round.
+            if not res.get("next") or page >= PACE[board]["pages"] or len(ads) == had:
+                say(f"הומלס: נקראו {page} עמודים, יש עוד" if page > 1 else "הומלס: נקרא העמוד הראשון בלבד")
+                return {"ads": list(ads.values()), "total": None, "complete": False, "errors": []}
+            page, at = page + 1, res["next"]
+            say(f"הומלס: עמוד {page}")
+            time.sleep(PACE[board]["page_gap"])
     if board != "madlan":
         bridge("navigate", url=url)
         feats = [f for f in YAD2_FEATURES if not ("/forsale" in url and f == "pets")]  # no such filter for a purchase
-        res = run_job(board, {"mode": "feed", "features": feats, "maxPages": 8})
+        job = {"mode": "feed", "features": feats, "maxPages": YAD2_PAGES, "whole": True}
+        res = run_job(board, job)
         if res.get("blocked"):
             # A browser the board has not seen before first gets a "checking your browser" page that passes by
             # itself in a few seconds. Wait and read the open page once more; nothing new is asked of the board.
             # A real check (one that wants a person) is still there afterwards, and is reported as such.
             time.sleep(9)
-            res = run_job(board, {"mode": "feed", "features": feats, "maxPages": 8})
+            res = run_job(board, job)
         if "ads" not in res:
             raise BridgeError(HUMAN_CHECK if res.get("blocked") else "; ".join(res.get("errors") or []) or "הלוח לא החזיר מודעות")
-        return res
+        return yad2_whole(url, res, say) if res.get("tooBig") else res
     ads, total, page, pages = {}, None, 1, 1
     while True:
         bridge("navigate", url=url + (f"&page={page}" if page > 1 else ""))
-        res = run_job(board, {"mode": "page", "city": boards.plain_name(city)})
+        # Madlan's list ends with ads of nearby towns, so its reader keeps one city only. Where Madlan spells the
+        # name its own way, an ad may carry either spelling: both are accepted.
+        res = run_job(board, {"mode": "page", "city": boards.madlan_city(city),
+                              "cities": sorted({boards.madlan_city(city), boards.plain_name(city)})})
         if "ads" not in res:
+            if page == 1 and res.get("notSearch"):
+                # Madlan does not list this place: it sent the tab to its home page. Not a failure of the board, and
+                # not "read to the end" either (nothing of ours is marked gone on such an answer).
+                say(f"מדלן לא מכיר את {city['name']}")
+                return {"ads": [], "total": None, "complete": False, "errors": [], "unknown_place": True}
             if page == 1:
                 raise BridgeError(HUMAN_CHECK if res.get("blocked") else "; ".join(res.get("errors") or []) or "הלוח לא החזיר מודעות")
             return {"ads": list(ads.values()), "total": total, "complete": False, "errors": res.get("errors") or []}
@@ -1003,11 +1274,13 @@ def save_details(pid, board, items, now):
     return done
 
 
-def sync_board(p, board, city, now, say):
+def sync_board(p, board, city, now, say, budget=None):
+    """budget: in a search over several cities, {"left": how many full ads this board may still read in this sync}."""
     prefs, he = p["prefs"], boards.BOARDS[board]
     deal = boards.deal_of(prefs)
+    town = city["name"] if prefs.get("cities") else None
     url = getattr(boards, board + "_url")(city, prefs, MARGIN[deal])
-    say(f"{he}: פותח את החיפוש")
+    say(f"{he}: פותח את החיפוש" + (f" ב{town}" if town else ""))
     res = pull_feed(board, url, city, say)
     errors = list(res.get("errors") or [])
     seen, new, changed = set(), 0, 0
@@ -1015,6 +1288,8 @@ def sync_board(p, board, city, now, say):
         p = load_profile(p["id"])
         for raw in res["ads"]:
             norm = normalize_item(board, raw, res, deal)
+            if town:
+                norm["in_city"] = town
             seen.add(norm["id"])
             r = merge_ad(p, norm, now)
             new += r == "new"
@@ -1022,13 +1297,15 @@ def sync_board(p, board, city, now, say):
         # A list that stops at its page limit is still a full read when the ads seen (the lists and the map
         # together) are exactly as many as the board says the search holds: nothing can be missing.
         complete = (bool(res.get("complete")) or bool(res.get("total") and len(seen) == res["total"])) and not errors
-        gone = mark_gone(p, board, seen, now) if complete else 0
+        if res.get("total") and not seen:
+            complete = False  # the board says it has ads and none was read: never a reason to mark ads as gone
+        gone = mark_gone(p, board, seen, now, town) if complete else 0
         save_profile(p)
     say(f"{he}: {len(seen)} מודעות" + (f" מתוך {res['total']}" if res.get("total") and res["total"] > len(seen) else "")
         + f", {new} חדשות, {changed} השתנו, {gone} ירדו")
     if board in ("komo", "homeless"):
         with GEO_LOCK:  # one address question a second in all, also when two boards finish together
-            placed = locate(p["id"], city, say)
+            placed = locate(p["id"], city, say, town=town)
         if placed:
             say(f"{he}: {placed} כתובות מוקמו על המפה")
         with LOCK:
@@ -1042,7 +1319,9 @@ def sync_board(p, board, city, now, say):
         want = [n for n in want if f"madlan:{n}" not in twins]
     if prefs.get("lists_only"):
         want = []  # a city store: full ads are read one by one, when somebody opens one
-    want, detailed, size = want[:PACE[board]["details"]], 0, PACE[board].get("batch", 5)
+    want, detailed, size = want[:PACE[board]["details"] if budget is None else max(0, budget["take"])], 0, PACE[board].get("batch", 5)
+    if budget is not None:
+        budget["left"] -= len(want)
     for i in range(0, len(want), size):
         say(f"{he}: קורא מודעות מלאות ({min(i + size, len(want))}/{len(want)})")
         items, refused, errs = pull_details(board, want[i:i + size])
@@ -1055,6 +1334,8 @@ def sync_board(p, board, city, now, say):
            "detailed": detailed, "complete": complete, "errors": errors[:5]}
     if board == "komo":
         out["signed_in"] = res["signed_in"]
+    if town:
+        out["city"] = town
     return out
 
 
@@ -1069,9 +1350,12 @@ def read_one(pid, ad_id):
     board, native = rec["board"], rec["native_id"]
     if board not in boards.BOARDS:
         raise BridgeError("מודעה שהודבקה: כל מה שיש עליה כבר כאן")
-    if board != "madlan":
-        bridge("navigate", url=rec["url"])
-    items, refused, errs = pull_details(board, [native])
+    try:
+        if board != "madlan":
+            bridge("navigate", url=rec["url"])
+        items, refused, errs = pull_details(board, [native])
+    finally:
+        done_with(board)
     if refused:
         raise BridgeError(HUMAN_CHECK)
     if not items:
@@ -1084,7 +1368,7 @@ def read_one(pid, ad_id):
 GEO_FILE = ROOT / "data" / "geocode.json"
 
 
-def locate(pid, city, say=lambda t: None, only=None):
+def locate(pid, city, say=lambda t: None, only=None, town=None):
     """Give coordinates to ads that came with an address only. OpenStreetMap's Nominatim, one question a second (its
     rule), answers kept in data/geocode.json. No street match: the neighborhood's centre, marked as approximate."""
     import urllib.parse
@@ -1095,8 +1379,10 @@ def locate(pid, city, say=lambda t: None, only=None):
         cache = {}
     hoods = {h["name"]: h for h in city["hoods"]}
     with LOCK:
-        todo = [(r["id"], r.get("street"), r.get("house_no"), r.get("hood")) for r in load_profile(pid)["ads"].values()
-                if not r.get("lat") and not r.get("gone_since") and (only is None or r["id"] in only)]
+        whole = load_profile(pid)
+        todo = [(r["id"], r.get("street"), r.get("house_no"), r.get("hood")) for r in whole["ads"].values()
+                if not r.get("lat") and not r.get("gone_since") and (only is None or r["id"] in only)
+                and (town is None or city_of_ad(r, whole["prefs"]) == town)]  # several cities: each ad by its own city
     found, asked = {}, 0
     for ad_id, street, house, hood in todo:
         hit = None
@@ -1142,13 +1428,14 @@ def sync(pid, say=print, only=None, done=None):
     if p.get("store"):  # a search over a city store: it is the city that is read
         return sync(p["store"], say, only, done)
     city, now = CITIES[p["prefs"]["city"]], now_iso()
+    towns = cities_of(p["prefs"])
     old_ext = tuple(int(x) for x in re.findall(r"\d+", EXT["version"] or "0")[:2]) < (1, 1)
     if boards.deal_of(p["prefs"]) == "sale" and not hasattr(LOCAL, "browser") and browser_ready() and old_ext:
         # The extension from before 1.1 reads every yad2 and Homeless tab as a rent search.
         raise BridgeError("חיפוש לקנייה צריך את התוסף המעודכן: ב-chrome://extensions לוחצים על חץ הרענון של "
                           "\"לוח אחד: קורא הלוחות\", ואז מרעננים את הדף הזה")
 
-    def one(board):
+    def one(board, city=city, budget=None, close=True):
         st = load_state()["boards"].get(board) or {}
         he = boards.BOARDS[board]
         if st.get("ok") is False and st.get("why") == "human" and not st.get("retry"):
@@ -1161,7 +1448,7 @@ def sync(pid, say=print, only=None, done=None):
             say(f"{he}: נמשך לפני {ago:.1f} שעות. נמשך פעם ב-{rest} שעות כדי שלא יחסום, המודעות שלו נשארות")
             return {"board": board, "skipped": "resting"}
         try:
-            res = sync_board(p, board, city, now, say)
+            res = sync_board(p, board, city, now, say, budget)
             if board == "komo" and not res["signed_in"]:
                 note_board(board, False, "login")
             else:
@@ -1174,11 +1461,39 @@ def sync(pid, say=print, only=None, done=None):
         except Exception as e:  # a fault in one board's code must not stop the other boards
             say(f"{he}: תקלה אצלנו ({type(e).__name__}: {e})")
             return {"board": board, "error": f"{type(e).__name__}: {e}"}
+        finally:
+            if close:
+                done_with(board)
+
+    def many(board):
+        """A search over several cities: the board reads them one after the other, in its one tab. A board that
+        may be read only once in some hours (REST_HOURS) reads ONE city per sync, the one it read longest ago,
+        so a wider search never means more visits to that board."""
+        order, out, budget = towns, [], {"left": PACE[board]["details"]}
+        if board in REST_HOURS:
+            last = {}
+            for s in p["meta"].get("syncs") or []:
+                for b in s.get("boards") or []:
+                    if b.get("board") == board and b.get("city") and "error" not in b and "skipped" not in b:
+                        last[b["city"]] = s["at"]
+            order = sorted(towns, key=lambda c: last.get(c["name"], ""))[:1]
+        try:
+            for i, c in enumerate(order):
+                if i:  # the same rest as between two cities of the shared mode: one browser, many cities
+                    say(f"{boards.BOARDS[board]}: מנוחה קצרה לפני העיר הבאה")
+                    time.sleep(CITY_GAP)
+                budget["take"] = math.ceil(budget["left"] / (len(order) - i))  # the full ads, shared out between the cities
+                out.append(dict(one(board, c, budget, close=False), city=c["name"]))
+                if "error" in out[-1] or "skipped" in out[-1]:
+                    break  # not answering, waiting for the person, or resting: its other cities wait for the next sync
+        finally:
+            done_with(board)
+        return out
 
     todo = [b for b in boards.BOARDS if not only or b == only]
     got = {}
     def run(b):
-        got[b] = one(b)
+        got[b] = many(b) if len(towns) > 1 else [one(b)]
         if done:
             done(b)
 
@@ -1187,7 +1502,7 @@ def sync(pid, say=print, only=None, done=None):
         t.start()
     for t in threads:
         t.join()
-    results = [got.get(b) or {"board": b, "error": "לא הסתיים"} for b in todo]
+    results = [r for b in todo for r in (got.get(b) or [{"board": b, "error": "לא הסתיים"}])]
     if hasattr(LOCAL, "after_sync"):
         LOCAL.after_sync()
     with LOCK:
@@ -1216,6 +1531,173 @@ def start_sync(pid, only=None):
 
     threading.Thread(target=work, daemon=True).start()
     return True
+
+
+# ---------------- checking by itself ----------------
+# Off until the person switches it on. While the app runs, a search whose last check is older than the hours they
+# chose is checked again: one search at a time, with the same rest between two as between two cities. The least is
+# six hours, which is also Madlan's own rest.
+AUTO_HOURS = (6, 12, 24)
+AUTO = {"tried": {}, "last": None}
+
+
+def auto_state():
+    a = load_state().get("auto") or {}
+    return {"hours": a.get("hours") if a.get("hours") in AUTO_HOURS else 0, "lang": a.get("lang") or "he", "last": AUTO["last"]}
+
+
+def set_auto(hours, lang=None):
+    with LOCK:
+        st = load_state()
+        st["auto"] = {"hours": hours if hours in AUTO_HOURS else 0, "since": now_iso(),
+                      "lang": lang if re.fullmatch(r"[a-z]{2,5}", str(lang or "")) else "he"}
+        STATE_FILE.parent.mkdir(exist_ok=True)
+        STATE_FILE.write_text(json.dumps(st, ensure_ascii=False, indent=1), encoding="utf-8")
+    return auto_state()
+
+
+def in_lang(lang, text, *vals):
+    """A text of ours in the person's language (the same files the page uses), with its values put in."""
+    try:
+        texts = json.loads((ROOT / "ui" / "lang" / f"{lang}.json").read_text(encoding="utf-8"))["texts"] if lang != "he" else {}
+    except (OSError, ValueError, KeyError):
+        texts = {}
+    out = texts.get(text, text)
+    for i, v in enumerate(vals):
+        out = out.replace("{%d}" % i, str(v))
+    return out
+
+
+def news_of(pid, at):
+    """What the check that ran at `at` brought for a search: flats that fit and are new, and flats that fit whose
+    price went down."""
+    p = load_profile(pid)
+    views = [v for v in build_views(p) if v["fit"] == "yes" and not v["gone_since"]]
+    new = [v for v in views if v["first_seen"] == at and v["is_new"]]
+    down = [v for v in views if v not in new and any(c["at"] == at and c["field"] == "price" and (c["to"] or 0) < (c["from"] or 0)
+                                                     for c in v.get("changes") or [])]
+    return p, new, down
+
+
+def tell_news(pid, at):
+    """One desktop note per check that found something; a click on it opens the search."""
+    p, new, down = news_of(pid, at)
+    if not new and not down:
+        return 0
+    lang, parts = auto_state()["lang"], []
+    if len(new) == 1:
+        v = new[0]
+        where = v.get("street") or v.get("hood") or v.get("city") or ""
+        parts.append(in_lang(lang, "דירה חדשה שמתאימה: {0}", " · ".join(x for x in (where, f"{v['price']:,} ₪" if v.get("price") else "") if x)))
+    elif new:
+        parts.append(in_lang(lang, "{0} דירות חדשות שמתאימות", len(new)))
+    if len(down) == 1:
+        parts.append(in_lang(lang, "דירה שמתאימה ירדה במחיר"))
+    elif down:
+        parts.append(in_lang(lang, "{0} דירות שמתאימות ירדו במחיר", len(down)))
+    try:
+        bridge("notify", title=f"לוח אחד · {p['name']}", text=" · ".join(parts), url=f"http://127.0.0.1:{PORT}/#/p/{pid}")
+    except BridgeError:
+        pass  # the search itself shows what changed
+    return len(new) + len(down)
+
+
+def auto_watch():
+    while True:
+        time.sleep(60)
+        try:
+            hours = auto_state()["hours"]
+            if not hours or SYNC["running"] or QUEUE or not (hasattr(LOCAL, "browser") or browser_ready()):
+                continue
+            now, due = datetime.now(), []
+            for path in PROFILES.glob("*.json"):
+                p = json.loads(path.read_text(encoding="utf-8"))
+                last, tried = parse_time((p.get("meta") or {}).get("last_sync")), AUTO["tried"].get(p["id"])
+                # A city store has its own line; a search that was never pulled is the person's to start; one that
+                # just failed waits an hour.
+                if p.get("store") or not last or now - last < timedelta(hours=hours) or (tried and now - tried < timedelta(hours=1)):
+                    continue
+                if hasattr(LOCAL, "auto_skip") and LOCAL.auto_skip(p["id"]):
+                    continue
+                due.append((last, p["id"]))
+            if not due:
+                continue
+            pid = min(due)[1]
+            AUTO["tried"][pid] = now
+            if not start_sync(pid):
+                continue
+            while SYNC["running"]:
+                time.sleep(2)
+            at = load_profile(pid)["meta"].get("last_sync")
+            found = 0 if SYNC["error"] else tell_news(pid, at)
+            AUTO["last"] = {"profile": pid, "at": now_iso(), "error": SYNC["error"], "found": found}
+            time.sleep(CITY_GAP)
+        except Exception:  # noqa: BLE001  a fault in one round must not end the watch
+            time.sleep(60)
+
+
+# ---------- a buyer's numbers: purchase tax, and what a mortgage would cost a month ----------
+# Purchase tax: the Tax Authority's steps (its execution directive 1/2025 and its buyers' guide for 2026). No address
+# gives them as data, so they are written here with the last day they are known to hold; after it the page says the
+# steps may have changed. [the top of the step, the rate on the part of the price inside it]
+TAX = {"only": [[1_978_745, 0], [2_347_040, 0.035], [6_055_070, 0.05], [20_183_565, 0.08], [None, 0.10]],   # a person's only home
+       "more": [[6_055_070, 0.08], [None, 0.10]],                                                             # any other home
+       "until": {"only": "2028-01-15", "more": "2026-12-31"},
+       "official": "https://www.misim.gov.il/svsimurechisha/FrmFirstPage.aspx"}
+# The interest: the Bank of Israel's open statistics, the average of all banks on new housing loans that are not
+# index-linked and have a fixed rate, and the average number of years. Asked once a week, only while there is a
+# search to buy, and kept in data/rates.json. Nothing about the person or a flat is sent: two plain addresses.
+RATES = ROOT / "data" / "rates.json"
+BOI = "https://edge.boi.gov.il/FusionEdgeServer/sdmx/v2/data/dataflow/BOI.STATISTICS/BIR_MRTG_99/1.0/BNK_99034_LR_BIR_MRTG_{}?lastNObservations=1&format=csv"
+RATE_KEPT = {"rate": 4.62, "month": "2026-08", "years": 23.8, "live": False}   # what the bank showed on 22.11.2026, until the first answer
+RATE_DAYS = 7
+# The Supervisor of Banks' limits on a housing loan (directive 329): the largest share of the price a bank may lend,
+# the longest loan, and the largest share of income a payment may take (banks rarely pass the second number).
+LOAN_RULES = {"own_min": {"only": 25, "more": 50}, "years_max": 30, "of_income": [50, 40]}
+
+
+def mortgage_rate():
+    try:
+        kept = json.loads(RATES.read_text(encoding="utf-8"))
+        return kept if kept.get("rate") else RATE_KEPT
+    except (OSError, ValueError):
+        return RATE_KEPT
+
+
+def fetch_rate():
+    import csv
+    import io
+    import urllib.request
+
+    def last(series):
+        req = urllib.request.Request(BOI.format(series), headers={"User-Agent": "apartment-board/1.0"})
+        with urllib.request.urlopen(req, timeout=30) as r:
+            rows = list(csv.DictReader(io.StringIO(r.read().decode("utf-8"))))
+        return rows[-1]["TIME_PERIOD"], float(rows[-1]["OBS_VALUE"])
+
+    month, rate = last(467)
+    _, years = last(461)
+    if not (0 < rate < 25 and 5 < years <= 30):
+        raise ValueError("an answer that is not an interest rate")
+    kept = {"rate": rate, "month": month, "years": years, "live": True, "at": datetime.now().isoformat(timespec="minutes")}
+    RATES.parent.mkdir(parents=True, exist_ok=True)
+    RATES.write_text(json.dumps(kept), encoding="utf-8")
+    return kept
+
+
+def rate_watch():
+    """Keeps the interest fresh: looks twice a day whether what is kept is older than a week."""
+    while True:
+        try:
+            old = mortgage_rate().get("at")
+            due = not old or datetime.now() - datetime.fromisoformat(old) > timedelta(days=RATE_DAYS)
+            if due and any(boards.deal_of(json.loads(f.read_text(encoding="utf-8")).get("prefs", {})) == "sale" for f in PROFILES.glob("*.json")):
+                tried("rate")
+                fetch_rate()
+                tried("rate", ok=True)
+        except Exception as e:  # noqa: BLE001  no answer today: the kept number stays, with its month
+            tried("rate", error=e)
+        time.sleep(12 * 3600)
 
 
 def sync_through_app(pid, only=None):
@@ -1262,8 +1744,12 @@ def paste_ad(pid, text, url=None):
         raise ValueError("צריך את הטקסט של המודעה")
     with LOCK:
         p = load_profile(pid)
-        city = CITIES[p["prefs"]["city"]]
-        norm, missing = boards.pasted_item(text, url, p["prefs"]["city"], [h["name"] for h in city["hoods"]], boards.deal_of(p["prefs"]))
+        towns = cities_of(p["prefs"])
+        # a search over several cities: the ad belongs to the one its text names, otherwise to the first
+        city = next((c for c in towns if boards.plain_name(c) in str(text or "")), towns[0]) if len(towns) > 1 else CITIES[p["prefs"]["city"]]
+        norm, missing = boards.pasted_item(text, url, city["name"], [h["name"] for h in city["hoods"]], boards.deal_of(p["prefs"]))
+        if len(towns) > 1:
+            norm["in_city"] = city["name"]
         ad_id, now = norm["id"], now_iso()
         known = ad_id in p["ads"]
         merge_ad(p, norm, now, from_detail=True)
@@ -1271,7 +1757,7 @@ def paste_ad(pid, text, url=None):
         save_profile(p)
     with GEO_LOCK:
         locate(pid, city, only={ad_id})
-    elsewhere = sorted(n for n in CITIES if n != p["prefs"]["city"] and n != "שדרות"  # also the word for a boulevard
+    elsewhere = sorted(n for n in CITIES if n not in (p["prefs"].get("cities") or [p["prefs"]["city"]]) and n != "שדרות"  # also the word for a boulevard
                        and re.search(r"(?<![֐-׿])[בלמ]?" + re.escape(n) + r"(?![֐-׿])", text))[:3]
     return {"id": ad_id, "known": known, "missing": missing, "other_city": elsewhere}
 
@@ -1335,6 +1821,111 @@ def open_in_chrome(url):
         except (OSError, subprocess.TimeoutExpired):
             pass
     webbrowser.open(url)
+
+
+# ---------------- a newer version: noticing it, taking it, starting again ----------------
+# Once at start and then twice a day the app reads ONE small public file, version.json of the published code, and
+# compares it with its own. Nothing about the person, the searches or this computer goes with that request.
+# `serve --no-update-check` (or `no_updates = True` in local_settings.py) switches it off.
+UPDATE = {"off": False, "found": None, "busy": False, "checked": 0.0}
+FAILED_UPDATE = ROOT / "data" / "backup" / "failed.txt"   # the version whose files were put back: not offered again
+
+
+def check_update():
+    if update is None or UPDATE["off"]:
+        return
+    try:
+        info = update.published_version()
+    except update.UpdateError as e:
+        tried("version", error=e)
+        return   # no network, or GitHub did not answer: ask again next time
+    tried("version", ok=True)
+    UPDATE["checked"] = time.time()
+    newest = str(info.get("version") or "")[:20]
+    try:
+        failed = FAILED_UPDATE.read_text(encoding="utf-8").strip()
+    except OSError:
+        failed = ""
+    if update.number(newest) > update.number(VERSION) and newest != failed:
+        UPDATE["found"] = {"version": newest, "date": str(info.get("date") or "")[:10], "news": update.news_since(info, VERSION)}
+    else:
+        UPDATE["found"] = None
+
+
+def update_watch():
+    while True:
+        check_update()
+        time.sleep(12 * 3600)
+
+
+def restart_soon():
+    """End with RESTART: the loop that started the app (`supervise`) starts it again, now from the new files."""
+    time.sleep(1.0)    # let the answer to the page go out first
+    with LOCK:         # never in the middle of writing a search to disk
+        os._exit(RESTART)
+
+
+def rollback():
+    """Put back the program files the last update replaced (it copied them to data/backup/<time>/), and remove the
+    files it added. -> whether there was anything to put back."""
+    folder = ROOT / "data" / "backup"
+    stamps = sorted(d for d in folder.iterdir() if d.is_dir() and not d.name.endswith("_put_back")) if folder.is_dir() else []
+    if not stamps:
+        return False
+    last = stamps[-1]
+    try:
+        failed = json.loads((ROOT / "version.json").read_text(encoding="utf-8")).get("version") or ""
+    except (OSError, ValueError):
+        failed = ""
+    try:
+        added = json.loads((last / "_added.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        added = []
+    for rel in added:
+        target = (ROOT / str(rel)).resolve()
+        if ROOT in target.parents and target.is_file() and (ROOT / "data") not in target.parents:
+            target.unlink()
+    for f in last.rglob("*"):
+        if f.is_file() and f.name != "_added.json":
+            target = ROOT / f.relative_to(last)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(f, target)
+    FAILED_UPDATE.write_text(str(failed), encoding="utf-8")
+    last.rename(last.with_name(last.name + "_put_back"))   # one update is put back once
+    return True
+
+
+def already_running():
+    """Whether this app already answers on its port (started from another window, or a copy left behind)."""
+    import urllib.request
+    try:
+        with urllib.request.urlopen(f"http://127.0.0.1:{PORT}/api/me", timeout=2) as r:
+            return "boot" in json.loads(r.read())
+    except (OSError, ValueError):
+        return False
+
+
+def supervise(argv):
+    """`serve` runs the app as a child of this small loop, so that the app can start itself again after an update:
+    it ends with RESTART and is started once more, from the new files. If the updated app does not come up, the
+    files it replaced are put back and the previous version is started."""
+    env = dict(os.environ, LUACH_CHILD="1", PYTHONUNBUFFERED="1")
+    updated = False
+    while True:
+        began = time.time()
+        try:
+            code = subprocess.call([sys.executable, str(ROOT / "app.py")] + argv, env=env)
+        except KeyboardInterrupt:
+            return 0
+        if code == RESTART:
+            argv = [a for a in argv if a != "--open"]   # the page that asked for the update is already open
+            updated = True
+            continue
+        if updated and code != 0 and time.time() - began < 40 and rollback():
+            print("The updated app did not start. The previous version was put back and is starting now.", flush=True)
+            updated = False
+            continue
+        return code
 
 
 def lan_ip():
@@ -1434,6 +2025,8 @@ class Handler(BaseHTTPRequestHandler):
 
     def route(self, method, body=None):
         parts = [x for x in self.path.split("?")[0].split("/") if x]
+        if hasattr(LOCAL, "route") and LOCAL.route(sys.modules[__name__], self, method, parts, body):
+            return  # this computer's own additions (local_settings.py) answered the request
         if method == "GET" and not parts:
             return self.send((ROOT / "ui" / "index.html").read_bytes(), ctype="text/html; charset=utf-8")
         if method == "GET" and parts == ["lang.js"]:
@@ -1464,16 +2057,27 @@ class Handler(BaseHTTPRequestHandler):
 
         # ---- open to any device that can reach the app: nothing private here ----
         if method == "GET" and parts == ["meta"]:
-            return self.send({"cities": [{"name": c["name"], "lat": c["lat"], "lon": c["lon"], "hoods": c["hoods"]} for c in CITIES.values()],
+            return self.send({"cities": [{"name": c["name"], "en": c.get("en"), "lat": c["lat"], "lon": c["lon"], "hoods": c["hoods"]} for c in CITIES.values()],
+                              "most_cities": most_cities(), "auto_hours": list(AUTO_HOURS),
+                              "buy": {"tax": TAX, "rate": mortgage_rate(), "rules": LOAN_RULES},
                               "features": boards.FEATURES, "types": boards.TYPES, "boards": dict(boards.BOARDS, **boards.OTHER), "sync_boards": list(boards.BOARDS), "kinds": KINDS,
                               "deals": boards.DEALS,
                               # the Street View key works only from this PC's own address (set at Google)
                               "maps_key": maps_key() if self.is_local else None, "local": self.is_local})
+        if method == "GET" and parts == ["status"]:
+            if not (self.is_local and me == people.OWNER):
+                return self.send({"error": "not found"}, 404)
+            return self.send({"items": status(), "now": now_iso()})
         if method == "GET" and parts == ["me"]:
             return self.send({"person": me, "name": people.names().get(me) if me else None, "owner": me == people.OWNER,
                               "local": self.is_local, "lan": LAN,
                               # only the person at this computer needs to know whether the boards can be read now
-                              "browser": browser_ready() if self.is_local else None})
+                              "browser": browser_ready() if self.is_local else None,
+                              "ext_reload": ext_stale() if self.is_local else None,
+                              "version": VERSION, "boot": BOOT,
+                              "auto": auto_state() if self.is_local and me == people.OWNER else None,
+                              # a newer published version, with what is new in it: for the person at this computer
+                              "update": UPDATE["found"] if self.is_local and me == people.OWNER else None})
         ip = self.client_address[0]
         if parts[:1] in (["link"], ["join"], ["shared"]) and people.slow_down(ip):
             return self.send({"error": "יותר מדי ניסיונות. נסו שוב בעוד כמה דקות"}, 429)
@@ -1527,6 +2131,11 @@ class Handler(BaseHTTPRequestHandler):
         # ---- everything below needs a person ----
         if me is None:
             return self.send({"error": "login"}, 401)
+        if method == "POST" and parts == ["update"]:
+            return self.update_now(body)
+        if method == "POST" and parts == ["auto"]:   # the searches check themselves every so many hours (0 = off)
+            self.owner_only()
+            return self.send(set_auto(body.get("hours"), body.get("lang")))
         if method == "POST" and parts == ["me", "name"]:
             people.rename(me, body.get("name"))
             return self.send({"ok": True})
@@ -1570,10 +2179,14 @@ class Handler(BaseHTTPRequestHandler):
             p = self.profile(pid)
             if method == "GET" and len(parts) == 2:
                 city, names, seen = CITIES[p["prefs"]["city"]], people.names(), people.last_seen()
+                towns, chosen = cities_of(p["prefs"]), p["prefs"].get("hoods_in") or {}
+                places = [load_places(c) for c in towns]
                 return self.send({"id": p["id"], "name": p["name"], "prefs": p["prefs"], "meta": p["meta"], "store": p.get("store"),
                                   "city": {"name": city["name"], "lat": city["lat"], "lon": city["lon"]},
-                                  "centers": [h for h in city["hoods"] if h["name"] in p["prefs"]["hoods"]],
-                                  "places": load_places(city), "kinds": KINDS, "board_state": load_state()["boards"],
+                                  "cities": [{"name": c["name"], "lat": c["lat"], "lon": c["lon"]} for c in towns],
+                                  "centers": [h for c in towns for h in c["hoods"]
+                                              if h["name"] in (chosen[c["name"]] if c["name"] in chosen else p["prefs"]["hoods"])],
+                                  "places": None if any(x is None for x in places) else [pl for x in places for pl in x], "kinds": KINDS, "board_state": load_state()["boards"],
                                   "fix_url": FIX_URL, "rest_hours": REST_HOURS,
                                   "shared": bool(p.get("store")) and dict(queue_state(p["store"]), fresh_hours=FRESH_HOURS,
                                                                               age_hours=store_age_hours(p["store"])),
@@ -1591,6 +2204,12 @@ class Handler(BaseHTTPRequestHandler):
             self.owner_only()
             if method == "POST" and parts[2:] == ["invite"]:
                 return self.send({"url": f"{self.base_url()}/#/join/{people.new_link('invite', me, profile=pid)}", "days": 7})
+            if method == "POST" and parts[2:] == ["delete"]:
+                try:
+                    delete_profile(pid)
+                except ValueError as e:
+                    return self.send({"error": str(e)}, 409)
+                return self.send({"ok": True})
             if method == "POST" and len(parts) == 5 and parts[2] == "members" and parts[4] == "remove":
                 with LOCK:
                     p = load_profile(pid)
@@ -1601,7 +2220,8 @@ class Handler(BaseHTTPRequestHandler):
                 return self.send({"ok": True})
             if method == "POST" and parts[2:] == ["places"]:
                 try:
-                    return self.send({"count": len(fetch_places(CITIES[p["prefs"]["city"]]))})
+                    towns = cities_of(p["prefs"])  # several cities: only those whose places were not fetched yet
+                    return self.send({"count": sum(len(fetch_places(c)) for c in towns if len(towns) == 1 or load_places(c) is None)})
                 except OSError as e:
                     return self.send({"error": f"OpenStreetMap לא ענה: {e}"}, 502)
             if method == "POST" and parts[2:] == ["prefs"]:
@@ -1612,10 +2232,17 @@ class Handler(BaseHTTPRequestHandler):
                     p["prefs"] = clean_prefs(dict(body.get("prefs") or {}, deal=old.get("deal")))
                     if body.get("name"):
                         p["name"] = str(body["name"]).strip()[:40]
+                    if p["prefs"].get("cities"):
+                        for rec in p["ads"].values():  # what was read so far was read under the one city it had
+                            rec.setdefault("in_city", old["city"])
                     if p.get("store"):
-                        p["store"] = ensure_store(p["prefs"])  # another city: another store
+                        if p["prefs"].get("cities"):
+                            p.pop("store")  # several cities now: from here on it reads for itself,
+                            p.pop("mine", None)  # starting from the city's ads with this search's marks on them
+                        else:
+                            p["store"] = ensure_store(p["prefs"])  # another city: another store
                     save_profile(p)
-                wider = any(old.get(k) != p["prefs"].get(k) for k in ("city", "price_max", "price_min", "rooms_min", "rooms_max"))
+                wider = any(old.get(k) != p["prefs"].get(k) for k in ("city", "cities", "price_max", "price_min", "rooms_min", "rooms_max"))
                 return self.send({"ok": True, "needs_sync": wider})
             if method == "POST" and parts[2:] == ["sync"]:
                 if p.get("store"):  # a search over a city store does not pull: its city takes a place in the line
@@ -1640,6 +2267,39 @@ class Handler(BaseHTTPRequestHandler):
                     return self.send({"error": str(e)}, 502)
                 return self.send({"ok": True})
         return self.send({"error": "not found"}, 404)
+
+    def update_now(self, body):
+        """POST /api/update. {"check": true}: ask now whether a newer version is published. Otherwise: bring this
+        folder to it and start the app again. Only the person at this computer."""
+        if not self.is_local:
+            return self.send({"error": "local only"}, 403)
+        self.owner_only()
+        if update is None or UPDATE["off"]:
+            return self.send({"error": "העדכון מתוך האפליקציה כבוי כאן"}, 400)
+        if body.get("check"):
+            check_update()
+            return self.send({"version": VERSION, "update": UPDATE["found"]})
+        with LOCK:
+            if SYNC["running"] or QUEUE or UPDATE["busy"]:
+                return self.send({"error": "סנכרון רץ עכשיו. מעדכנים כשהוא מסתיים"}, 409)
+            UPDATE["busy"] = True
+        try:
+            res = update.apply()
+        except update.UpdateError as e:
+            UPDATE["busy"] = False
+            return self.send({"error": f"העדכון לא הצליח, שום דבר לא השתנה ({e})"}, 502)
+        except OSError as e:
+            UPDATE["busy"] = False
+            return self.send({"error": f"העדכון נעצר באמצע ({e}). הקבצים שהוחלפו שמורים ב-data/backup"}, 500)
+        if not res["updated"]:
+            UPDATE.update(busy=False, found=None)
+            return self.send({"ok": True, "updated": False, "version": VERSION})
+        restart = bool(os.environ.get("LUACH_CHILD"))
+        if restart:
+            threading.Thread(target=restart_soon, daemon=True).start()
+        else:
+            UPDATE.update(busy=False, found=None)
+        return self.send({"ok": True, "updated": True, "version": res["version"], "restart": restart})
 
     def handle_one(self, method):
         if not self.allowed():
@@ -1681,6 +2341,7 @@ def main():
     s.add_argument("--lan", action="store_true", help="also answer other devices on the home network")
     s.add_argument("--open", action="store_true", help="open the app in Chrome once it is up")
     s.add_argument("--shared", action="store_true", help="a new search looks through its city's shared store; cities are read in turn")
+    s.add_argument("--no-update-check", action="store_true", help="never ask GitHub whether a newer version is published")
     s = sub.add_parser("sync")
     s.add_argument("profile")
     s.add_argument("board", nargs="?", choices=list(boards.BOARDS), help="only this board")
@@ -1714,10 +2375,23 @@ def main():
         set_fields(args.profile, args.ad, people.OWNER, args.status, args.note, args.summary)
         print("נשמר.")
     else:
+        if not os.environ.get("LUACH_CHILD"):
+            sys.exit(supervise(sys.argv[1:]))
         global LAN, SHARED
         LAN = bool(getattr(args, "lan", False))
         SHARED = bool(getattr(args, "shared", False))
+        UPDATE["off"] = bool(getattr(args, "no_update_check", False) or getattr(LOCAL, "no_updates", False))
+        if already_running():
+            # Windows lets a second program take the same port without an error: two apps would then answer by
+            # turns and both would check the searches by themselves. So the second one only opens the first.
+            print(f"האפליקציה כבר פועלת: http://127.0.0.1:{PORT}")
+            if getattr(args, "open", False):
+                open_in_chrome(f"http://127.0.0.1:{PORT}")
+            return
         threading.Thread(target=queue_worker, daemon=True).start()
+        threading.Thread(target=update_watch, daemon=True).start()
+        threading.Thread(target=auto_watch, daemon=True).start()
+        threading.Thread(target=rate_watch, daemon=True).start()
         server = ThreadingHTTPServer(("0.0.0.0" if LAN else "127.0.0.1", PORT), Handler)
         print(f"http://127.0.0.1:{PORT}  (Ctrl+C עוצר)")
         if getattr(args, "open", False):

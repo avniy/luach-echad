@@ -27,7 +27,9 @@ globalThis.__luachCollectors.madlan = async (JOB) => {
   }
 
   const list = state?.domainData?.searchList?.data?.searchPoiV2;
-  if (!list) return check() ? { blocked: true, errors: ["מדלן מבקש אימות אנושי"] } : { errors: ["לא דף חיפוש של מדלן: " + document.title] };
+  // A place Madlan does not list sends the tab to its home page: that is "no such place there", not a failure.
+  if (!list) return check() ? { blocked: true, errors: ["מדלן מבקש אימות אנושי"] }
+    : { errors: ["לא דף חיפוש של מדלן: " + document.title], notSearch: !/\/for-(rent|sale)\//.test(decodeURIComponent(location.pathname)) };
   const slim = (p) => ({
     id: p.id, price: p.price, beds: p.beds, area: p.area, floor: p.floor, buildingClass: p.buildingClass,
     generalCondition: p.generalCondition,
@@ -39,6 +41,7 @@ globalThis.__luachCollectors.madlan = async (JOB) => {
     insights: (p.insights?.insights || []).map((i) => i.tradeoff?.value).filter(Boolean),
   });
   // The list ends with ads from nearby towns; only the profile's city is kept.
-  const ads = (list.poi || []).filter((p) => p.type === "bulletin" && p.id && p.addressDetails?.city === JOB.city).map(slim);
+  const want = new Set([JOB.city, ...(JOB.cities || [])].filter(Boolean));
+  const ads = (list.poi || []).filter((p) => p.type === "bulletin" && p.id && want.has(p.addressDetails?.city)).map(slim);
   return { total: list.total ?? null, ads };
 };

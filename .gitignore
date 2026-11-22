@@ -13,6 +13,10 @@
 !/start.cmd
 !/start-lan.cmd
 !/start.sh
+!/update.py
+!/update.cmd
+!/update.sh
+!/version.json
 !/ui/
 !/extension/
 __pycache__/
