@@ -1928,6 +1928,58 @@ def supervise(argv):
         return code
 
 
+# The start window. English and plain ASCII on purpose: a Windows console shows Hebrew backwards, and a console
+# that is not UTF-8 cannot print box or emoji characters at all.
+TIPS = [
+    "Saw a flat in a WhatsApp group? Press '+' in the top bar and paste its text.",
+    "Turn on the automatic check on the first screen: every 6, 12 or 24 hours.",
+    "Buying? Every ad for sale shows purchase tax, cash needed and a monthly payment.",
+    "Searching together? The share button makes an invite link for your partner.",
+    "The footer link 'System status' tells you when each board was last read.",
+    "Too bright at night? The footer switches the dark look on and off.",
+    "One search can cover up to 3 places, each with its own neighbourhoods.",
+    "Listen to an ad: the speaker button in the ad view reads it aloud.",
+    "The same flat on two boards shows once, with the price on each.",
+]
+
+
+def banner(lan=False):
+    """What the start window says: where the app is, what it does, and how to stop it."""
+    import random
+    local = f"http://127.0.0.1:{PORT}"
+    line = "  " + "-" * 66
+    out = [
+        "",
+        "        /\\        L U A C H   E C H A D   (one board)",
+        "       /  \\       every Israeli apartment board in one place",
+        "      /____\\      version " + (VERSION or "?") + "  -  free for private use",
+        "      | [] |",
+        "      |____|      yad2  -  Madlan  -  Komo  -  Homeless",
+        "",
+        line,
+        f"   Open the app:     {local}",
+    ]
+    if lan:
+        out += [f"   Home network:     http://{lan_ip()}:{PORT}",
+                "                     (other devices get in only with an invite link from the app)"]
+    else:
+        out += ["   Other devices:    start with start-lan.cmd instead, then invite them from the app"]
+    out += [
+        line,
+        "   Keep this window open while you use the app. Close it, or press Ctrl+C, to stop.",
+        "   The boards are read through your Chrome and the app's extension, slowly, like a person.",
+        "   Your searches stay on this computer, in the folder 'data'. Nothing is sent to us.",
+        "   New versions: the app offers them by itself, with a list of what is new.",
+        line,
+        "   Guide:    https://boards.avniyay.in",
+        "   Contact:  im@avniyay.in  -  x.com/avniyayin",
+        line,
+        "   Tip: " + random.choice(TIPS),
+        "",
+    ]
+    print("\n".join(out), flush=True)
+
+
 def lan_ip():
     """This PC's address on the home network (no packet is sent: the socket only picks the route)."""
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -2373,7 +2425,7 @@ def main():
                   f"fl {'?' if v['floor'] is None else v['floor']:>2} {v['area']:7} {m:>5}  {where}  {'; '.join(v['no'] + v['unknown'] + v['warn'])}")
     elif args.cmd == "set":
         set_fields(args.profile, args.ad, people.OWNER, args.status, args.note, args.summary)
-        print("נשמר.")
+        print("Saved.")
     else:
         if not os.environ.get("LUACH_CHILD"):
             sys.exit(supervise(sys.argv[1:]))
@@ -2384,7 +2436,8 @@ def main():
         if already_running():
             # Windows lets a second program take the same port without an error: two apps would then answer by
             # turns and both would check the searches by themselves. So the second one only opens the first.
-            print(f"האפליקציה כבר פועלת: http://127.0.0.1:{PORT}")
+            print(f"\n  Luach Echad is already running: http://127.0.0.1:{PORT}\n"
+                  "  Opening it in your browser. This window can be closed.\n", flush=True)
             if getattr(args, "open", False):
                 open_in_chrome(f"http://127.0.0.1:{PORT}")
             return
@@ -2393,11 +2446,9 @@ def main():
         threading.Thread(target=auto_watch, daemon=True).start()
         threading.Thread(target=rate_watch, daemon=True).start()
         server = ThreadingHTTPServer(("0.0.0.0" if LAN else "127.0.0.1", PORT), Handler)
-        print(f"http://127.0.0.1:{PORT}  (Ctrl+C עוצר)")
+        banner(LAN)
         if getattr(args, "open", False):
             open_in_chrome(f"http://127.0.0.1:{PORT}")
-        if LAN:
-            print(f"ברשת הביתית: http://{lan_ip()}:{PORT}")
         try:
             server.serve_forever()
         except KeyboardInterrupt:

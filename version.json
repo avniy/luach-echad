@@ -1,7 +1,19 @@
 {
-  "version": "1.2.0",
+  "version": "1.2.1",
   "date": "2026-11-22",
   "releases": [
+    {
+      "version": "1.2.1",
+      "date": "2026-11-22",
+      "he": [
+        "חלון ההפעלה מסודר: הכתובות של האפליקציה (גם ברשת הביתית), מה היא עושה, איך עוצרים, וטיפ קטן בכל הפעלה",
+        "המראה הכהה מסודר יותר: בלי רקעים ומסגרות בהירים"
+      ],
+      "en": [
+        "A tidy start window: the app's addresses (home network too), what it does, how to stop it, and a small tip each time",
+        "A cleaner dark look: no light backgrounds or borders left"
+      ]
+    },
     {
       "version": "1.2.0",
       "date": "2026-11-22",
